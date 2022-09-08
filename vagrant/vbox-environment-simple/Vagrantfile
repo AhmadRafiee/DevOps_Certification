@@ -1,0 +1,14 @@
+IMAGE_1804 = "bento/ubuntu-18.04"
+IMAGE_2004 = "bento/ubuntu-20.04"
+IMAGE_2204 = "bento/ubuntu-22.04"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = IMAGE_2204
+  config.vm.hostname = "test"
+  config.vm.provider "virtualbox" do |my_vm|
+    my_vm.name = "my_vm"
+    my_vm.memory = 1024
+    my_vm.cpus = 1
+  end
+  config.vm.provision :shell, path: "bootstrap.sh"
+end
