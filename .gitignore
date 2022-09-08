@@ -1,0 +1,5 @@
+*.box
+*box
+.vagrant
+*.iso
+*iso
