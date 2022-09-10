@@ -17,9 +17,13 @@ The exercises, tools, and scenarios for learning DevOps.
 
 - [Ansible:](ansible)
   - [installation ansible on ubuntu](ansible/ansible-installation.md)
-
-
-
+  - [ansible configuration](ansible/ansible-configuration.md)
+  - [ansible useful commands](ansible/ansible-useful-commands.md)
+  - [ansible sample hosts.ini](ansible/hosts.ini)
+  - [ansible sample hosts.yml](ansible/hosts.yml)
+  - [ansible sample playbook](ansible/playbook.yml)
+  - [ansible sample config](ansible/ansible.cfg)
+  - [install and configure nginx with ansible](ansible/nginx-practices)
 
 # 🔗 Links
 [![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/)
