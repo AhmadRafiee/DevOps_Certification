@@ -1,0 +1,8 @@
+---
+- hosts: web-servers
+  become: true
+  gather_facts: yes
+  name: setup nginx web server
+  roles:
+  # install and configure nginx service
+    - { role: nginx, become: True, tags: setup_nginx }

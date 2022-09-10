@@ -1,0 +1,32 @@
+---
+- name: "apt-get update"
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: ensure nginx is at the latest version
+  apt: name=nginx state=latest
+  tags: install_nginx
+
+- name: delete default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+  tags: configure_nginx
+
+- name: copy nginx site.conf
+  template:
+    src: site.conf.j2
+    dest: /etc/nginx/conf.d/{{ domain }}.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
+  tags: configure_nginx
+
+- name: start nginx
+  service:
+    name: nginx
+    state: started
+  tags: configure_nginx
