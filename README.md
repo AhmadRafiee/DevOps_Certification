@@ -23,6 +23,7 @@ The exercises, tools, and scenarios for learning DevOps.
   - [ansible sample config](ansible/ansible.cfg)
   - [install and configure nginx with ansible](ansible/nginx-practices)
   - [install and configure AWX tools](ansible/AWX-installation-configuration.md)
+  - [ansible practice: install and configure nexus service](ansible/ansible-practice)
 
 # In Progress Task:
   - linux practice
