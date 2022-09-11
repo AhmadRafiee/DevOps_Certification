@@ -1,0 +1,15 @@
+---
+- name: install docker
+  import_tasks: install_docker.yaml
+  tags: install_docker
+  when: ansible_os_family == "Debian"
+
+- name: config docker
+  import_tasks: configure_docker.yaml
+  tags: config_docker
+  when: ansible_os_family == "Debian"
+
+- name: install compose
+  import_tasks: install_compose.yaml
+  tags: install_compose
+  when: ansible_os_family == "Debian"

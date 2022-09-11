@@ -1,0 +1,5 @@
+# package list
+packages:
+    - vim
+    - wget
+    - git

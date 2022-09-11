@@ -1,0 +1,15 @@
+---
+- name: Add the br_netfilter module
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Change various sysctl-settings
+  sysctl:
+    name: "{{ item.key }}"
+    state: present
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/MeCan.conf
+    reload: yes
+    ignoreerrors: yes
+  with_dict: '{{ sysctl_config }}'

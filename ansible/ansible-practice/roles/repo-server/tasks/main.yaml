@@ -1,0 +1,6 @@
+---
+- name: pull all image
+  include: image-pull.yaml
+
+- name: config and setup all service
+  include: repo-setup.yaml

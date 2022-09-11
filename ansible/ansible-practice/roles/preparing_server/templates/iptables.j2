@@ -1,0 +1,64 @@
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags SYN,RST SYN,RST -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,RST FIN,RST -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,ACK FIN -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags ACK,URG URG -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,ACK FIN -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags PSH,ACK PSH -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,PSH,URG -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,PSH,URG -j DROP
+-A PREROUTING -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK,URG -j DROP
+COMMIT
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:CHECK_INPUT - [0:0]
+:CHECK_OUTPUT - [0:0]
+-A INPUT -j CHECK_INPUT
+-A INPUT -j DROP
+-A OUTPUT -j CHECK_OUTPUT
+-A OUTPUT -j DROP
+-A CHECK_INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+{% if iptables.network_adapter_access is defined %}
+{% for net in iptables.network_adapter_access %}
+-A CHECK_INPUT -i {{ net }} -j ACCEPT
+{% endfor %}
+{% endif %}
+-A CHECK_INPUT -p tcp -m tcp --dport {{ sshd_config.Port|default('22') }} -j ACCEPT
+{% if iptables.tcp_port_access is defined %}
+{% for tcp in iptables.tcp_port_access %}
+-A CHECK_INPUT -p tcp -m tcp --dport {{ tcp }} -j ACCEPT
+{% endfor %}
+{% endif %}
+{% if iptables.udp_port_access is defined %}
+{% for udp in iptables.udp_port_access %}
+-A CHECK_INPUT -p udp -m udp --dport {{ udp }} -j ACCEPT
+{% endfor %}
+{% endif %}
+{% if iptables.trusted_IP is defined %}
+{% for ip in iptables.trusted_IP %}
+-A CHECK_INPUT -s {{ ip }} -j ACCEPT -m comment --comment "The Trusted Server Ip"
+{% endfor %}
+{% endif %}
+{% if iptables.trusted_Range is defined %}
+{% for range in iptables.trusted_Range %}
+-A CHECK_INPUT -s {{ range }} -j ACCEPT -m comment --comment "The Trusted Server Range"
+{% endfor %}
+{% endif %}
+-A CHECK_OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A CHECK_OUTPUT -j ACCEPT
+COMMIT
+
+
+

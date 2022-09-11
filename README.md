@@ -1,14 +1,12 @@
 # DevOps training with DockerMe
 The exercises, tools, and scenarios for learning DevOps.
 
-
 # Table and Content
 
 - [Environment Setup:](vagrant)
   - [vagrant and packer](vagrant/vagrant-and-packer.md)
   - [vagrant virtualbox provider - Simple](vagrant/vbox-environment-simple)
   - [vagrant virtualbox provider - Expert](vagrant/vbox-environment-expert)
-
 
 - [Linux:](linux)
   - [http proxy on linux](linux/http-proxy-set.md)
@@ -24,6 +22,14 @@ The exercises, tools, and scenarios for learning DevOps.
   - [ansible sample playbook](ansible/playbook.yml)
   - [ansible sample config](ansible/ansible.cfg)
   - [install and configure nginx with ansible](ansible/nginx-practices)
+  - [install and configure AWX tools](ansible/AWX-installation-configuration.md)
+
+# In Progress Task:
+  - linux practice
+  - ansible practice
+
+# Reference:
+  - https://www.ansible.com/
 
 # 🔗 Links
 [![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/)

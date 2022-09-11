@@ -1,0 +1,10 @@
+# http proxy
+http_proxy: http://37.59.93.12:8520
+
+# docker variables
+docker:
+  http_proxy: "{{ http_proxy }}"
+  no_proxy: localhost,127.0.0.1,hub.hamdocker.ir
+  log_max_file: "5"
+  log_max_size: 100m
+  registry_mirror: https://hub.hamdocker.ir

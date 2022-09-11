@@ -1,0 +1,20 @@
+---
+- name: docker | Manual - create directories
+  file:
+    dest=/etc/systemd/system/docker.service.d/
+    recurse=yes
+    state=directory
+    owner=root
+    group=root
+
+- name: Make docker configuration file.
+  template:
+    src: docker-service.j2
+    dest: /etc/systemd/system/docker.service.d/override.conf
+  notify: restart docker
+
+- name: Restart service docker and daemon-reload to pick up config changes
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: yes
+    name: docker

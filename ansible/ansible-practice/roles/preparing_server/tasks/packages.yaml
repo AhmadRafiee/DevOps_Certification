@@ -1,0 +1,22 @@
+---
+- name: Update and upgrade apt packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Install basic tools
+  apt:
+    name: "{{ packages }}"
+    state: present
+    force_apt_get: yes
+    update_cache: yes
+
+- name: Set hostname
+  hostname:
+    name: '{{ inventory_hostname }}'
+
+- name: Fix /etc/hosts
+  template:
+    src: "hosts.j2"
+    dest: "/etc/hosts"

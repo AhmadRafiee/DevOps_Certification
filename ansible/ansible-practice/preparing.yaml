@@ -1,0 +1,12 @@
+---
+- hosts: repo-servers
+  become: true
+  gather_facts: yes
+  name: install and configure repo server
+  roles:
+  # preparing server and hardening
+    #- { role: preparing_server, become: True, tags: ahmad }
+  # install and configure docker service
+    #- { role: docker, become: True, tags: ahmad }
+  # install and configure repo server
+    - { role: repo-server, become: True, tags: ahmad }

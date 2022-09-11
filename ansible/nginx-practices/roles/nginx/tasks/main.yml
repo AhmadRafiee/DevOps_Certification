@@ -4,6 +4,13 @@
     update_cache: yes
     cache_valid_time: 3600
 
+- name: Install tools
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ packages }}"
+  tags: install_packages
+
 - name: ensure nginx is at the latest version
   apt: name=nginx state=latest
   tags: install_nginx

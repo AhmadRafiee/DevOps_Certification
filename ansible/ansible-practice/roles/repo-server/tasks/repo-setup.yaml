@@ -1,0 +1,45 @@
+---
+- name: Creates directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ REPO_DIRE_NAME }}"
+    - "{{ REPO_DIRE_NAME }}/traefik"
+    - "{{ REPO_DIRE_NAME }}/traefik/certs"
+
+- name: copy bash script
+  template:
+    src: nexus-setup-with-api.sh.j2
+    dest: "{{ REPO_DIRE_NAME }}/nexus-setup-with-api.sh"
+
+- name: Copy trafik config file.
+  template:
+    src: traefik.yaml.j2
+    dest: "{{ REPO_DIRE_NAME }}/traefik/config.yml"
+
+- name: copy Docker Compose files
+  template:
+    src: docker-compose.yaml.j2
+    dest: "{{ REPO_DIRE_NAME }}/docker-compose.yaml"
+
+#- name: Build the docker-compose stack
+#  shell: docker compose -f "{{ REPO_DIRE_NAME }}"/docker-compose.yaml up -d
+
+- name: Run `docker-compose up` again
+  docker_compose:
+    project_src: "{{ REPO_DIRE_NAME }}"
+    build: no
+    files:
+      - docker-compose.yaml
+  register: output
+
+- debug:
+    var: output
+
+- name: Pause for 2 minutes to run nexus service
+  pause:
+    minutes: 2
+
+- name: Execute the script
+  command: bash "{{ REPO_DIRE_NAME }}/nexus-setup-with-api.sh"

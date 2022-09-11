@@ -1,0 +1,108 @@
+# basic package list for installation
+packages:
+- sysstat
+- wget
+- git
+- vim
+- nano
+- bash-completion
+- curl
+- htop
+- iftop
+- jq
+- ncdu
+- unzip
+- net-tools
+- dnsutils
+- atop
+- sudo
+- ntp
+- fail2ban
+- software-properties-common
+- apache2-utils
+- tcpdump
+- telnet
+- axel
+- iptables-persistent
+- ntp
+- auditd
+- libpwquality-common
+- cracklib-runtime
+
+# sshd configuration
+sshd_config:
+  Port: "{{ ansible_port }}"
+  ListenAddress: 0.0.0.0
+  PermitRootLogin: without-password
+  PasswordAuthentication: "yes"
+  AllowUsers: root
+  AllowGroups: root
+
+# iptables configuration
+iptables:
+  network_adapter_access:
+    - lo
+  tcp_port_access:
+    - 80
+    - 443
+  #udp_port_access:
+  trusted_IP:
+    - 87.247.187.145
+  trusted_Range:
+    - 10.60.10.0/24
+
+# fail2ban configuration
+fail2ban:
+  bantime: 10m
+  findtime: 10m
+  maxretry: 5
+
+# setion timeout setting (seconds)
+timeout_time: 600
+
+# auditd vars
+auditd_apply_audit_rules: 'yes'
+auditd_action_mail_acct: root
+auditd_admin_space_left_action: suspend
+auditd_disk_error_action: suspend
+auditd_disk_full_action: suspend
+auditd_max_log_file: 8
+auditd_max_log_file_action: keep_logs
+auditd_mode: 1
+auditd_num_logs: 5
+auditd_space_left: 75
+auditd_space_left_action: email
+grub_audit_backlog_cmdline: audit_backlog_limit=8192
+grub_audit_cmdline: audit=1
+
+# lynis variables
+lynis_version: '3.0.8'
+lynis_name: 'lynis-{{ lynis_version }}'
+lynis_tarball_url: 'https://cisofy.com/files/{{ lynis_name }}.tar.gz'
+lynis_tarball_unpackdest: '/opt'
+lynis_tarball_unpackdest_dir: '{{ lynis_tarball_unpackdest }}/lynis'
+lynis_tarball_dest: '{{ lynis_tarball_unpackdest_dir }}/{{ lynis_name }}.tar.gz'
+
+# dns variables
+dns: 8.8.8.8 1.1.1.1
+fallback_dns: 9.9.9.9 4.2.2.4
+dnssec: allow-downgrade
+dns_over_tls: opportunistic
+
+# Limit.conf variables
+limit_nofile_hard: 1024
+limit_nofile_soft: 512
+limit_nproc_hard: 1024
+limit_nproc_soft: 512
+
+# sysctll configuration variables
+sysctl_config:
+  net.ipv4.ip_forward: 1
+  net.ipv4.conf.all.forwarding: 1
+  net.ipv6.conf.all.forwarding: 1
+  vm.max_map_count: 262144
+  fs.file-max: 1500000
+  net.ipv4.tcp_tw_reuse: 1
+  net.netfilter.nf_conntrack_tcp_timeout_established: 900
+  net.netfilter.nf_conntrack_tcp_timeout_close_wait: 10
+  net.netfilter.nf_conntrack_tcp_timeout_syn_recv: 30

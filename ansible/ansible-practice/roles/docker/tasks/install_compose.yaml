@@ -1,0 +1,13 @@
+---
+- name: "apt-get update"
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: ensure nginx is at the latest version
+  apt:
+    name: docker-compose-plugin
+    state: latest
+    update_cache: yes
+  environment: "{{ proxy_env }}"
+  tags: inatall_compose

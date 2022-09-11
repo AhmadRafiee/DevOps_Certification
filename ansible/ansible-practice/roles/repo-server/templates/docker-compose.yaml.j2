@@ -1,0 +1,97 @@
+version: '3.4'
+
+networks:
+  web_net:
+    external: false
+    name: web_net
+
+volumes:
+  traefik-acme:
+    name: traefik-acme
+  nexus-data:
+    name: nexus-data
+
+services:
+  traefik:
+    image: "{{TRAEFIK_IMAGE }}:{{TRAEFIK_VERSION}}"
+    restart: always
+    container_name: traefik
+    command:
+      - "--log.level=INFO"
+      - "--log.filepath=/log-file.log"
+      - "--log.format=json"
+      - "--api=true"
+      - "--ping=true"
+      - "--accesslog=true"
+      - "--accesslog.bufferingsize=100"
+      - "--api.insecure=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=web_net"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--metrics.prometheus=true"
+      - "--entryPoints.metrics.address=:8082"
+      - "--metrics.prometheus.entryPoint=metrics"
+      - "--certificatesresolvers.mycert.acme.email={{ TRAEFIK_ACME_EMAIL }}"
+      - "--certificatesresolvers.mycert.acme.storage=/acme/acme.json"
+      - "--certificatesresolvers.mycert.acme.tlschallenge=true"
+      - "--providers.file.filename=/traefik/config.yml"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/traefik
+      - traefik-acme:/acme
+    networks:
+      - web_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`{{ TRAEFIK_SUB_DOMAIN }}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.traefik.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.web-auth.basicauth.users={{ WEB_AUTH_USER }}:{{ WEB_AUTH_PASS }}"
+      - "traefik.http.routers.traefik-secure.middlewares=web-auth,security@file,hsts@file"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`{{ TRAEFIK_SUB_DOMAIN }}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.options=default"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=mycert"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
+  nexus:
+    image: "{{ NEXUS_IMAGE }}:{{ NEXUS_VERSION }}"
+    container_name: nexus
+    restart: always
+    volumes:
+      - "nexus-data:/nexus-data"
+    networks:
+      - web_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.repo.entrypoints=http"
+      - "traefik.http.routers.repo.rule=Host(`{{NEXUS_SUB_DOMAIN}}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.repo.service=repo-secure"
+      - "traefik.http.routers.repo.middlewares=https-redirect"
+      - "traefik.http.routers.repo-secure.entrypoints=https"
+      - "traefik.http.routers.repo-secure.rule=Host(`{{NEXUS_SUB_DOMAIN}}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.repo-secure.tls=true"
+      - "traefik.http.routers.repo-secure.tls.options=default"
+      - "traefik.http.routers.repo-secure.service=repo-secure"
+      - "traefik.http.routers.repo-secure.tls.certresolver=mycert"
+      - "traefik.http.services.repo-secure.loadbalancer.server.port=8081"
+      - "traefik.http.routers.hubdocker.entrypoints=http"
+      - "traefik.http.routers.hubdocker.rule=Host(`{{HUB_SUB_DOMAIN}}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.hubdocker.middlewares=https-redirect"
+      - "traefik.http.routers.hubdocker-secure.entrypoints=https"
+      - "traefik.http.routers.hubdocker.service=hubdocker-secure"
+      - "traefik.http.routers.hubdocker-secure.rule=Host(`{{HUB_SUB_DOMAIN}}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.hubdocker-secure.tls=true"
+      - "traefik.http.routers.hubdocker-secure.tls.options=default"
+      - "traefik.http.routers.hubdocker-secure.service=hubdocker-secure"
+      - "traefik.http.routers.hubdocker-secure.tls.certresolver=mycert"
+      - "traefik.http.services.hubdocker-secure.loadbalancer.server.port=8090"

@@ -1,0 +1,20 @@
+---
+# download images
+- name: Docker module dependency | Login and pull image
+  apt:
+    name: "{{ item }}"
+    force_apt_get: yes
+  with_items:
+    - python3-docker
+    - docker-compose
+  register: apt_action
+  retries: 100
+  until: apt_action is success or ('Failed to lock apt for exclusive operation' not in apt_action.msg and '/var/lib/dpkg/lock' not in apt_action.msg)
+
+- name: docker images pull
+  docker_image:
+    name: "{{ item }}"
+    source: pull
+  with_items:
+    - "{{ TRAEFIK_IMAGE }}:{{ TRAEFIK_VERSION }}"
+    - "{{ NEXUS_IMAGE }}:{{ NEXUS_VERSION }}"
