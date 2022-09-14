@@ -1,0 +1,34 @@
+version: '3.8'
+
+networks:
+  web_net:
+    external: true
+    name: web_net
+
+volumes:
+  registry_data:
+    name: registry_data
+
+services:
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: on-failure
+    volumes:
+      - registry_data:/var/lib/registry
+    networks:
+      - web_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.registry.entrypoints=http"
+      - "traefik.http.routers.registry.rule=Host(`repo.docker.mecan.ir`)"
+      - "traefik.http.routers.registry.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.registry-secure.middlewares=web-auth"
+      - "traefik.http.routers.registry-secure.entrypoints=https"
+      - "traefik.http.routers.registry-secure.rule=Host(`repo.docker.mecan.ir`)"
+      - "traefik.http.routers.registry-secure.tls=true"
+      - "traefik.http.routers.registry-secure.tls.options=default"
+      - "traefik.http.routers.registry-secure.tls.certresolver=mycert"
+      - "traefik.http.services.registry.loadbalancer.server.port=5000"

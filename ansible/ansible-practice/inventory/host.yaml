@@ -3,6 +3,6 @@ all:
     repo-servers:
       hosts:
         repo-server:
-          ansible_host: 37.32.24.231
+          ansible_host: 37.32.26.49
           ansible_user: root
           ansible_port: 8090

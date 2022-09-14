@@ -25,6 +25,17 @@ The exercises, tools, and scenarios for learning DevOps.
   - [install and configure AWX tools](ansible/AWX-installation-configuration.md)
   - [ansible practice: install and configure nexus service](ansible/ansible-practice)
 
+- [Docker:](docker)
+  - [docker practice answer steps](docker/docker-practice-answer.md)
+  - [docker change config](docker/change-docker-config.md)
+  - [traefik compose file](docker/traefik-compose.yml)
+  - [registry compose file](docker/registry-compose.yml)
+  - [registry readme file](docker/registry-with-nginx.md)
+  - [elk stack scenario](docker/elk)
+  - [wordpress compose file](docker/wordpress-compose.yml)
+  - [vote stack scenario](docker/voting-app)
+  - [portainer compose file](docker/portainer-compose.yml)
+
 # In Progress Task:
   - linux practice
   - ansible practice
@@ -33,7 +44,7 @@ The exercises, tools, and scenarios for learning DevOps.
   - https://www.ansible.com/
 
 # 🔗 Links
-[![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/)
+[![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](http proxy on linuxhttps://dockerme.ir/)
 [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmad-rafiee/)
 [![twitter](https://img.shields.io/badge/twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/@rafiee1001)
 [![telegram](https://img.shields.io/badge/telegram-0A66C2?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/dockerme)

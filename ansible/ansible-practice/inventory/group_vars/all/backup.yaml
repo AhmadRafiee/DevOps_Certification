@@ -1,0 +1,6 @@
+---
+docker_root_directory: /var/lib/docker
+traefik_backup_volume_name: traefik-acme
+traefik_destination_backup_dir: /mnt/backups/traefik
+nexus_backup_volume_name: nexus-data
+nexus_destination_backup_dir: /mnt/backups/nexus

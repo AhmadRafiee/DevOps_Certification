@@ -1,0 +1,69 @@
+---
+version: '3.8'
+
+networks:
+    web_net:
+        external: true
+        name: web_net
+    wp_net:
+        name: wp_net
+        driver_opts:
+            com.docker.network.bridge.name: wp_net
+
+volumes:
+    wordpress_mysql_data:
+        name: wordpress_mysql_data
+    wordpress_data:
+        name: wordpress_data
+
+services:
+    mysql:
+        image: mysql:5.7
+        container_name: mysql
+        restart: on-failure
+        volumes:
+            - wordpress_mysql_data:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: sdfascsdvsfdvweliuo
+            MYSQL_DATABASE: MeCan
+            MYSQL_USER: MeCan
+            MYSQL_PASSWORD: sdfascsiquowecefcwaefef
+        networks:
+            - wp_net
+        healthcheck:
+            test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+            start_period: 5s
+            timeout: 20s
+            interval: 5s
+            retries: 10
+
+    wordpress:
+        image: wordpress:latest
+        container_name: wordpress
+        restart: on-failure
+        volumes:
+            - wordpress_data:/var/www/html/
+        depends_on:
+            mysql:
+                condition: service_healthy
+        environment:
+            WORDPRESS_DB_HOST: mysql:3306
+            WORDPRESS_DB_USER: MeCan
+            WORDPRESS_DB_NAME: MeCan
+            WORDPRESS_DB_PASSWORD: sdfascsiquowecefcwaefef
+        networks:
+            - wp_net
+            - web_net
+        labels:
+            - "traefik.enable=true"
+            - "traefik.docker.network=web_net"
+            - "traefik.http.routers.wordpress.entrypoints=http"
+            - "traefik.http.routers.wordpress.rule=Host(`wp.docker.mecan.ir`)"
+            - "traefik.http.routers.wordpress.middlewares=https-redirect"
+            - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+            - "traefik.http.routers.wordpress-secure.entrypoints=https"
+            - "traefik.http.routers.wordpress-secure.rule=Host(`wp.docker.mecan.ir`)"
+            - "traefik.http.routers.wordpress-secure.tls=true"
+            - "traefik.http.routers.wordpress-secure.tls.options=default"
+            - "traefik.http.routers.wordpress-secure.tls.certresolver=mycert"
+            - "traefik.http.services.wordpress.loadbalancer.server.port=80"

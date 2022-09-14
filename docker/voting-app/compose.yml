@@ -1,0 +1,103 @@
+version: '3.8'
+
+networks:
+  web_net:
+    external: true
+    name: web_net
+  vote_net:
+    external: false
+    name: vote_net
+    driver_opts:
+        com.docker.network.bridge.name: vote_net
+
+volumes:
+  vote_postgress_data:
+    name: vote_postgress_data
+
+services:
+  vote:
+    build:
+      context: vote/
+    image: ${REGISTRY_URL}/${REGISTRY_DIR}/vote:${VOTE_VERSION}
+    command: python app.py
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - web_net
+      - vote_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.vote.entrypoints=http"
+      - "traefik.http.routers.vote.rule=Host(`${VOTE_SUB_DOMAIN}.${DOMAIN_NAME`)"
+      - "traefik.http.routers.vote.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.vote-secure.entrypoints=https"
+      - "traefik.http.routers.vote-secure.rule=Host(`${VOTE_SUB_DOMAIN}.${DOMAIN_NAME`)"
+      - "traefik.http.routers.vote-secure.tls=true"
+      - "traefik.http.routers.vote-secure.tls.options=default"
+      - "traefik.http.routers.vote-secure.tls.certresolver=mycert"
+      - "traefik.http.services.vote.loadbalancer.server.port=80"
+
+  result:
+    build:
+      context: result/
+    image: ${REGISTRY_URL}/${REGISTRY_DIR}/result:${VOTE_VERSION}
+    command: nodemon server.js
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - web_net
+      - vote_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.result.entrypoints=http"
+      - "traefik.http.routers.result.rule=Host(`${RESULT_SUB_DOMAIN}.${DOMAIN_NAME`)"
+      - "traefik.http.routers.result.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.result-secure.entrypoints=https"
+      - "traefik.http.routers.result-secure.rule=Host(`${RESULT_SUB_DOMAIN}.${DOMAIN_NAME`)"
+      - "traefik.http.routers.result-secure.tls=true"
+      - "traefik.http.routers.result-secure.tls.options=default"
+      - "traefik.http.routers.result-secure.tls.certresolver=mycert"
+      - "traefik.http.services.result.loadbalancer.server.port=80"
+
+  worker:
+    build:
+      context: worker/
+    image: ${REGISTRY_URL}/${REGISTRY_DIR}/worker:${VOTE_VERSION}
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - vote_net
+
+  redis:
+    image: redis:5.0-alpine3.10
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    networks:
+      - vote_net
+
+  db:
+    image: postgres:9.4
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - "vote_postgress_data:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vote_net

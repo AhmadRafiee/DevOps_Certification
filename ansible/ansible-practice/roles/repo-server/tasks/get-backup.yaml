@@ -1,0 +1,20 @@
+---
+#- synchronize:
+#    mode: pull
+#    #src: "rsync://{{ ansible_host }}{{ docker_root_directory }}/volumes/{{ traefik_backup_volume_name }}/_data/"
+#    src: rsync://{{ ansible_host }}/opt/
+#    dest: "{{ traefik_destination_backup_dir }}"
+
+- name: Copy a "traefik certificate" file on the remote machine to controller host
+  copy:
+    src: "{{ docker_root_directory }}/volumes/{{ traefik_backup_volume_name }}/_data/"
+    remote_src: yes
+    dest: "{{ traefik_destination_backup_dir }}"
+    directory_mode: true
+
+- name: Copy a "nexus data" file on the remote machine to controller host
+  copy:
+    src: "{{ docker_root_directory }}/volumes/{{ nexus_backup_volume_name }}/_data/"
+    dest: "{{ nexus_destination_backup_dir }}"
+    directory_mode: true
+    remote_src: yes

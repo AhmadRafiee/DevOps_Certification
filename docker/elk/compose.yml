@@ -1,0 +1,103 @@
+version: '3.8'
+
+volumes:
+  es_data:
+    name: es_data
+
+networks:
+  web_net:
+    external: true
+    name: web_net
+  app_net:
+    external: true
+    name: app_net
+
+services:
+  elasticsearch:
+    build:
+      context: elasticsearch/
+      args:
+        ELK_VERSION: ${ELK_VERSION}
+    image: ${REGISTRY_URL}/${REGISTRY_DIR}/elasticsearch:${ELK_VERSION}
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    container_name: elasticsearch
+    restart: on-failure
+    environment:
+      ES_JAVA_OPTS: "-Xmx1g -Xms1g"
+      ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+      cluster.name: es-cluster
+      bootstrap.memory_lock: "true"
+      http.cors.enabled: "true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - web_net
+      - app_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.elasticsearch.entrypoints=http"
+      - "traefik.http.routers.elasticsearch.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.elasticsearch.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.elasticsearch-secure.entrypoints=https"
+      - "traefik.http.routers.elasticsearch-secure.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.elasticsearch-secure.tls=true"
+      - "traefik.http.routers.elasticsearch-secure.tls.options=default"
+      - "traefik.http.routers.elasticsearch-secure.tls.certresolver=mycert"
+      - "traefik.http.services.elasticsearch.loadbalancer.server.port=9200"
+
+  logstash:
+    build:
+      context: logstash/
+      args:
+        ELK_VERSION: ${ELK_VERSION}
+    image: ${REGISTRY_URL}/${REGISTRY_DIR}/logstash:${ELK_VERSION}
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    container_name: logstash
+    restart: on-failure
+    environment:
+      LS_JAVA_OPTS: "-Xmx1g -Xms1g"
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - app_net
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    build:
+      context: kibana/
+      args:
+        ELK_VERSION: ${ELK_VERSION}
+    image: ${REGISTRY_URL}/${REGISTRY_DIR}/kibana:${ELK_VERSION}
+    ports:
+      - "5601:5601"
+    container_name: kibana
+    restart: on-failure
+    environment:
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+    networks:
+      - web_net
+      - app_net
+    depends_on:
+      - elasticsearch
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.kibana.entrypoints=http"
+      - "traefik.http.routers.kibana.rule=Host(`${KIBANA_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.kibana.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.kibana-secure.entrypoints=https"
+      - "traefik.http.routers.kibana-secure.rule=Host(`${KIBANA_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.kibana-secure.tls=true"
+      - "traefik.http.routers.kibana-secure.tls.options=default"
+      - "traefik.http.routers.kibana-secure.tls.certresolver=mycert"
+      - "traefik.http.services.kibana.loadbalancer.server.port=5601"
