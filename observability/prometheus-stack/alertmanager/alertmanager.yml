@@ -1,0 +1,24 @@
+global:
+  smtp_smarthost: 'smtp.google.com:587'
+  smtp_from: 'ahmadnotif@gmail.com'
+  smtp_auth_username: 'ahmadnotif@gmail.com'
+  smtp_auth_password: 'XXXXXXXXXXXX'
+  smtp_auth_identity: 'ahmadnotif@gmail.com'
+
+route:
+  group_by: ['instance', 'severity']
+  group_wait: 30s
+  group_interval: 30s
+  repeat_interval: 30m
+  receiver: 'stage'
+
+receivers:
+- name: 'stage'
+  email_configs:
+    - send_resolved: true
+      to: 'ahmadnotif@gmail.com'
+
+- name: 'product'
+  email_configs:
+    - send_resolved: true
+      to: 'ahmadnotif@gmail.com'

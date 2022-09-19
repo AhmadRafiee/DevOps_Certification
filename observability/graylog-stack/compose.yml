@@ -1,0 +1,88 @@
+version: "3.8"
+
+volumes:
+  graylog_mongodb_data:
+    name: graylog_mongodb_data
+  graylog_es_data:
+    name: graylog_es_data
+  graylog_data:
+    name: graylog_data
+  graylog_journal:
+    name: graylog_journal
+
+networks:
+  gra_net:
+    external: true
+    name: app_net
+  web_net:
+    external: true
+    name: web_net
+
+services:
+  mongodb:
+    image: "mongo:5.0"
+    restart: "on-failure"
+    container_name: graylog_mongodb
+    volumes:
+      - "graylog_mongodb_data:/data/db"
+    networks:
+      gra_net:
+
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2"
+    restart: "on-failure"
+    container_name: graylog_elasticsearch
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
+      bootstrap.memory_lock: "true"
+      discovery.type: "single-node"
+      http.host: "0.0.0.0"
+      action.auto_create_index: "false"
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+    volumes:
+      - "graylog_es_data:/usr/share/elasticsearch/data"
+    networks:
+      gra_net:
+
+  graylog:
+    image: "graylog/graylog:4.3"
+    restart: "on-failure"
+    container_name: graylog
+    depends_on:
+      elasticsearch:
+        condition: "service_started"
+      mongodb:
+        condition: "service_started"
+    entrypoint: "/usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh"
+    environment:
+      GRAYLOG_NODE_ID_FILE: "/usr/share/graylog/data/config/node-id"
+      GRAYLOG_PASSWORD_SECRET: ${GRAYLOG_PASSWORD_SECRET}
+      GRAYLOG_ROOT_PASSWORD_SHA2: ${GRAYLOG_ROOT_PASSWORD_SHA2}
+      GRAYLOG_HTTP_BIND_ADDRESS: "0.0.0.0:9000"
+      GRAYLOG_HTTP_EXTERNAL_URI: "http://localhost:9000/"
+      GRAYLOG_ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+      GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
+    volumes:
+      - "graylog_data:/usr/share/graylog/data/data"
+      - "graylog_journal:/usr/share/graylog/data/journal"
+    ports:
+      - 5148:5148/udp
+    networks:
+      gra_net:
+      web_net:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.graylog.entrypoints=http"
+      - "traefik.http.routers.graylog.rule=Host(`${GRAYSUB}.${DOMAIN_ADDRESS}`)"
+      - "traefik.http.routers.graylog.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.graylog-secure.entrypoints=https"
+      - "traefik.http.routers.graylog-secure.rule=Host(`${GRAYSUB}.${DOMAIN_ADDRESS}`)"
+      - "traefik.http.routers.graylog-secure.tls=true"
+      - "traefik.http.routers.graylog-secure.tls.options=default"
+      - "traefik.http.routers.graylog-secure.tls.certresolver=mycert"
+      - "traefik.http.services.graylog.loadbalancer.server.port=9000"

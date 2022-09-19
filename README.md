@@ -36,15 +36,21 @@ The exercises, tools, and scenarios for learning DevOps.
   - [vote stack scenario](docker/voting-app)
   - [portainer compose file](docker/portainer-compose.yml)
 
+- [Observability:](observability)
+  - [elk stack scenario](observability/elk-stack)
+  - [graylog stack scenario](observability/graylog-stack)
+  - [loki stack scenario](observability/loki-stack)
+  - [prometheus stack scenario](observability/prometheus-stack)
+  - [traefik](observability/traefik)
+  - [zabbix stack scenario](observability/zabbix-stack)
+
 # In Progress Task:
-  - linux practice
-  - ansible practice
 
 # Reference:
   - https://www.ansible.com/
 
 # 🔗 Links
-[![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](http proxy on linuxhttps://dockerme.ir/)
+[![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/)
 [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmad-rafiee/)
 [![twitter](https://img.shields.io/badge/twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/@rafiee1001)
 [![telegram](https://img.shields.io/badge/telegram-0A66C2?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/dockerme)

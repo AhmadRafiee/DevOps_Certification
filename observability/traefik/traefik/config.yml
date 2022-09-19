@@ -1,0 +1,43 @@
+http:
+  middlewares:
+    redirect:
+      redirectScheme:
+        scheme: https
+
+    security:
+      headers:
+        frameDeny: true
+        referrerPolicy: true
+        contentSecurityPolicy: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+
+    hsts:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        sslRedirect: true
+        stsPreload: true
+        forceSTSHeader: true
+
+    secure:
+      chain:
+        middlewares:
+          - redirect
+          - hsts
+          - security
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      maxVersion: VersionTLS13
+      cipherSuites:
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305 
+        - TLS_AES_256_GCM_SHA384               
+        - TLS_CHACHA20_POLY1305_SHA256
+  certificates:
+    - certFile: /traefik/certs/cert.pem
+      keyFile: /traefik/certs/key.pem

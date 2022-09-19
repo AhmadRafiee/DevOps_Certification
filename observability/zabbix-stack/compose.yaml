@@ -1,0 +1,122 @@
+version: '3.8'
+
+networks:
+  zbx_net:
+    driver: bridge
+    name: zbx_net
+    external: false
+  web_net:
+    name: web_net
+    external: true
+
+volumes:
+  zbx_mysql_data:
+    name: zbx_mysql_data
+  zbx_server_data:
+    name: zbx_server_data
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    restart: on-failure
+    volumes:
+      - 'zbx_mysql_data:/var/lib/data'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${ZABBIX_MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${ZABBIX_MYSQL_DATABASE}
+      - MYSQL_USER=${ZABBIX_MYSQL_USER}
+      - MYSQL_PASSWORD=${ZABBIX_MYSQL_PASSWORD}
+    networks:
+      zbx_net:
+
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:ubuntu-5.0.1
+    container_name: zabbix-server
+    restart: on-failure
+    ports:
+      - '10051:10051'
+    volumes:
+      - 'zbx_server_data:/usr/lib/zabbix/alertscripts'
+    environment:
+      - DB_SERVER_HOST=mysql
+      - MYSQL_DATABASE=${ZABBIX_MYSQL_DATABASE}
+      - MYSQL_USER=${ZABBIX_MYSQL_USER}
+      - MYSQL_PASSWORD=${ZABBIX_MYSQL_PASSWORD}
+    depends_on:
+      mysql:
+        condition: "service_started"
+    networks:
+      zbx_net:
+
+  zabbix-frontend:
+    image: zabbix/zabbix-web-apache-mysql:ubuntu-5.0.1
+    container_name: zabbix-frontend
+    restart: on-failure
+    environment:
+      - DB_SERVER_HOST=mysql
+      - MYSQL_DATABASE=${ZABBIX_MYSQL_DATABASE}
+      - MYSQL_USER=${ZABBIX_MYSQL_USER}
+      - MYSQL_PASSWORD=${ZABBIX_MYSQL_PASSWORD}
+      - PHP_TZ=America/Sao_Paulo
+    depends_on:
+      mysql:
+        condition: "service_started"
+    networks:
+      zbx_net:
+      web_net:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.zabbix.entrypoints=http"
+      - "traefik.http.routers.zabbix.rule=Host(`${ZBXGUI}.${DOMAIN_ADDRESS}`)"
+      - "traefik.http.routers.zabbix.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.zabbix-secure.entrypoints=https"
+      - "traefik.http.routers.zabbix-secure.rule=Host(`${ZBXGUI}.${DOMAIN_ADDRESS}`)"
+      - "traefik.http.routers.zabbix-secure.tls=true"
+      - "traefik.http.routers.zabbix-secure.tls.options=default"
+      - "traefik.http.routers.zabbix-secure.tls.certresolver=mycert"
+      - "traefik.http.services.zabbix.loadbalancer.server.port=8080"
+
+  zabbix-grafana:
+    image: grafana/grafana
+    container_name: zabbix-grafana
+    restart: on-failure
+    environment:
+      - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app
+    depends_on:
+      mysql:
+        condition: "service_started"
+      zabbix-server:
+        condition: "service_started"
+    networks:
+      zbx_net:
+      web_net:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.zbx_grafana.entrypoints=http"
+      - "traefik.http.routers.zbx_grafana.rule=Host(`${ZBXGRA}.${DOMAIN_ADDRESS}`)"
+      - "traefik.http.routers.zbx_grafana.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.zbx_grafana-secure.entrypoints=https"
+      - "traefik.http.routers.zbx_grafana-secure.rule=Host(`${ZBXGRA}.${DOMAIN_ADDRESS}`)"
+      - "traefik.http.routers.zbx_grafana-secure.tls=true"
+      - "traefik.http.routers.zbx_grafana-secure.tls.options=default"
+      - "traefik.http.routers.zbx_grafana-secure.tls.certresolver=mycert"
+      - "traefik.http.services.zbx_grafana.loadbalancer.server.port=3000"
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent2:alpine-5.0.1
+    container_name: zabbix-agent
+    user: root
+    restart: on-failure
+    privileged: true
+    volumes:
+      - /var/run:/var/run
+    environment:
+      - ZBX_HOSTNAME=observability-host
+      - ZBX_SERVER_HOST=zabbix-server
+    networks:
+      zbx_net:

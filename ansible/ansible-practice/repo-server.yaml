@@ -1,0 +1,8 @@
+---
+- hosts: repo-servers
+  become: true
+  gather_facts: yes
+  name: install and configure repo server
+  roles:
+  # install and configure repo server
+    - { role: repo-server, become: True, tags: repo_setup }
