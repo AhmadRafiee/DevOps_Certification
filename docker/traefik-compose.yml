@@ -34,11 +34,13 @@ services:
       - "--certificatesresolvers.mycert.acme.email=certs@mecan.ir"
       - "--certificatesresolvers.mycert.acme.storage=/acme/acme.json"
       - "--certificatesresolvers.mycert.acme.tlschallenge=true"
+      - "--providers.file.directory=/traefik"
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/traefik
       - traefik-acme:/acme
     networks:
       - web_net

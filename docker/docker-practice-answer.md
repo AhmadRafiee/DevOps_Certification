@@ -25,10 +25,10 @@ docker network ls
 ```
 
 ### Step4: create reverse proxy
-[traefik service compose file](registry-compose.yml)
+[traefik service compose file](traefik-compose.yml)
 
 ### Step5: create registry service
-[registry service compose file](traefik-compose.yml)
+[registry service compose file](registry-compose.yml)
 
 ### Step6: create elk services
 [elk service files](elk)

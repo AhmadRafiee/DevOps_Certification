@@ -1,0 +1,18 @@
+IMAGE_1804 = "bento/ubuntu-18.04"
+IMAGE_2004 = "bento/ubuntu-20.04"
+IMAGE_2204 = "bento/ubuntu-22.04"
+
+Vagrant.configure("2") do |config|
+  config.proxy.http = "http://192.168.56.1:8123"
+  config.proxy.https = "http://192.168.56.1:8123"
+  config.proxy.no_proxy = "localhost,127.0.0.1,192.168.56.0/24,repo.docker.mecan.ir,*.docker.mecan.ir"
+  config.vm.box = IMAGE_2204
+  config.vm.network "private_network", ip: "192.168.56.150"
+  config.vm.hostname = "docker-practice"
+  config.vm.provider "virtualbox" do |my_vm|
+    my_vm.name = "docker-practice"
+    my_vm.memory = 4096
+    my_vm.cpus = 4
+  end
+  config.vm.provision :shell, path: "bootstrap.sh"
+end
