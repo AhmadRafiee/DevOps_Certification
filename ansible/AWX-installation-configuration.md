@@ -14,7 +14,7 @@ curl -fsSL https://get.docker.com | bash
 
 ```bash
 apt update
-apt install -y python-pip python3-pip
+apt install -y python3-pip
 pip3 install docker
 pip3 install docker-compose
 ```
@@ -23,6 +23,7 @@ pip3 install docker-compose
 
 
 ```bash
+[ -d /var/services/ ] || mkdir /var/services/
 cd /var/services/
 git clone -b 17.1.0 https://github.com/ansible/awx.git
 ```
@@ -40,21 +41,21 @@ Edit and modify variables in awx/installer/inventory
 ```bash
 admin_password=ADMIN_PASSWORD
 pg_password=POSTGRES_PASSWORD
-secret_key=GENERATE_WITH_OPENSSL_COMMANDS
+secret_key=GENERATE_WITH_OPENSSL_COMMANDS # openssl rand -base64 30
 awx_alternate_dns_servers="8.8.8.8,8.8.4.4"
 postgres_data_dir="/var/lib/pgdocker"
-docker_compose_dir="/var/lib/awx/awxcompose"
+docker_compose_dir="/var/services/awx/awxcompose"
 project_data_dir=/var/lib/awx/projects
 ```
 Create directory for postgres
 ```bash
-mkdir /var/lib/pgdocker
+[ -d /var/lib/pgdocker ] || mkdir /var/lib/pgdocker
 ```
 
 
 ### Install AWX
 ```bash
-ansible-playbook -i ~/awx/installer/inventory ~/awx/installer/install.yml -v
+ansible-playbook -i installer/inventory installer/install.yml -v
 ```
 Example output:
 ```bash
@@ -84,6 +85,43 @@ a6c2c87729a1 ansible/awx:17.1.0 "/usr/bin/tini -- /b…" 42 minutes ago Up 2 min
 [root@centos2 ~]#
 ```
 
+## Configuration AWX web ssl
+install certbot for get certificate
+```bash
+which certbot || apt install -y certbot
+```
+
+Create certificate with certbot command
+```bash
+DOMAIN=awx.MeCan.ir
+EMAIL=ahmad@DockerMe.ir
+certbot certonly \
+    --standalone \
+    --non-interactive \
+    --agree-tos \
+    --no-eff-email \
+    --no-redirect \
+    --email ${EMAIL} \
+    --domains ${DOMAIN}
+```
+
+Add Domain variable on inventory file and certificate path
+```bash
+DOMAIN=awx.MeCan.ir
+cat installer/inventory | grep DOMAIN || sed -i '/host_port_ssl=443/a DOMAIN='${DOMAIN}'' installer/inventory
+sed -i 's/ssl_certificate=/ssl_certificate=\/etc\/letsencrypt\/archive\/${DOMAIN}\/fullchain1.pem/g' installer/inventory
+sed -i 's/ssl_certificate_key=/ssl_certificate_key=\/etc\/letsencrypt\/archive\/${DOMAIN}\/privkey1.pem/g' installer/inventory
+```
+
+Change server_name on nginx template
+```bash
+sed -i 's/server_name _;/server_name {{DOMAIN}};/g' installer/roles/local_docker/templates/nginx.conf.j2
+```
+
+### Install AWX again
+```bash
+ansible-playbook -i installer/inventory installer/install.yml -v
+```
 ## Configuration of AWX
 
 To run Ansible Playbook against Linux/Windows machine, we need to configure the following -
