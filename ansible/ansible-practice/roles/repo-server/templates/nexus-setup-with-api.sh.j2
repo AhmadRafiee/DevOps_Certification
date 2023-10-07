@@ -33,7 +33,7 @@ done
 echo "nexus writable state is ok"
 
 # get bootstrap password
-BOOTSTRAP_ADMIN_PASSWORD=$(docker exec -i nexus cat nexus-data/admin.password)
+BOOTSTRAP_ADMIN_PASSWORD=$(docker exec -i nexus cat /nexus-data/admin.password)
 echo ${BOOTSTRAP_ADMIN_PASSWORD}
 
 # change password
