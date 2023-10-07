@@ -1,0 +1,110 @@
+stages:
+  - build
+  - test
+  - deploy
+
+include:
+  - remote: "https://github.com/aquasecurity/trivy/raw/main/contrib/Trivy.gitlab-ci.yml"
+
+default:
+  image: docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+
+variables:
+  SSH_PORT: 8090
+  SSH_USER: root
+
+cache-test:
+  image: ubuntu:22.04
+  tags: [build]
+  stage: build
+  script:
+    - apt update ; apt upgrade -y
+    - apt install -y containerd docker-ce
+
+build-job:
+  stage: build
+  tags:
+    - build
+    - test
+  script:
+    - docker build -t reg.mecan.ir/devops/mapsa:$CI_COMMIT_SHORT_SHA .
+    - docker push reg.mecan.ir/devops/mapsa:$CI_COMMIT_SHORT_SHA
+
+test-image:
+  stage: test
+  tags: [test]
+  script:
+    - docker pull reg.mecan.ir/devops/mapsa:$CI_COMMIT_SHORT_SHA
+    - echo "test image"
+    - docker tag reg.mecan.ir/devops/mapsa:$CI_COMMIT_SHORT_SHA reg.mecan.ir/devops/mapsa:final
+    - docker push reg.mecan.ir/devops/mapsa:final
+
+load-test:
+  stage: test
+  tags: [test]
+  script:
+    - echo hi
+  parallel: 1
+
+Trivy_container_scanning:
+  stage: test
+  tags: [test]
+  variables:
+    IMAGE: reg.mecan.ir/devops/mapsa:$CI_COMMIT_SHORT_SHA
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+
+deploy-development:
+  stage: deploy
+  image: docker:dind
+  tags: [deploy]
+  variables:
+    DOMAIN: stage.mecan.ir
+    image_name: reg.mecan.ir/devops/mapsa:final
+    SERVER_NAME: 5.253.24.241
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY"
+    - ssh-add "$SSH_PRIVATE_KEY"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - |
+      ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${SSH_USER}@${SERVER_NAME} "
+      docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+      docker ps -a | grep development && docker rm -f development
+      docker run -d -e DOMAIN=stage.mecan.ir --name development -p 80:80 $image_name
+      "
+  environment:
+    name: development
+    url: https://$DOMAIN:80
+
+deploy-production:
+  stage: deploy
+  tags: [deploy]
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY"
+    - ssh-add "$SSH_PRIVATE_KEY"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  variables:
+    domain_name: product.mecan.ir
+    image_name: reg.mecan.ir/devops/mapsa:final
+    SERVER_NAME: 5.253.24.54
+  script:
+  - |
+      ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${SSH_USER}@${SERVER_NAME} "
+      docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+      docker ps -a | grep production && docker rm -f production
+      docker run -d -e DOMAIN=product.mecan.ir --name production -p 80:80 $image_name
+      "
+  environment:
+    name: production
+    url: https://$domain_name:80
+  when: manual
