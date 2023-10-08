@@ -14,4 +14,5 @@ discovery.type: single-node
 ## see https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-xpack.html
 xpack.license.self_generated.type: trial
 xpack.security.enabled: true
+xpack.security.authc.api_key.enabled: true
 xpack.monitoring.collection.enabled: true
