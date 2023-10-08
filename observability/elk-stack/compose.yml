@@ -1,8 +1,8 @@
 version: '3.8'
 
 volumes:
-  es_data:
-    name: es_data
+  elasticsearch_data:
+    name: elasticsearch_data
   filebeat_logstash_data:
     name: filebeat_logstash_data
   filebeat_elasticsearch_data:
@@ -25,19 +25,26 @@ networks:
 services:
   elasticsearch:
     image: elasticsearch:${ELK_VERSION}
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     container_name: elasticsearch
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     environment:
-      ES_JAVA_OPTS: "-Xmx1g -Xms1g"
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
       ELASTIC_USERNAME: ${ELASTICSEARCH_USERNAME}
       ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      cluster.name: es-cluster
+      node.name: elasticsearch
+      network.host: 0.0.0.0
+      http.port: 9200
+      cluster.name: docker-cluster
+      discovery.type: single-node
       bootstrap.memory_lock: "true"
       http.cors.enabled: "true"
-      xpack.security.authc.api_key.enabled: true
+      xpack.security.authc.api_key.enabled: "true"
+      xpack.license.self_generated.type: basic
+      xpack.security.enabled: "true"
+      xpack.monitoring.collection.enabled: "true"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
     ulimits:
       memlock:
         soft: -1
@@ -45,6 +52,10 @@ services:
     networks:
       - web_net
       - elk_net
+    healthcheck:
+      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      interval: 30s
+      timeout: 3s
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web_net"
@@ -61,14 +72,14 @@ services:
 
   logstash:
     image: logstash:${ELK_VERSION}
+    container_name: logstash
+    restart: ${RESTART_POLICY}
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
     ports:
       - "5044:5044"
       - "9600:9600"
-    container_name: logstash
-    restart: on-failure
     environment:
       LS_JAVA_OPTS: "-Xmx1g -Xms1g"
       ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
@@ -77,24 +88,27 @@ services:
     networks:
       - elk_net
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
 
   kibana:
     image: kibana:${ELK_VERSION}
     container_name: kibana
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     environment:
+      SERVERNAME: kibana
       ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
       ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
       ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
       KIBANA_PUBLIC_URL: ${KIBANA_PUBLIC_URL}
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
     networks:
       - web_net
       - elk_net
-    volumes:
-      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web_net"
@@ -114,7 +128,7 @@ services:
     user: root
     container_name: filebeat-logstash
     hostname: "filebeat-logstash-${HOSTNAME}"
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     command: ["--strict.perms=false"]
     environment:
       ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
@@ -129,13 +143,16 @@ services:
       - filebeat_logstash_data:/var/lib/filebeat/data
     networks:
       - elk_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   filebeat-elasticsearch:
     image: elastic/filebeat:${ELK_VERSION}
     user: root
     container_name: filebeat-elasticsearch
     hostname: "filebeat-elasticsearch-${HOSTNAME}"
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     command: ["--strict.perms=false"]
     environment:
       ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
@@ -150,6 +167,9 @@ services:
       - filebeat_elasticsearch_data:/var/lib/filebeat/data
     networks:
       - elk_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   auditbeat:
     image: elastic/auditbeat:${ELK_VERSION}
@@ -157,7 +177,7 @@ services:
     hostname: "auditbeat-${HOSTNAME}"
     user: root
     pid: host
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     cap_add:
       - AUDIT_CONTROL
       - AUDIT_READ
@@ -173,12 +193,15 @@ services:
       - auditbeat_data:/usr/share/auditbeat/data
     networks:
       - elk_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   metricbeat:
     image: elastic/metricbeat:${ELK_VERSION}
     hostname: "metricbeat-${HOSTNAME}"
     container_name: metricbeat
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     user: root
     volumes:
       - ./metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
@@ -195,50 +218,60 @@ services:
     command: ["--strict.perms=false", "-system.hostfs=/hostfs"]
     networks:
       - elk_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   packetbeat:
     image: elastic/packetbeat:${ELK_VERSION}
     hostname: "packetbeat-${HOSTNAME}"
     container_name: packetbeat
     user: root
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     volumes:
       - packetbeat_data:/usr/share/packetbeat/data
       - ./packetbeat/packetbeat.yml:/usr/share/packetbeat/packetbeat.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - ELASTICSEARCH_HOSTNAME=${ELASTICSEARCH_HOSTNAME}
-      - KIBANA_HOSTNAME=${KIBANA_HOSTNAME}
-      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
+      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
     cap_add:
       - NET_RAW
       - NET_ADMIN
     command: ["--strict.perms=false"]
     networks:
       - elk_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   heartbeat:
     image: elastic/heartbeat:${ELK_VERSION}
     hostname: "heartbeat-${HOSTNAME}"
     container_name: heartbeat
     user: root
-    restart: on-failure
+    restart: ${RESTART_POLICY}
     volumes:
       - ./heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
     environment:
-      - ELASTICSEARCH_HOSTNAME=${ELASTICSEARCH_HOSTNAME}
-      - KIBANA_HOSTNAME=${KIBANA_HOSTNAME}
-      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
+      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
+      KIBANA_PUBLIC_URL: ${KIBANA_PUBLIC_URL}
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
     command: ["--strict.perms=false"]
     networks:
       - elk_net
       - web_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   fleet:
     image: elastic/elastic-agent:${ELK_VERSION}
-    restart: unless-stopped
+    restart: ${RESTART_POLICY}
     container_name: fleet
     hostname: "${DOMAIN_NAME}"
     environment:
@@ -248,12 +281,15 @@ services:
       FLEET_SERVER_POLICY_ID: ${FLEET_SERVER_POLICY_ID}
     networks:
       - elk_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
   apm-server:
     image: elastic/apm-server:${ELK_VERSION}
     container_name: apm-server
     hostname: "apm-${HOSTNAME}"
-    restart: unless-stopped
+    restart: ${RESTART_POLICY}
     volumes:
       - ./apm-server/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
     environment:
@@ -263,3 +299,6 @@ services:
       ELASTICSEARCH_APM_SECRET_TOKEN: ${ELASTICSEARCH_APM_SECRET_TOKEN}
     networks:
       - elk_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy

@@ -17,7 +17,7 @@ output.elasticsearch:
 #============================= X-pack Monitoring =============================
 monitoring.enabled: true
 monitoring.elasticsearch:
-  protocol: "https"
+  protocol: "http"
   username: '${ELASTICSEARCH_USERNAME}'
   password: '${ELASTICSEARCH_PASSWORD}'
   hosts: '${ELASTICSEARCH_HOSTNAME}'

@@ -2,7 +2,7 @@ heartbeat.monitors:
 #Monitor all containers using an icmp ping
 - type: icmp
   schedule: '*/5 * * * * * *'
-  hosts: ["filebeat","metricbeat","packetbeat","elasticsearch","kibana","traefik", "elastic-agent", "auditbeat"]
+  hosts: ["filebeat-logstash", "filebeat-elasticsearch", "metricbeat","packetbeat","elasticsearch","kibana","traefik", "fleet", "auditbeat"]
   ipv4: true
   ipv6: true
   mode: any
@@ -25,7 +25,7 @@ heartbeat.monitors:
   check.response:
     status: 200
 
-#Monitor the Kibana instance with a http GET to / - checking for a 200 response code
+#Monitor the Kibana instance with a http GET to / - checking for a 302 response code
 - type: http
   enabled: true
   schedule: '@every 5s'
@@ -40,6 +40,23 @@ heartbeat.monitors:
     method: "GET"
   check.response:
     status: 302
+
+#Monitor the public urls over https with a GET to the /  - checking for a 200 response
+- type: http
+  enabled: true
+  schedule: '@every 5s'
+  urls:
+    - https://dockerme.ir
+    - https://sudoer.ir
+  ipv4: true
+  ipv6: true
+  mode: all
+  timeout: 5s
+  check.request:
+    method: "GET"
+  check.response:
+    status: 200
+  max_redirects: 2
 
 #========================== Elasticsearch output ===============================
 output.elasticsearch:
