@@ -236,16 +236,16 @@ services:
       - elk_net
       - web_net
 
-  elastic-agent:
+  fleet:
     image: elastic/elastic-agent:${ELK_VERSION}
     restart: unless-stopped
-    container_name: elastic-agent
-    hostname: "{{.Node.Hostname}}.${DOMAIN_NAME}"
+    container_name: fleet
+    hostname: "${DOMAIN_NAME}"
     environment:
       FLEET_SERVER_ENABLE: true
       FLEET_SERVER_ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOSTNAME}
-      FLEET_SERVER_SERVICE_TOKEN: "AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE2OTY3NjAyNDcyMzY6blkyUVN3SzBRMzJtUjVZSVI5d3dsQQ"
-      FLEET_SERVER_POLICY_ID: "499b5aa7-d214-5b5d-838b-3cd76469844e"
+      FLEET_SERVER_SERVICE_TOKEN: ${FLEET_SERVER_SERVICE_TOKEN}
+      FLEET_SERVER_POLICY_ID: ${FLEET_SERVER_POLICY_ID}
     networks:
       - elk_net
 
