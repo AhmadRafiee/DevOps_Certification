@@ -10,7 +10,7 @@ volumes:
 
 services:
   traefik:
-    image: traefik:v2.8.5
+    image: traefik:v2.10.4
     restart: always
     container_name: traefik
     command:

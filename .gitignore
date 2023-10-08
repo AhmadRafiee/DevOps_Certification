@@ -3,3 +3,4 @@
 .vagrant
 *.iso
 *iso
+.trunk
