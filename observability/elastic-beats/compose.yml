@@ -144,4 +144,3 @@ services:
     command: ["--strict.perms=false"]
     networks:
       - elk_net
-      - web_net

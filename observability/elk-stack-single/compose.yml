@@ -96,13 +96,23 @@ services:
     container_name: kibana
     restart: ${RESTART_POLICY}
     environment:
-      SERVERNAME: kibana
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      KIBANA_PUBLIC_URL: ${KIBANA_PUBLIC_URL}
+      - "SERVERNAME=kibana"
+      - "ELASTICSEARCH_HOSTNAME=${ELASTICSEARCH_HOSTNAME}"
+      - "ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}"
+      - "ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}"
+      - "KIBANA_PUBLIC_URL=${KIBANA_PUBLIC_URL}"
+      - "MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED=true"
+      - "XPACK_FLEET_ENABLED=true"
+      - "XPACK_FLEET_AGENTS_ENABLED=true"
+      - "XPACK_FLEET_AGENTS_ELASTICSEARCH_HOST=${ELASTICSEARCH_HOSTNAME}"
+      - "XPACK_FLEET_AGENTS_FLEET_SERVER_HOSTS=[\"http://fleet:8220\"]"
+      - "XPACK_FLEET_AGENTS_TLSCHECKDISABLED=true"
     volumes:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    healthcheck:
+      test: "curl -f http://localhost:5601/login | grep kbn-injected-metadata 2>&1 >/dev/null"
+      retries: 600
+      interval: 1s
     networks:
       - web_net
       - elk_net
@@ -122,6 +132,48 @@ services:
       - "traefik.http.routers.kibana-secure.tls.options=default"
       - "traefik.http.routers.kibana-secure.tls.certresolver=mycert"
       - "traefik.http.services.kibana.loadbalancer.server.port=5601"
+
+  fleet:
+    image: elastic/elastic-agent:${ELK_VERSION}
+    restart: ${RESTART_POLICY}
+    container_name: fleet
+    hostname: "${FLEET_SUB_DOMAIN}.${DOMAIN_NAME}"
+    environment:
+      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOSTNAME}
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+      FLEET_SERVER_ENABLE: true
+      FLEET_SERVER_ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOSTNAME}
+      FLEET_SERVER_INSECURE_HTTP: true
+      KIBANA_FLEET_SETUP: true
+      KIBANA_FLEET_HOST: ${KIBANA_HOSTNAME}
+      FLEET_SERVER_HOST: 0.0.0.0
+      FLEET_SERVER_PORT: 8220
+    networks:
+      - elk_net
+      - web_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    healthcheck:
+      test: "curl -f http://127.0.0.1:8220/api/status | grep HEALTHY 2>&1 >/dev/null"
+      retries: 12
+      interval: 5s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.fleet.entrypoints=http"
+      - "traefik.http.routers.fleet.rule=Host(`${FLEET_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.fleet.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.fleet-secure.entrypoints=https"
+      - "traefik.http.routers.fleet-secure.rule=Host(`${FLEET_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.fleet-secure.tls=true"
+      - "traefik.http.routers.fleet-secure.tls.options=default"
+      - "traefik.http.routers.fleet-secure.tls.certresolver=mycert"
+      - "traefik.http.services.fleet.loadbalancer.server.port=8220"
 
   filebeat-logstash:
     image: elastic/filebeat:${ELK_VERSION}
@@ -146,6 +198,8 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+      kibana:
+        condition: service_healthy
 
   filebeat-elasticsearch:
     image: elastic/filebeat:${ELK_VERSION}
@@ -169,6 +223,8 @@ services:
       - elk_net
     depends_on:
       elasticsearch:
+        condition: service_healthy
+      kibana:
         condition: service_healthy
 
   auditbeat:
@@ -196,6 +252,8 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+      kibana:
+        condition: service_healthy
 
   metricbeat:
     image: elastic/metricbeat:${ELK_VERSION}
@@ -220,6 +278,8 @@ services:
       - elk_net
     depends_on:
       elasticsearch:
+        condition: service_healthy
+      kibana:
         condition: service_healthy
 
   packetbeat:
@@ -246,6 +306,8 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+      kibana:
+        condition: service_healthy
 
   heartbeat:
     image: elastic/heartbeat:${ELK_VERSION}
@@ -268,21 +330,7 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-
-  fleet:
-    image: elastic/elastic-agent:${ELK_VERSION}
-    restart: ${RESTART_POLICY}
-    container_name: fleet
-    hostname: "${DOMAIN_NAME}"
-    environment:
-      FLEET_SERVER_ENABLE: true
-      FLEET_SERVER_ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOSTNAME}
-      FLEET_SERVER_SERVICE_TOKEN: ${FLEET_SERVER_SERVICE_TOKEN}
-      FLEET_SERVER_POLICY_ID: ${FLEET_SERVER_POLICY_ID}
-    networks:
-      - elk_net
-    depends_on:
-      elasticsearch:
+      kibana:
         condition: service_healthy
 
   apm-server:
