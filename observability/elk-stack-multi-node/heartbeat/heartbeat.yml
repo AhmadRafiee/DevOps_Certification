@@ -13,7 +13,7 @@ heartbeat.monitors:
 - type: http
   enabled: true
   schedule: '@every 5s'
-  urls: ["${ELASTICSEARCH_HOSTNAME}"]
+  urls: ${ELASTICSEARCH_HOSTNAME}
   ipv4: true
   ipv6: true
   mode: any
@@ -60,7 +60,7 @@ heartbeat.monitors:
 
 #========================== Elasticsearch output ===============================
 output.elasticsearch:
-  hosts: ["${ELASTICSEARCH_HOSTNAME}"]
+  hosts: ${ELASTICSEARCH_HOSTNAME}
   username: ${ELASTICSEARCH_USERNAME}
   password: ${ELASTICSEARCH_PASSWORD}
 

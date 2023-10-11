@@ -46,7 +46,7 @@ processors:
 
 #========================== Elasticsearch output ===============================
 output.elasticsearch:
-  hosts: ["${ELASTICSEARCH_HOSTNAME}"]
+  hosts: "${ELASTICSEARCH_HOSTNAME}"
   username: ${ELASTICSEARCH_USERNAME}
   password: ${ELASTICSEARCH_PASSWORD}
 
@@ -63,4 +63,3 @@ setup.kibana:
 #============================== Xpack Monitoring ===============================
 xpack.monitoring:
   enabled: true
-  elasticsearch:
