@@ -1,0 +1,66 @@
+#============================== Network device ================================
+packetbeat.interfaces.device: any
+
+#================================== Flows =====================================
+packetbeat.flows:
+  timeout: 30s
+  period: 10s
+
+#========================== Transaction protocols =============================
+packetbeat.protocols:
+- type: http
+  ports: [80, 8080, 5000]
+  send_headers: true
+  send_all_headers: true
+
+- type: tls
+  ports: [443]
+  send_certificates: false
+
+#=========================== Monitored processes ==============================
+packetbeat.procs:
+  enabled: false
+  monitored:
+    - process: pgsql
+      cmdline_grep: postgres
+
+#================================ Processors ===================================
+# For example, you can use the following processors to keep the fields that
+# contain CPU load percentages, but remove the fields that contain CPU ticks
+# values:
+processors:
+- include_fields:
+   fields: ["cpu"]
+- drop_fields:
+   fields: ["cpu.user", "cpu.system"]
+# The following example drops the events that have the HTTP response code 200:
+- drop_event:
+   when:
+      equals:
+          http.code: 200
+# The following example enriches each event with metadata from the cloud provider about the host machine.
+- add_docker_metadata:
+   host: "unix:///var/run/docker.sock"
+- add_cloud_metadata: ~
+- add_locale: ~
+
+#========================== Elasticsearch output ===============================
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTNAME}"]
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${ELASTICSEARCH_PASSWORD}
+
+#============================== Dashboards =====================================
+setup.dashboards:
+  enabled: true
+
+#============================== Kibana =========================================
+setup.kibana:
+  host: "${KIBANA_HOSTNAME}"
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${ELASTICSEARCH_PASSWORD}
+
+#============================== Xpack Monitoring ===============================
+xpack.monitoring:
+  enabled: true
+  elasticsearch:

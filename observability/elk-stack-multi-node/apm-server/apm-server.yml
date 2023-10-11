@@ -1,0 +1,24 @@
+################################ APM Server ################################
+apm-server:
+  host: "0.0.0.0:8200"
+  auth:
+    secret_token: '${ELASTICSEARCH_APM_SECRET_TOKEN}'
+  ssl.enabled: false
+
+#================================ Outputs =================================
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTNAME}'
+  enabled: true
+  protocol: "http"
+  username: '${ELASTICSEARCH_USERNAME}'
+  password: '${ELASTICSEARCH_PASSWORD}'
+  ssl.enabled: false
+
+#============================= X-pack Monitoring =============================
+monitoring.enabled: true
+monitoring.elasticsearch:
+  protocol: "http"
+  username: '${ELASTICSEARCH_USERNAME}'
+  password: '${ELASTICSEARCH_PASSWORD}'
+  hosts: '${ELASTICSEARCH_HOSTNAME}'
+  ssl.enabled: false
