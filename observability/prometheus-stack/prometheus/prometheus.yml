@@ -2,20 +2,20 @@ global:
   scrape_interval:     30s
   evaluation_interval: 30s
   external_labels:
-      monitor: 'prom'
+      monitor: prom
 
 rule_files:
-  - '/etc/prometheus/alerts/*.rules'
+  - /etc/prometheus/alerts/*.rules
 
 alerting:
   alertmanagers:
   - scheme: http
     static_configs:
     - targets:
-        - "alertmanager:9093"
+        - alertmanager:9093
 
 scrape_configs:
-  - job_name: 'prometheus'
+  - job_name: prometheus
     static_configs:
       - targets: ['localhost:9090']
 
@@ -27,21 +27,9 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
 
-  - job_name: 'blackbox-web'
-    metrics_path: '/probe'
-    params:
-      module: [http_2xx]
+  - job_name: 'blackbox_exporter'
     static_configs:
-      - targets: ['https://DockerMe.ir', 'https://Google.com', 'https://www.arvancloud.com']
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: target
-      - target_label: __address__
-        replacement: blackbox-exporter:9115
-      - target_label: region
-        replacement: "local"
+      - targets: ['blackbox-exporter:9115']
 
   - job_name: 'blackbox-ping'
     scrape_interval: 30s
@@ -49,7 +37,16 @@ scrape_configs:
     params:
       module: [icmp_ipv4]
     static_configs:
-      - targets: ['8.8.8.8', 'google.com']
+      - targets:
+          - 8.8.8.8
+          - google.com
+          - node-exporter
+          - blackbox-exporter
+          - cadvisor
+          - pushgateway
+          - alertmanager
+          - grafana
+          - prometheus
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

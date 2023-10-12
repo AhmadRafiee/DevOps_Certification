@@ -11,6 +11,7 @@ services:
     restart: ${RESTART_POLICY}
     container_name: elastic-agent
     hostname: "${HOSTNAME}.${DOMAIN_NAME}"
+    user: root
     environment:
       FLEET_ENROLLMENT_TOKEN: "${FLEET_ENROLLMENT_TOKEN}"
       FLEET_ENROLL: 1

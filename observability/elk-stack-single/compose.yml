@@ -57,18 +57,18 @@ services:
       interval: 30s
       timeout: 3s
     labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=web_net"
-      - "traefik.http.routers.elasticsearch.entrypoints=http"
-      - "traefik.http.routers.elasticsearch.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.elasticsearch.middlewares=https-redirect"
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.elasticsearch-secure.entrypoints=https"
-      - "traefik.http.routers.elasticsearch-secure.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.elasticsearch-secure.tls=true"
-      - "traefik.http.routers.elasticsearch-secure.tls.options=default"
-      - "traefik.http.routers.elasticsearch-secure.tls.certresolver=mycert"
-      - "traefik.http.services.elasticsearch.loadbalancer.server.port=9200"
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.elasticsearch.entrypoints=http
+      - traefik.http.routers.elasticsearch.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.elasticsearch.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.elasticsearch-secure.entrypoints=https
+      - traefik.http.routers.elasticsearch-secure.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.elasticsearch-secure.tls=true
+      - traefik.http.routers.elasticsearch-secure.tls.options=default
+      - traefik.http.routers.elasticsearch-secure.tls.certresolver=mycert
+      - traefik.http.services.elasticsearch.loadbalancer.server.port=9200
 
   logstash:
     image: logstash:${ELK_VERSION}
