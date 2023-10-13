@@ -29,7 +29,7 @@ For a complete options list check the loki logging driver options
 logging:
   driver: loki
   options:
-    loki-url: "https://DockerMe:sdfsdkffkljwerwlkewlkecweefw@loki.observability.mecan.ir/loki/api/v1/push"
+    loki-url: "https://<LOKI_USERNAME>:<LOKI_PASSWORD>@<LOKI_URL>/loki/api/v1/push"
 ```
 
 #### Daemon.json
@@ -49,7 +49,7 @@ Don’t forget to restart the docker daemon afterwards.
     "debug" : true,
     "log-driver": "loki",
     "log-opts": {
-        "loki-url": "https://DockerMe:sdfsdkffkljwerwlkewlkecweefw@loki.observability.mecan.ir/loki/api/v1/push"
+        "loki-url": "https://<LOKI_USERNAME>:<LOKI_PASSWORD>@<LOKI_URL>/loki/api/v1/push"
     }
 }
 ```
