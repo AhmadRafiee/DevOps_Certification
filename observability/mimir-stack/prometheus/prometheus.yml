@@ -1,0 +1,60 @@
+global:
+  scrape_interval:     30s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: MeCan
+    namespace: MeCan
+
+rule_files:
+  - /etc/prometheus/alerts/rules.yaml
+  - /etc/prometheus/alerts/*.rules
+
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets:
+        - alertmanager:9093
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'grafana'
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  - job_name: 'traefik'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['traefik:8082']
+
+  - job_name: MeCan/mimir
+    static_configs:
+      - targets: ["mimir1:8080"]
+        labels:
+          pod: "mimir1"
+      - targets: ["mimir2:8080"]
+        labels:
+          pod: "mimir2"
+      - targets: ["mimir3:8080"]
+        labels:
+          pod: "mimir3"
+
+remote_write:
+  - url: http://load-balancer:9009/api/v1/push
+    # Add X-Scope-OrgID header so that Mimir knows what tenant the remote write data should be stored in.
+    # In this case, our tenant is "MeCan"
+    headers:
+      X-Scope-OrgID: MeCan
