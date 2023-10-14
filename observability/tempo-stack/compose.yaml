@@ -1,0 +1,115 @@
+version: "3.8"
+
+networks:
+  app_net:
+    external: false
+    name: app_net
+  web_net:
+    external: true
+    name: web_net
+
+volumes:
+  grafana_data:
+    name: grafana_data
+  prometheus_data:
+    name: prometheus_data
+  tempo_data:
+    name: tempo_data
+
+services:
+  tempo:
+    image: grafana/tempo:main-67fd171
+    container_name: tempo
+    hostname: tempo
+    restart: ${RESTART_POLICY}
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo_data:/tmp/tempo
+    ports:
+      - "14268:14268"   # jaeger ingest
+      - "3200:3200"     # tempo
+      - "9095:9095"     # tempo grpc
+      - "4317:4317"     # otlp grpc
+      - "4318:4318"     # otlp http
+      - "9411:9411"     # zipkin
+    networks:
+      - app_net
+
+  k6-tracing:
+    image: ghcr.io/grafana/xk6-client-tracing:v0.0.2
+    container_name: k6-tracing
+    hostname: k6-tracing
+    restart: ${RESTART_POLICY}
+    environment:
+      - ENDPOINT=tempo:4317
+    depends_on:
+      - tempo
+    networks:
+      - app_net
+
+  grafana:
+    image: grafana/grafana:10.1.5
+    restart: ${RESTART_POLICY}
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/:/etc/grafana/provisioning/
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SMTP_ENABLED=true
+      - GF_INSTALL_PLUGINS=${GRAFANA_INSTALL_PLUGINS}
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_USERS_DEFAULT_THEME=light
+      - GF_LOG_MODE=console
+      - GF_LOG_LEVEL=critical
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    networks:
+      - web_net
+      - app_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.grafana.entrypoints=http
+      - traefik.http.routers.grafana.rule=Host(`${GRASUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.grafana.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.grafana-secure.entrypoints=https
+      - traefik.http.routers.grafana-secure.rule=Host(`${GRASUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.grafana-secure.tls=true
+      - traefik.http.routers.grafana-secure.tls.options=default
+      - traefik.http.routers.grafana-secure.tls.certresolver=mycert
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+
+  prometheus:
+    image: prom/prometheus:v2.47.1
+    restart: ${RESTART_POLICY}
+    container_name: prometeheus
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus:/etc/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --log.level=error
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+    networks:
+      - web_net
+      - app_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.prometheus.entrypoints=http
+      - traefik.http.routers.prometheus.rule=Host(`${PROSUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.prometheus.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.prometheus-secure.entrypoints=https
+      - traefik.http.routers.prometheus-secure.rule=Host(`${PROSUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.prometheus-secure.tls=true
+      - traefik.http.routers.prometheus-secure.tls.options=default
+      - traefik.http.routers.prometheus-secure.middlewares=web-auth
+      - traefik.http.routers.prometheus-secure.tls.certresolver=mycert
+      - traefik.http.services.prometheus.loadbalancer.server.port=9090
