@@ -258,13 +258,15 @@ BLOB_STORE_NAME=docker
 1. Change bootstrap password with new admin password
 2. Delete default maven repository
 3. Delete default nuget repository
-4. Disable anonymous access
+4. Enable anonymous access
 5. Activate realms for docker login to registry
 6. Create role for new user
 7. Create new user for repository usage
 8. Create docker blob store for docker repository on minio object storage
 9. Create docker proxy repository for mirror registry
-10. Check all settings
+10. Create apt proxy for debian 12 main
+11. Create apt proxy for debian 12 security
+12. Check all settings
 
 **Run script for nexus config with this command:**
 
@@ -275,6 +277,46 @@ cd nexus
 # run bash script
 bash ./nexus-setup-with-api.sh
 ```
+
+#### After the Nexus setup is complete you can use for apt and docker mirror repository:
+
+**Set mirror registry for docker service:**
+
+```bash
+# check and change docker configuration
+cat /etc/docker/daemon.json
+{
+    "registry-mirrors": ["https://hub.mecan.ir"]
+}
+
+# restart docker service
+systemctl restart docker
+systemctl status docker
+```
+
+**Set apt mirror:**
+
+```bash
+# check and change apt configuration
+rm -rf /etc/apt/sources.list.d/*
+ls /etc/apt/sources.list.d/
+
+# create apt repository
+cat <<EOF > /etc/apt/sources.list.d/MeCan.list
+deb https://repo.mecan.ir/repository/debian/ bookworm main
+deb https://repo.mecan.ir/repository/debian/ bookworm-updates main
+deb https://repo.mecan.ir/repository/debian/ bookworm-backports main
+deb https://repo.mecan.ir/repository/debian-security/ bookworm-security main
+EOF
+
+# check repository file
+cat /etc/apt/sources.list.d/MeCan.list
+
+# update and upgrade debian 12
+apt update
+apt upgrade -y
+```
+
 
 ## Gitlab service setup and config:
 

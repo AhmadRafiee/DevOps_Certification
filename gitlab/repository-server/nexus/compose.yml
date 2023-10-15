@@ -43,4 +43,4 @@ services:
       - traefik.http.routers.hubdocker-secure.tls.options=default
       - traefik.http.routers.hubdocker-secure.service=hubdocker-secure
       - traefik.http.routers.hubdocker-secure.tls.certresolver=mycert
-      - traefik.http.services.hubdocker-secure.loadbalancer.server.port=8090
+      - traefik.http.services.hubdocker-secure.loadbalancer.server.port=1404
