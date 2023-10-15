@@ -1,0 +1,46 @@
+version: '3.8'
+
+networks:
+  web_net:
+    external: true
+    name: web_net
+
+volumes:
+  nexus_data:
+    name: nexus_data
+
+services:
+  nexus:
+    image: sonatype/nexus3:${NEXUS_IMAGE_TAG}
+    container_name: nexus
+    hostname: nexus-${HOSTNAME}
+    restart: ${RESTART_POLICY}
+    volumes:
+      - nexus_data:/nexus-data
+    networks:
+      - web_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.repo.entrypoints=http
+      - traefik.http.routers.repo.rule=Host(`${NEXUS_SUB_DOMAIN}.${DOMAIN}`)
+      - traefik.http.routers.repo.service=repo-secure
+      - traefik.http.routers.repo.middlewares=https-redirect
+      - traefik.http.routers.repo-secure.entrypoints=https
+      - traefik.http.routers.repo-secure.rule=Host(`${NEXUS_SUB_DOMAIN}.${DOMAIN}`)
+      - traefik.http.routers.repo-secure.tls=true
+      - traefik.http.routers.repo-secure.tls.options=default
+      - traefik.http.routers.repo-secure.service=repo-secure
+      - traefik.http.routers.repo-secure.tls.certresolver=mycert
+      - traefik.http.services.repo-secure.loadbalancer.server.port=8081
+      - traefik.http.routers.hubdocker.entrypoints=http
+      - traefik.http.routers.hubdocker.rule=Host(`${HUB_SUB_DOMAIN}.${DOMAIN}`)
+      - traefik.http.routers.hubdocker.middlewares=https-redirect
+      - traefik.http.routers.hubdocker-secure.entrypoints=https
+      - traefik.http.routers.hubdocker.service=hubdocker-secure
+      - traefik.http.routers.hubdocker-secure.rule=Host(`${HUB_SUB_DOMAIN}.${DOMAIN}`)
+      - traefik.http.routers.hubdocker-secure.tls=true
+      - traefik.http.routers.hubdocker-secure.tls.options=default
+      - traefik.http.routers.hubdocker-secure.service=hubdocker-secure
+      - traefik.http.routers.hubdocker-secure.tls.certresolver=mycert
+      - traefik.http.services.hubdocker-secure.loadbalancer.server.port=8090

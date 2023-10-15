@@ -45,9 +45,8 @@ The exercises, tools, and scenarios for learning DevOps.
   - [zabbix stack scenario](observability/zabbix-stack)
 
 # In Progress Task:
-
-# Reference:
-  - https://www.ansible.com/
+  - update readme file
+  - write readme on observability
 
 # 🔗 Links
 [![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/)

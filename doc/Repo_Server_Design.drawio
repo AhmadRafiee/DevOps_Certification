@@ -1,0 +1,111 @@
+<mxfile host="Electron" modified="2023-10-14T11:15:31.643Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.0.2 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36" etag="WkZirU2rmR6jSSaEPkri" version="22.0.2" type="device">
+  <diagram name="Page-1" id="ziHmGceFmZ8IrDc1lhzU">
+    <mxGraphModel dx="957" dy="581" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-20" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;arcSize=29;dashed=1;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="133" y="110" width="503" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontFamily=Helvetica;fontSize=12;fontColor=default;endArrow=classic;endFill=1;" parent="1" source="z6N8PKe_HhuRY13bzHWO-1" target="z6N8PKe_HhuRY13bzHWO-33" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-1" value="Objec Storage&lt;br&gt;[Minio]" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="300" y="280" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="z6N8PKe_HhuRY13bzHWO-2" target="z6N8PKe_HhuRY13bzHWO-1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-2" value="Package Repository&lt;br&gt;[Nexus]" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="200" y="205" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="z6N8PKe_HhuRY13bzHWO-3" target="z6N8PKe_HhuRY13bzHWO-1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-3" value="Git Repository&lt;br&gt;[Gitlab]" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1;align=center;" parent="1" vertex="1">
+          <mxGeometry x="397" y="205" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=12;fontColor=default;" parent="1" source="z6N8PKe_HhuRY13bzHWO-4" target="z6N8PKe_HhuRY13bzHWO-1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontFamily=Helvetica;fontSize=12;fontColor=default;" parent="1" source="z6N8PKe_HhuRY13bzHWO-4" target="z6N8PKe_HhuRY13bzHWO-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontFamily=Helvetica;fontSize=12;fontColor=default;" parent="1" source="z6N8PKe_HhuRY13bzHWO-4" target="z6N8PKe_HhuRY13bzHWO-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-4" value="Reverse Proxy&lt;br&gt;[Traefik]" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="300" y="130" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-10" value="Store Backup and&lt;br&gt;&amp;nbsp;Registry data" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="460" y="260" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-12" value="Store Docke and&amp;nbsp;&lt;br&gt;Apt Blob" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="170" y="260" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="z6N8PKe_HhuRY13bzHWO-61" target="z6N8PKe_HhuRY13bzHWO-4" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="225" y="55.028571428571354" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-25" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;arcSize=29;dashed=1;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="229" y="370" width="273" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=12;fontColor=default;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="z6N8PKe_HhuRY13bzHWO-26" target="z6N8PKe_HhuRY13bzHWO-4" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="620" y="160" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="650" y="479" />
+              <mxPoint x="650" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-26" value="Replication Objec Storage&lt;br&gt;[Minio]" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="300" y="459" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontFamily=Helvetica;fontSize=12;fontColor=default;" parent="1" source="z6N8PKe_HhuRY13bzHWO-33" target="z6N8PKe_HhuRY13bzHWO-26" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-33" value="Reverse Proxy&lt;br&gt;[Traefik]" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="300" y="394" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-42" value="Minio Replication Path" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="380" y="335" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-43" value="Minio Replication Path" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="502" y="446.5" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-45" value="Repo Server" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="258" y="85" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-46" value="Backup Server" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="248" y="347" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-52" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://seeklogo.com/images/G/gitlab-logo-757620E430-seeklogo.com.png;" parent="1" vertex="1">
+          <mxGeometry x="568" y="200.00000000000003" width="55" height="50.79" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-53" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://assets-global.website-files.com/5f10ed4c0ebf7221fb5661a5/5f2af61146c55b6e172fa5b3_NexusRepo_Icon.png;" parent="1" vertex="1">
+          <mxGeometry x="143" y="200" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-54" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Traefik.logo.png/1200px-Traefik.logo.png;" parent="1" vertex="1">
+          <mxGeometry x="242.87" y="117.5" width="47.13" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-58" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://cdn.hackernoon.com/images/img-y3233jx.png;" parent="1" vertex="1">
+          <mxGeometry x="257.01" y="458.99999999999994" width="18.85" height="38.08" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-59" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://cdn.hackernoon.com/images/img-y3233jx.png;" parent="1" vertex="1">
+          <mxGeometry x="271.15" y="281.91999999999996" width="18.85" height="38.08" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-60" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Traefik.logo.png/1200px-Traefik.logo.png;" parent="1" vertex="1">
+          <mxGeometry x="242.87" y="381.5" width="47.13" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-61" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://cdn-icons-png.flaticon.com/512/2019/2019400.png;" parent="1" vertex="1">
+          <mxGeometry x="193" y="30" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="z6N8PKe_HhuRY13bzHWO-62" value="End Users" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="271.15" y="40" width="80" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

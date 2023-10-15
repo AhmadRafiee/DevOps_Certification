@@ -1,0 +1,162 @@
+version: '3.8'
+
+networks:
+  web_net:
+    name: web_net
+    external: true
+  app_net:
+    name: app_net
+    external: true
+
+volumes:
+  gitlab_backup:
+    name: gitlab_backup
+  gitlab_data:
+    name: gitlab_data
+  gitlab_logs:
+    name: gitlab_logs
+  gitlab_config:
+    name: gitlab_config
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:${GITLAB_IMAGE_TAG}
+    restart: always
+    container_name: gitlab
+    hostname: ${GIT_DOMAIN}
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # Gitlab external url
+        external_url 'https://${GIT_DOMAIN}'
+
+        # Change the initial default admin password
+        gitlab_rails['initial_root_password'] = "${GITLAB_ROOT_PASSWORD}"
+        gitlab_rails['display_initial_root_password'] = "false"
+        gitlab_rails['store_initial_root_password'] = "false"
+
+        # Nginx Configuration
+        nginx['client_max_body_size'] = '10240m'
+        nginx['gzip_enabled'] = true
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        nginx['proxy_cache'] = 'gitlab'
+        nginx['http2_enabled'] = true
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        nginx['http2_enabled'] = false
+        nginx['proxy_set_headers'] = {
+          "Host" => "$$http_host",
+          "X-Real-IP" => "$$remote_addr",
+          "X-Forwarded-For" => "$$proxy_add_x_forwarded_for",
+          "X-Forwarded-Proto" => "https",
+          "X-Forwarded-Ssl" => "on"
+        }
+
+        # ZOHO SMTP configuration
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = "${SMTP_ADDRESS}"
+        gitlab_rails['smtp_port'] = "${SMTP_PORT}"
+        gitlab_rails['smtp_authentication'] = "plain"
+        gitlab_rails['smtp_enable_starttls_auto'] = true
+        gitlab_rails['smtp_user_name'] = "${SMTP_USER}"
+        gitlab_rails['smtp_password'] = "${SMTP_PASS}"
+        gitlab_rails['smtp_domain'] = "${SMTP_ADDRESS}"
+        gitlab_rails['gitlab_email_from'] = "${SMTP_USER}"
+
+        # Configure a failed authentication ban
+        gitlab_rails['rack_attack_git_basic_auth'] = {
+          'enabled' => false,
+          'ip_whitelist' => ["127.0.0.1"],
+          'maxretry' => 10,
+          'findtime' => 60,
+          'bantime' => 3600
+        }
+
+        # Disable unuse services
+        prometheus['enable'] = false
+        grafana['enable'] = false
+        alertmanager['enable'] = false
+        pgbouncer_exporter['enable'] = false
+        puma['exporter_enabled'] = false
+        gitlab_exporter['enable'] = false
+        node_exporter['enable'] = false
+        sidekiq['metrics_enabled'] = false
+        redis_exporter['enable'] = false
+        postgres_exporter['enable'] = false
+
+        # gitlab backup config
+        gitlab_rails['manage_backup_path'] = true
+        gitlab_rails['backup_path'] = "/var/opt/gitlab/backups"
+        gitlab_rails['backup_archive_permissions'] = 0644
+        gitlab_rails['backup_keep_time'] = 604800
+        gitlab_rails['env'] = {"SKIP" => "registry"}
+
+        # Configure Minio storage for the Backup Location
+        gitlab_rails['backup_upload_connection'] = {
+          'provider' => 'AWS',
+          'region' => 'eu-west-1',
+          'aws_access_key_id' => '${MINIO_ACCESS_KEY}',
+          'aws_secret_access_key' => '${MINIO_SECRET_KEY}',
+          'endpoint' => '${MINIO_ENDPOINT_URL}',
+          'path_style' => true
+        }
+        gitlab_rails['backup_upload_remote_directory'] = '${MINIO_BACKUP_BUCKET_NAME}'
+
+        # Gitlab registry config
+        registry_external_url 'https://${RIGISTRY_SUB}.${DOMAIN_ADDRESS}'
+        registry_nginx['listen_port'] = 5100
+        registry_nginx['listen_https'] = false
+        registry_nginx['proxy_set_headers'] = {
+          "Host" => "$$http_host",
+          "X-Real-IP" => "$$remote_addr",
+          "X-Forwarded-For" => "$$proxy_add_x_forwarded_for",
+          "X-Forwarded-Proto" => "https",
+          "X-Forwarded-Ssl" => "on"
+        }
+
+        # Configure Minio storage for the Container Registry Backend
+        registry['storage'] = {
+            's3' => {
+              'accesskey' => '${MINIO_ACCESS_KEY}',
+              'secretkey' => '${MINIO_SECRET_KEY}',
+              'bucket' => '${MINIO_REGISTRY_BUCKET_NAME}',
+              'region' => 'us-east-1',
+              'regionendpoint' => '${MINIO_ENDPOINT_URL}'
+            }
+          }
+    labels:
+      # gitlab web config
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.gitlab.entrypoints=http
+      - traefik.http.routers.gitlab.rule=Host(`${GIT_DOMAIN}`)
+      - traefik.http.routers.gitlab.middlewares=https-redirect
+      - traefik.http.routers.gitlab-secure.entrypoints=https
+      - traefik.http.routers.gitlab-secure.rule=Host(`${GIT_DOMAIN}`)
+      - traefik.http.routers.gitlab-secure.tls=true
+      - traefik.http.routers.gitlab-secure.tls.options=default
+      - traefik.http.routers.gitlab.service=gitlab
+      - traefik.http.routers.gitlab-secure.service=gitlab
+      - traefik.http.routers.gitlab-secure.tls.certresolver=mycert
+      - traefik.http.services.gitlab.loadbalancer.server.port=80
+      # gitlab registry config
+      - traefik.http.routers.gitlab-registry.entrypoints=http
+      - traefik.http.routers.gitlab-registry.rule=Host(`${RIGISTRY_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.gitlab-registry.middlewares=https-redirect
+      - traefik.http.routers.gitlab-registry.service=gitlab-registry
+      - traefik.http.routers.gitlab-registry-secure.service=gitlab-registry
+      - traefik.http.routers.gitlab-registry-secure.entrypoints=https
+      - traefik.http.routers.gitlab-registry-secure.rule=Host(`${RIGISTRY_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.gitlab-registry-secure.tls=true
+      - traefik.http.routers.gitlab-registry-secure.tls.options=default
+      - traefik.http.routers.gitlab-registry-secure.tls.certresolver=mycert
+      - traefik.http.services.gitlab-registry.loadbalancer.server.port=5100
+    volumes:
+      - gitlab_backup:/var/opt/gitlab/backups
+      - gitlab_data:/var/opt/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_config:/etc/gitlab
+    ports:
+      - "22:22"
+    networks:
+      - web_net
