@@ -155,10 +155,12 @@ Let’s create a new bucket with the command:
 ```bash
 mc mb MeCan/gitlab-backups
 mc mb MeCan/gitlab-registries
+mc mb MeCan/nexus-docker-blob
 
 # You should see the following in the output:
 Bucket created successfully 'MeCan/gitlab-backups'.
 Bucket created successfully 'MeCan/gitlab-registries'.
+Bucket created successfully 'MeCan/nexus-docker-blob'.
 
 # You can view a list of current buckets with the command:
 mc ls MeCan
@@ -240,7 +242,15 @@ REPO_USERNAME="repo"
 REPO_PASSWORD="<NEXUS_REPO_PASSWORD>"
 REPO_EMAIL="ahmad@MeCan.ir"
 
-DOCKER_REPO_BLOBSTORE="docker"
+
+# Minio information
+MINIO_ACCESS_KEY=<MINIO_ACCESS_KEY>
+MINIO_SECRET_KEY=<MINIO_SECRET_KEY>
+MINIO_ENDPOINT_URL=https://io.repository.mecan.ir
+MINIO_BLOBSTORE_BUCKET_NAME=nexus-docker-blob
+
+# blob store name
+BLOB_STORE_NAME=docker
 ```
 
 #### Bash script Nexus cofiguration steps:
@@ -252,7 +262,7 @@ DOCKER_REPO_BLOBSTORE="docker"
 5. Activate realms for docker login to registry
 6. Create role for new user
 7. Create new user for repository usage
-8. Create docker blob store for docker repository
+8. Create docker blob store for docker repository on minio object storage
 9. Create docker proxy repository for mirror registry
 10. Check all settings
 

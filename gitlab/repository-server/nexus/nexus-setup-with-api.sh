@@ -1,15 +1,23 @@
 #!/bin/bash
 
-# variable section
+# Variable section
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="<NEXUS_ADMIN_PASSWORD>"
 NEXUS_URL="https://repo.mecan.ir"
 
+# New user information
 REPO_USERNAME="repo"
 REPO_PASSWORD="<NEXUS_REPO_PASSWORD>"
 REPO_EMAIL="ahmad@MeCan.ir"
 
-DOCKER_REPO_BLOBSTORE="docker"
+# Minio information
+MINIO_ACCESS_KEY=<MINIO_ACCESS_KEY>
+MINIO_SECRET_KEY=<MINIO_SECRET_KEY>
+MINIO_ENDPOINT_URL=https://io.repository.mecan.ir
+MINIO_BLOBSTORE_BUCKET_NAME=nexus-docker-blob
+
+# blob store name
+BLOB_STORE_NAME=docker
 # -----------------------------------------------------
 # writable state
 curl -k -X 'GET' \
@@ -136,18 +144,37 @@ curl -k -X 'POST' \
   ]
 }'
 
-curl -k -X 'POST' \
-  ''${NEXUS_URL}'/service/rest/v1/blobstores/file' \
+# Create blob store with s3 backend
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/blobstores/s3' \
   -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
+  -H 'NX-ANTI-CSRF-TOKEN: 0.4675223549012617' \
+  -H 'X-Nexus-UI: true' \
   -d '{
+  "name": "'${BLOB_STORE_NAME}'",
   "softQuota": {
     "type": "spaceRemainingQuota",
-    "limit": 102400
+    "limit": 10
   },
-  "path": "'${DOCKER_REPO_BLOBSTORE}'",
-  "name": "'${DOCKER_REPO_BLOBSTORE}'"
+  "bucketConfiguration": {
+    "bucket": {
+      "region": "DEFAULT",
+      "name": "'${MINIO_BLOBSTORE_BUCKET_NAME}'",
+      "prefix": "",
+      "expiration": 3
+    },
+    "bucketSecurity": {
+      "accessKeyId": "'${MINIO_ACCESS_KEY}'",
+      "secretAccessKey": "'${MINIO_SECRET_KEY}'"
+    },
+    "advancedBucketConnection": {
+      "endpoint": "'${MINIO_ENDPOINT_URL}'",
+      "forcePathStyle": true,
+      "maxConnectionPoolSize": 0
+    }
+  }
 }'
 
 # create docker proxy repository
@@ -160,7 +187,7 @@ curl -k -X 'POST' \
   "name": "hub",
   "online": true,
   "storage": {
-    "blobStoreName": "'${DOCKER_REPO_BLOBSTORE}'",
+    "blobStoreName": "'${BLOB_STORE_NAME}'",
     "strictContentTypeValidation": true
   },
   "cleanup": {
@@ -169,7 +196,7 @@ curl -k -X 'POST' \
     ]
   },
   "proxy": {
-    "remoteUrl": "https://mirror.gcr.io",
+    "remoteUrl": "https://registry-1.docker.io",
     "contentMaxAge": 1440,
     "metadataMaxAge": 1440
   },
