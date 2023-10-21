@@ -121,3 +121,14 @@ Examples of addresses:
 Remember that for listening on ports below 1024 - at least on Linux/Unix systems - you need to have root/administrator rights.
 
 The HTTP server is opened on the selected host:port without any authorization. If you plan to bind the metrics server to a public interface then you should consider to use your firewall to limit access to this server or add an HTTP proxy which will add the authorization and access control layer.
+
+**Sample prometheus configs:**
+```bash
+scrape_configs:
+  - job_name: 'runner'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['<Runner_Address>:9252']
+```
+
+**Grafana dashboard:** you can use `grafana-dashboard/GitlabRunnerMetrics.json` dashboard in your grafana instance.
