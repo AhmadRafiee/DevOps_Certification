@@ -211,6 +211,23 @@ variables:
   VERSION: v1.0.6
 ```
 
+#### Protected variables:
+
+set protected variable in **Project ⇒ Settings ⇒ CI/CD ⇒ Variables**
+```bash
+MINIO_ACCESS_KEY
+MINIO_SECRET_KEY
+POSTGRES_PASSWORD
+POSTGRES_USER
+SSH_PRIVATE_KEY
+
+# Group variables (inherited)
+REGISTRY_PASS
+REGISTRY_USER
+REGISTRY_URL
+```
+![gitlab protected variables](images/gitlab-protected-variables.png)
+
 #
 **before_script:** Use before_script to define an array of commands that should run before each job’s script commands, but after artifacts are restored.
 
@@ -677,6 +694,22 @@ postgres-check-backup:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
 ```
+
+#### Create Gitlab schedule:
+Use scheduled pipelines to run GitLab CI/CD pipelines at regular intervals.
+
+Add a pipeline schedule:
+To add a pipeline schedule:
+1. On the left sidebar, select Search or go to and find your project.
+2. Select Build > Pipeline schedules.
+3. Select New schedule and fill in the form.
+  - Interval Pattern: Select one of the preconfigured intervals, or enter a custom interval in cron notation. You can use any cron value, but scheduled pipelines cannot run more frequently than the instance’s maximum scheduled pipeline frequency.
+  - Target branch or tag: Select the branch or tag for the pipeline.
+  - Variables: Add any number of CI/CD variables to the schedule. These variables are available only when the scheduled pipeline runs, and not in any other pipeline run.
+If the project already has the maximum number of pipeline schedules, you must delete unused schedules before you can add another.
+
+In this case, create a backup and restore it to the staging node using a scheduled GitLab pipeline.
+![gitlab pipeline schedule](images/gitlab-pipeline-schedule.png)
 
 #### View the final pipeline structure in this picture:
 ![final pipeline structure](images/final-pipeline-structure.png)
