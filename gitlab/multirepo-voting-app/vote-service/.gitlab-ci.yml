@@ -1,0 +1,67 @@
+stages:
+  - build
+  - test
+  - deploy
+  - release
+
+default:
+  image: reg.mecan.ir/vote/runner-image:dind
+  before_script:
+    - docker login -u ${REGISTRY_USER} -p ${REGISTRY_PASS} ${REGISTRY_URL}
+
+variables:
+  IMAGE_PATH: ${REGISTRY_URL}/voting-service
+  VERSION: v1.0.1
+
+vote-build-job:
+  stage: build
+  script:
+    - docker build -t ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA .
+    - docker push ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA
+  retry: 2
+
+vote-test-image:
+  stage: test
+  needs: ["vote-build-job"]
+  script:
+    - docker pull ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA
+    - echo "vote image test"
+    - docker tag ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA ${IMAGE_PATH}/vote:${VERSION}
+    - docker push ${IMAGE_PATH}/vote:${VERSION}
+  retry: 2
+
+vote-service-image-scan:
+  stage: test
+  image: reg.mecan.ir/vote/runner-image:trivy
+  needs: ["vote-test-image"]
+  variables:
+    VOTE_IMAGE: ${IMAGE_PATH}/vote:${VERSION}
+  script:
+    - trivy --exit-code 0 --cache-dir .trivycache/ --no-progress --format template --template "@/tmp/trivy-gitlab.tpl" -o gl-container-scanning-report.json $VOTE_IMAGE
+  cache:
+    paths:
+      - /cache/.trivycache/
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+  retry: 2
+
+deploy-to-pre-product:
+  stage: deploy
+  needs: ["vote-service-image-scan"]
+  trigger:
+    project: vote/voiting-devops
+    branch: main
+
+release_job:
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  stage: release
+  rules:
+    - if: $CI_COMMIT_TAG
+  inherit:
+    default: false
+  script:
+    - echo "running release_job"
+  release:
+    tag_name: '$CI_COMMIT_TAG'
+    description: '$CI_COMMIT_TAG'
