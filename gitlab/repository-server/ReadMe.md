@@ -156,11 +156,13 @@ Let’s create a new bucket with the command:
 mc mb MeCan/gitlab-backups
 mc mb MeCan/gitlab-registries
 mc mb MeCan/nexus-docker-blob
+mc mb MeCan/nexus-apt-blob
 
 # You should see the following in the output:
 Bucket created successfully 'MeCan/gitlab-backups'.
 Bucket created successfully 'MeCan/gitlab-registries'.
 Bucket created successfully 'MeCan/nexus-docker-blob'.
+Bucket created successfully 'MeCan/nexus-apt-blob'.
 
 # You can view a list of current buckets with the command:
 mc ls MeCan

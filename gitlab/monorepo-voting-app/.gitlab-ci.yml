@@ -1,0 +1,333 @@
+stages:
+  - release
+  - build
+  - test
+  - deploy
+  - post-deploy
+  - schedules
+
+default:
+  image: reg.mecan.ir/vote/runner-image:main
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+
+variables:
+  SSH_PORT: 8090
+  SSH_USER: root
+  IMAGE_PATH: reg.mecan.ir/vote/monorepo-vote-app
+  SERVICE_PATH: /opt/services/vote-services
+  BACKUP_PATH: /opt/services/BACKUP
+  VERSION: v1.0.6
+
+vote-build-job:
+  stage: build
+  script:
+    - cd vote
+    - docker build -t ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA .
+    - docker push ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA
+  except:
+    - schedules
+  retry: 2
+
+vote-test-image:
+  stage: test
+  needs: ["vote-build-job"]
+  script:
+    - docker pull ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA
+    - echo "vote image test"
+    - docker tag ${IMAGE_PATH}/vote:$CI_COMMIT_SHORT_SHA ${IMAGE_PATH}/vote:${VERSION}
+    - docker push ${IMAGE_PATH}/vote:${VERSION}
+  except:
+    - schedules
+
+result-build-job:
+  stage: build
+  script:
+    - cd result
+    - docker build -t ${IMAGE_PATH}/result:$CI_COMMIT_SHORT_SHA .
+    - docker push ${IMAGE_PATH}/result:$CI_COMMIT_SHORT_SHA
+  except:
+    - schedules
+  retry: 2
+
+result-test-image:
+  stage: test
+  needs: ["result-build-job"]
+  script:
+    - docker pull ${IMAGE_PATH}/result:$CI_COMMIT_SHORT_SHA
+    - echo "result image test"
+    - docker tag ${IMAGE_PATH}/result:$CI_COMMIT_SHORT_SHA ${IMAGE_PATH}/result:${VERSION}
+    - docker push ${IMAGE_PATH}/result:${VERSION}
+  except:
+    - schedules
+
+worker-build-job:
+  stage: build
+  script:
+    - cd worker
+    - docker build -t ${IMAGE_PATH}/worker:$CI_COMMIT_SHORT_SHA .
+    - docker push ${IMAGE_PATH}/worker:$CI_COMMIT_SHORT_SHA
+  except:
+    - schedules
+  retry: 2
+
+worker-test-image:
+  stage: test
+  needs: ["worker-build-job"]
+  script:
+    - docker pull ${IMAGE_PATH}/worker:$CI_COMMIT_SHORT_SHA
+    - echo "worker image test"
+    - docker tag ${IMAGE_PATH}/worker:$CI_COMMIT_SHORT_SHA ${IMAGE_PATH}/worker:${VERSION}
+    - docker push ${IMAGE_PATH}/worker:${VERSION}
+  except:
+    - schedules
+
+voting-app-scan-image:
+  stage: test
+  image: reg.mecan.ir/vote/runner-image:trivy
+  needs: ["vote-test-image","result-test-image","worker-test-image"]
+  variables:
+    VOTE_IMAGE: ${IMAGE_PATH}/vote:${VERSION}
+    RESULT_IMAGE: ${IMAGE_PATH}/result:${VERSION}
+    WORKER_IMAGE: ${IMAGE_PATH}/worker:${VERSION}
+  script:
+    - trivy --exit-code 0 --cache-dir .trivycache/ --no-progress --format template --template "@/tmp/trivy-gitlab.tpl" -o gl-container-scanning-report.json $VOTE_IMAGE
+    - trivy --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --no-progress $VOTE_IMAGE
+    - trivy --exit-code 0 --cache-dir .trivycache/ --no-progress --format template --template "@/tmp/trivy-gitlab.tpl" -o gl-container-scanning-report.json $RESULT_IMAGE
+    - trivy --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --no-progress $RESULT_IMAGE
+    - trivy --exit-code 0 --cache-dir .trivycache/ --no-progress --format template --template "@/tmp/trivy-gitlab.tpl" -o gl-container-scanning-report.json $WORKER_IMAGE
+    - trivy --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --no-progress $WORKER_IMAGE
+  cache:
+    paths:
+      - /cache/.trivycache/
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+  except:
+    - schedules
+  retry: 2
+
+deploy-to-pre-product:
+  stage: deploy
+  image: reg.mecan.ir/vote/runner-image:ssh
+  variables:
+    DOMAIN: pre-product.mecan.ir
+    SERVER_NAME: pre-product.mecan.ir
+    HOSTNAME: pre-product
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - chmod 400 ${SSH_PRIVATE_KEY}
+    - ssh-add ${SSH_PRIVATE_KEY}
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - |
+      # Create directory if not exist
+      ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${SSH_USER}@${SERVER_NAME} "
+      [ -d ${SERVICE_PATH} ] || mkdir -p ${SERVICE_PATH}
+      "
+      # change env file
+      sed -i "s/FQDN/${DOMAIN}/g" .env
+      sed -i "s/SERVER_NAME/${HOSTNAME}/g" .env
+      sed -i "s/PIPELINE_ID/${VERSION}/g" .env
+      # move compose and env file to server
+      scp -o StrictHostKeyChecking=no -P${SSH_PORT} .env ${SSH_USER}@${SERVER_NAME}:${SERVICE_PATH}/
+      scp -o StrictHostKeyChecking=no -P${SSH_PORT} compose.yml ${SSH_USER}@${SERVER_NAME}:${SERVICE_PATH}/
+      # deploy service on server
+      ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${SSH_USER}@${SERVER_NAME} "
+      docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+      cd ${SERVICE_PATH}
+      docker compose pull
+      docker compose up -d
+      "
+  environment:
+    name: pre-product
+    url: https://vote.$DOMAIN
+  except:
+    - schedules
+
+deploy-to-production:
+  stage: deploy
+  image: reg.mecan.ir/vote/runner-image:ssh
+  variables:
+    DOMAIN: production.mecan.ir
+    SERVER_NAME: production.mecan.ir
+    HOSTNAME: production
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY"
+    - ssh-add "$SSH_PRIVATE_KEY"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - |
+      # Create directory if not exist
+      ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${SSH_USER}@${SERVER_NAME} "
+      [ -d ${SERVICE_PATH} ] || mkdir -p ${SERVICE_PATH}
+      "
+      # change env file
+      sed -i "s/FQDN/${DOMAIN}/g" .env
+      sed -i "s/SERVER_NAME/${HOSTNAME}/g" .env
+      sed -i "s/PIPELINE_ID/${VERSION}/g" .env
+      # move compose and env file to server
+      scp -o StrictHostKeyChecking=no -P${SSH_PORT} .env ${SSH_USER}@${SERVER_NAME}:${SERVICE_PATH}/
+      scp -o StrictHostKeyChecking=no -P${SSH_PORT} compose.yml ${SSH_USER}@${SERVER_NAME}:${SERVICE_PATH}/
+      # deploy service on server
+      ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${SSH_USER}@${SERVER_NAME} "
+      docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+      cd ${SERVICE_PATH}
+      docker compose pull
+      docker compose up -d
+      "
+  environment:
+    name: production
+    url: https://vote.$DOMAIN
+  when: manual
+  except:
+    - schedules
+
+release_job:
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  stage: release
+  rules:
+    - if: $CI_COMMIT_TAG
+  inherit:
+    default: false
+  script:
+    - echo "running release_job"
+  release:
+    tag_name: '$CI_COMMIT_TAG'
+    description: '$CI_COMMIT_TAG'
+
+loadtest-image-build:
+  stage: post-deploy
+  image: reg.mecan.ir/vote/runner-image:dind
+  variables:
+    DOMAIN: pre-product.mecan.ir
+    SERVER_NAME: pre-product.mecan.ir
+    HOSTNAME: pre-product
+  script:
+    - cd seed-data
+    - docker build -t ${IMAGE_PATH}/seed-data:main .
+    - docker push ${IMAGE_PATH}/seed-data:main
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+      changes:
+        - seed-data/*
+
+loadtest-pre-product:
+  stage: post-deploy
+  image: reg.mecan.ir/vote/runner-image:dind
+  variables:
+    DOMAIN: pre-product.mecan.ir
+    HOSTNAME: pre-product
+    DOCKER_RUN: docker run -id --name loadtest-${HOSTNAME} ${IMAGE_PATH}/seed-data:main bash
+    DOCKER_EXEC: docker exec -i loadtest-${HOSTNAME}
+  inherit:
+    default: false
+  script:
+    - ${DOCKER_RUN}
+    - ${DOCKER_EXEC} python make-data.py
+    - ${DOCKER_EXEC} ab -n 100 -c 50 -p posta -T "application/x-www-form-urlencoded" https://vote.${DOMAIN}/
+    - ${DOCKER_EXEC} ab -n 1000 -c 50 -p postb -T "application/x-www-form-urlencoded" https://vote.${DOMAIN}/
+  after_script:
+    - docker rm -f loadtest-${HOSTNAME}
+  except:
+    - schedules
+
+loadtest-production:
+  stage: post-deploy
+  image: reg.mecan.ir/vote/runner-image:dind
+  variables:
+    DOMAIN: production.mecan.ir
+    HOSTNAME: production
+    DOCKER_RUN: docker run -id --name loadtest-${HOSTNAME} ${IMAGE_PATH}/seed-data:main bash
+    DOCKER_EXEC: docker exec -i loadtest-${HOSTNAME}
+  inherit:
+    default: false
+  script:
+    - ${DOCKER_RUN}
+    - ${DOCKER_EXEC} python make-data.py
+    - ${DOCKER_EXEC} ab -n 100 -c 50 -p posta -T "application/x-www-form-urlencoded" https://vote.${DOMAIN}/
+    - ${DOCKER_EXEC} ab -n 10000 -c 50 -p postb -T "application/x-www-form-urlencoded" https://vote.${DOMAIN}/
+  after_script:
+    - docker rm -f loadtest-${HOSTNAME}
+  when: manual
+  except:
+    - schedules
+
+postgres-create-backup:
+  stage: schedules
+  image: reg.mecan.ir/vote/runner-image:ssh
+  variables:
+    DOMAIN: production.mecan.ir
+    SERVER_NAME: production.mecan.ir
+    HOSTNAME: production
+    MINIO_ENDPOINT: https://io.repository.mecan.ir
+    MINIO_ALIAS_NAME: MeCan
+    MINIO_API_VERSION: S3v4
+    MINIO_BUCKET: voiting-app-backup
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY"
+    - ssh-add "$SSH_PRIVATE_KEY"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - mc alias set ${MINIO_ALIAS_NAME} ${MINIO_ENDPOINT} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} --api ${MINIO_API_VERSION}
+    - mc alias list
+    - mc --version
+  script:
+    - |
+      ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${SSH_USER}@${SERVER_NAME} "
+      # Create directory if not exist
+      [ -d ${BACKUP_PATH} ] || mkdir -p ${BACKUP_PATH}
+      cd ${BACKUP_PATH}
+
+      # Create postgresql backup
+      docker exec -i -e PGPASSWORD=${POSTGRES_PASSWORD} postgresql-production /usr/local/bin/pg_dumpall --host=localhost --port=5432 --username=${POSTGRES_USER} | gzip -9 > postgres_backup_${CI_PIPELINE_ID}.sql.gz
+      "
+      # move backup file to runner
+      scp -o StrictHostKeyChecking=no -P${SSH_PORT} ${SSH_USER}@${SERVER_NAME}:${BACKUP_PATH}/postgres_backup_${CI_PIPELINE_ID}.sql.gz .
+      mc cp --continue --recursive postgres_backup_${CI_PIPELINE_ID}.sql.gz ${MINIO_ALIAS_NAME}/${MINIO_BUCKET}/
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+postgres-check-backup:
+  stage: schedules
+  image: reg.mecan.ir/vote/runner-image:dind
+  needs: ["postgres-create-backup"]
+  variables:
+    POSTGRES_USER: ${POSTGRES_USER}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    MINIO_ENDPOINT: https://io.repository.mecan.ir
+    MINIO_ALIAS_NAME: MeCan
+    MINIO_API_VERSION: S3v4
+    MINIO_BUCKET: voiting-app-backup
+  before_script:
+    - apk add --no-cache ca-certificates
+    - wget https://dl.minio.io/client/mc/release/linux-amd64/mc
+    - chmod +x mc
+    - mv mc /usr/local/bin/
+    - mc --version
+    - mc alias set ${MINIO_ALIAS_NAME} ${MINIO_ENDPOINT} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} --api ${MINIO_API_VERSION}
+    - mc alias list
+  script:
+    - mc cp --continue --recursive ${MINIO_ALIAS_NAME}/${MINIO_BUCKET}/postgres_backup_${CI_PIPELINE_ID}.sql.gz .
+    - gunzip postgres_backup_${CI_PIPELINE_ID}.sql.gz
+    - cp postgres_backup_${CI_PIPELINE_ID}.sql psql-test
+    - docker run -d --name psql-test -e POSTGRES_USER=${POSTGRES_USER} -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} postgres:15-alpine
+    - docker cp psql-test psql-test:/opt
+    - sleep 10
+    - cat psql-test/psql-test.sh | docker exec -i psql-test bash
+    - docker cp psql-test:/opt/psql-test/restore.log .
+  artifacts:
+    paths:
+    - ./restore.log
+    expire_in: 1 week
+  after_script:
+    - docker rm -f psql-test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
