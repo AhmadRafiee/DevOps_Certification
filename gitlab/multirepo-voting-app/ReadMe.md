@@ -1,8 +1,8 @@
-# Voting App Monorepo Design and Detailed Configuration.
+# Voting App Monorepo Design and Detailed Configuration
 
 ![Repository server and gitlab runner design](images/repository-and-runner-design.png)
 
-This design requires a repository server and GitLab Runner. The Runner service executes all jobs and updates results in the GitLab CI/CD section. The GitLab Runner executor uses Docker and runs the GitLab Runner process within a container.
+This design requires a repository and Runner servers. The Runner service executes all jobs and updates results in the GitLab CI/CD section. The GitLab Runner executor uses Docker and runs the GitLab Runner process within a container.
 
 ## Voting app:
 A simple distributed application running across multiple Docker containers.
@@ -131,7 +131,7 @@ stages:
 
 ### On Microservice project for example result-service:
 
-##### For example, we always need to log-in to the registry and set the default image for all jobs:
+##### For example, we always need to log-in to the registry and set the default image for all jobs. In this case, the repository is outside of the GitLab instance.
 ```bash
 default:
   image: reg.mecan.ir/vote/runner-image:dind
@@ -147,12 +147,6 @@ It looks like you're suggesting a strategy for pipeline efficiency, recommending
 ![runner image tags](images/runner-image-tags.png)
 
 **Gitlab predefined variables:** In GitLab CI/CD, predefined variables are environmental variables that GitLab automatically sets for every pipeline and job. These variables provide useful information about the pipeline, runner, and repository, among other things. You can use predefined variables in your GitLab CI/CD configuration without having to define them yourself.
-
-**CI_REGISTRY_USER:** The username to push containers to the project’s GitLab Container Registry. Only available if the Container Registry is enabled for the project.
-
-**CI_JOB_TOKEN:** A token to authenticate with certain API endpoints. The token is valid as long as the job is running.
-
-**CI_REGISTRY:** The address of the GitLab Container Registry. Only available if the Container Registry is enabled for the project. This variable includes a :port value if one is specified in the registry configuration.
 
 **CI_COMMIT_SHORT_SHA:** The first eight characters of CI_COMMIT_SHA.
 
@@ -198,7 +192,7 @@ REGISTRY_URL
 - Use except to define when a job does not run.
 
 
-##### You want to specify a section specifically for building the "vote" Docker image and pushing it to the registry.
+##### You want to specify a section specifically for building the "result-service" Docker image and pushing it to the registry.
 ```bash
 result-build-job:
   stage: build
@@ -212,7 +206,7 @@ In this configuration, a job is created and executed whenever code is pushed to 
 #
 **needs:** Use needs to execute jobs out-of-order. Relationships between jobs that use needs can be visualized as a directed acyclic graph. You can ignore stage ordering and run some jobs without waiting for others to complete. Jobs in multiple stages can run concurrently.
 
-##### You want to specify a section specifically for testing the "vote" Docker image, tag image to new tag and pushing it to the registry.
+##### You want to specify a section specifically for testing the "result-service" Docker image, tag image to new tag and pushing it to the registry.
 ```bash
 result-test-image:
   stage: test
@@ -261,7 +255,7 @@ The artifacts are sent to GitLab after the job finishes. They are available for 
 By default, jobs in later stages automatically download all the artifacts created by jobs in earlier stages. You can control artifact download behavior in jobs with dependencies.
 When using the needs keyword, jobs can only download artifacts from the jobs defined in the needs configuration. Job artifacts are only collected for successful jobs by default, and artifacts are restored after caches.
 
-##### In this section, scan all service images with Trivy. If critical vulnerabilities are found, it will break the pipeline and prevent the application from being deployed to the environments.
+##### In this section, scan result-service images with Trivy. If critical vulnerabilities are found, it will break the pipeline and prevent the application from being deployed to the environments.
 ```bash
 result-service-image-scan:
   stage: test
@@ -280,7 +274,8 @@ result-service-image-scan:
   retry: 2
 ```
 
-##### In this section, deploy the application to the pre-production environment. Override the default configuration and use the specific image. Create the environment and deploy the job to this environment. We use a single long command instead of multiple short commands.
+#
+##### In this section, deploy the application to the pre-production environment. Override the default configuration and use the specific image. Create the environment and deploy the job to this environment.
 
 ```bash
 deploy-to-pre-product:
@@ -291,8 +286,10 @@ deploy-to-pre-product:
     branch: main
 ```
 
+#
 ### On `voting-devops` project pipeline:
 
+#
 #### Environment Component Detail:
 In the design, deploy these components per environment.
 
@@ -341,6 +338,18 @@ REGISTRY_URL
 
 **Split long commands:** You can split long commands into multiline commands to improve readability with | (literal) and > (folded) YAML multiline block scalar indicators.
 
+**before_script:** Use before_script to define an array of commands that should run before each job’s script commands, but after artifacts are restored.
+
+**script:** Use script to specify commands for the runner to execute. All jobs except trigger jobs require a script keyword.
+
+**after_script:** Use after_script to define an array of commands that run after each job, including failed jobs.
+
+**retry:** Use retry to configure how many times a job is retried if it fails. If not defined, defaults to 0 and jobs do not retry. When a job fails, the job is processed up to two more times, until it succeeds or reaches the maximum number of retries.
+
+**only / except:** You can use only and except to control when to add jobs to pipelines.
+- Use only to define when a job runs.
+- Use except to define when a job does not run.
+
 ##### In this section, deploy the application to the pre-production environment. Override the default configuration and use the specific image. Create the environment and deploy the job to this environment. We use a single long command instead of multiple short commands.
 
 ```bash
@@ -384,19 +393,6 @@ deploy-to-pre-product:
   except:
     - schedules
 ```
-
-#
-**before_script:** Use before_script to define an array of commands that should run before each job’s script commands, but after artifacts are restored.
-
-**script:** Use script to specify commands for the runner to execute. All jobs except trigger jobs require a script keyword.
-
-**after_script:** Use after_script to define an array of commands that run after each job, including failed jobs.
-
-**retry:** Use retry to configure how many times a job is retried if it fails. If not defined, defaults to 0 and jobs do not retry. When a job fails, the job is processed up to two more times, until it succeeds or reaches the maximum number of retries.
-
-**only / except:** You can use only and except to control when to add jobs to pipelines.
-- Use only to define when a job runs.
-- Use except to define when a job does not run.
 
 #
 **when:** Use when to configure the conditions for when jobs run. If not defined in a job, the default value is when: on_success.
@@ -664,5 +660,6 @@ In this case, create a backup and restore it to the staging node using a schedul
 
 #
 #### View the final pipeline structure in this picture:
-![final pipeline structure](images/final-pipeline-structure.png)
+![final result-service pipeline structure](images/result-service-pipeline.png)
+![final vote-devops pipeline structure](images/vote-devops-pipeline.png)
 ![schedules pipeline structure](images/schedules-pipeline.png)
