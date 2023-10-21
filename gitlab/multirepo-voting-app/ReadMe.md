@@ -1,4 +1,4 @@
-# Voting App Monorepo Design and Detailed Configuration
+# Voting App Multi-repo Design and Detailed Configuration
 
 ![Repository server and gitlab runner design](images/repository-and-runner-design.png)
 
