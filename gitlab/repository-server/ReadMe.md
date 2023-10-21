@@ -3,11 +3,12 @@
 ## Repository Server Design
 
 The diagram below illustrates the relationship between these service on repository server:
-![Architecture diagram for repository server](../../doc/Repo_Server_Design.drawio.png)
+![Architecture diagram for repository server](../../doc/Repo_Server_Design_V1.png)
 
 ### Prerequisites and resource management:
 
 **1. Hardening OS**
+
 **2. Install docker and docker-compose-plugin**
   To install the latest stable versions of Docker CLI, Docker Engine, and their dependencies:
 ```bash
