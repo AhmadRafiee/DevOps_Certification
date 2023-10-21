@@ -1,0 +1,50 @@
+stages:
+    - build
+
+default:
+    image: docker:dind
+    before_script:
+        - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+
+variables:
+    IMAGE_PATH: reg.mecan.ir/vote
+
+build-runner-image:
+    stage: build
+    script:
+        - cd dind-image
+        - docker build -t ${IMAGE_PATH}/runner-image:dind .
+        - docker push ${IMAGE_PATH}/runner-image:dind
+    only:
+        changes:
+            - dind-image/*
+
+build-trivy-image:
+    stage: build
+    script:
+        - cd trivy-image
+        - docker build -t ${IMAGE_PATH}/runner-image:trivy .
+        - docker push ${IMAGE_PATH}/runner-image:trivy
+    only:
+        changes:
+            - trivy-image/*
+
+build-ssh-image:
+    stage: build
+    script:
+        - cd ssh-image
+        - docker build -t ${IMAGE_PATH}/runner-image:ssh .
+        - docker push ${IMAGE_PATH}/runner-image:ssh
+    only:
+        changes:
+            - ssh-image/*
+
+build-tools-image:
+    stage: build
+    script:
+        - cd tools-image
+        - docker build -t ${IMAGE_PATH}/runner-image:tools .
+        - docker push ${IMAGE_PATH}/runner-image:tools
+    only:
+        changes:
+            - tools-image/*
