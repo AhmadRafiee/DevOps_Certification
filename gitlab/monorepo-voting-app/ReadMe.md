@@ -695,6 +695,7 @@ postgres-check-backup:
     - if: $CI_PIPELINE_SOURCE == "schedule"
 ```
 
+#
 #### Create Gitlab schedule:
 Use scheduled pipelines to run GitLab CI/CD pipelines at regular intervals.
 
@@ -711,6 +712,7 @@ If the project already has the maximum number of pipeline schedules, you must de
 In this case, create a backup and restore it to the staging node using a scheduled GitLab pipeline.
 ![gitlab pipeline schedule](images/gitlab-pipeline-schedule.png)
 
+#
 #### View the final pipeline structure in this picture:
 ![final pipeline structure](images/final-pipeline-structure.png)
 ![schedules pipeline structure](images/schedules-pipeline.png)
