@@ -1,0 +1,14 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: test
+servers: 1
+agents: 2
+registries:
+  create:
+    name: MeCanRepo
+  config: |
+    mirrors:
+      "hub.mecan.ir":
+        endpoint:
+          - https://hub.mecan.ir

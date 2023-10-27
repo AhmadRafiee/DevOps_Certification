@@ -1,0 +1,40 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: MeCan
+servers: 3
+agents: 3
+kubeAPI:
+  host: "single-node.kube.mecan.ir"
+  hostIP: "127.0.0.1"
+  hostPort: "6445"
+image: rancher/k3s:v1.20.4-k3s1
+ports:
+  - port: 8080:80
+    nodeFilters:
+      - loadbalancer
+registries:
+  config: |
+    mirrors:
+      "hub.mecan.ir":
+        endpoint:
+          - https://hub.mecan.ir
+hostAliases:
+  - ip: 188.121.102.157
+    hostnames:
+      - single-node.kube.mecan.ir
+options:
+  k3s:
+    extraArgs:
+      - arg: "--tls-san=single-node.kube.mecan.ir"
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
+  runtime:
+    gpuRequest: all
+    ulimits:
+      - name: nofile
+        soft: 26677
+        hard: 26677

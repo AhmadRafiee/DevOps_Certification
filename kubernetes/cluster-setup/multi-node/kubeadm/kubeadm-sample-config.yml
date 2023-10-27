@@ -1,0 +1,81 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: ${master1_ip}
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: ${master1_name}
+  taints:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+  extraArgs:
+    authorization-mode: "Node,RBAC"
+  certSANs:
+    - "${master1_ip}"
+    - "${master2_ip}"
+    - "${master3_ip}"
+    - "${master1_name}"
+    - "${master2_name}"
+    - "${master3_name}"
+    - "${vip_api_name}"
+    - "${vip_api_name}.${domain_name}"
+    - "${master1_name}.${domain_name}"
+    - "${master2_name}.${domain_name}"
+    - "${master3_name}.${domain_name}"
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+etcd:
+  local:
+    imageRepository: "quay.io/coreos"
+    imageTag: "v3.5.9"
+    dataDir: "/var/lib/etcd"
+    serverCertSANs:
+      - "${master1_ip}"
+      - "${master2_ip}"
+      - "${master3_ip}"
+      - "${master1_name}"
+      - "${master2_name}"
+      - "${master3_name}"
+      - "${vip_api_name}"
+      - "${vip_api_name}.${domain_name}"
+      - "${master1_name}.${domain_name}"
+      - "${master2_name}.${domain_name}"
+      - "${master3_name}.${domain_name}"
+    peerCertSANs:
+      - "${master1_ip}"
+      - "${master2_ip}"
+      - "${master3_ip}"
+      - "${master1_name}"
+      - "${master2_name}"
+      - "${master3_name}"
+      - "${vip_api_name}"
+      - "${vip_api_name}.${domain_name}"
+      - "${master1_name}.${domain_name}"
+      - "${master2_name}.${domain_name}"
+      - "${master3_name}.${domain_name}"
+imageRepository: registry.k8s.io
+kind: ClusterConfiguration
+kubernetesVersion: 1.26.5
+controlPlaneEndpoint: "${vip_api_name}.${domain_name}:6443"
+networking:
+  dnsDomain: cluster.local
+  serviceSubnet: "10.233.0.0/18"
+  podSubnet: "10.233.64.0/18"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd

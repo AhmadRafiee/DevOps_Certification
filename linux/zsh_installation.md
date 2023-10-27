@@ -4,6 +4,7 @@ sudo apt update
 sudo apt upgrade
 ```
 Install prerequisite packages zsh
+```bash
 sudo apt install -y zsh
 ```
 

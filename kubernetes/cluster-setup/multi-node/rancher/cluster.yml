@@ -1,0 +1,75 @@
+nodes:
+  - address: 192.168.56.101
+    port: 22
+    role: ['controlplane', 'etcd', 'worker']
+    hostname_override: "master1"
+    user: vagrant
+  - address: 192.168.56.102
+    port: 22
+    role: ['controlplane', 'etcd', 'worker']
+    hostname_override: "master2"
+    user: vagrant
+  - address: 192.168.56.103
+    port: 22
+    role: ['controlplane', 'etcd', 'worker']
+    hostname_override: "master3"
+    user: vagrant
+
+services:
+  kube-api:
+    audit_log:
+      enabled: true
+      configuration:
+        max_age: 6
+        max_backup: 6
+        max_size: 110
+        path: /var/log/kube-audit/audit-log.json
+        format: json
+        policy:
+          apiVersion: audit.k8s.io/v1 # This is required.
+          kind: Policy
+          omitStages:
+            - "RequestReceived"
+          rules:
+            - level: RequestResponse
+              resources:
+              - group: ""
+                resources: ["pods"]
+    service_cluster_ip_range: 10.43.0.0/16
+    service_node_port_range: 30000-32767
+  kube-controller:
+    cluster_cidr: 10.42.0.0/16
+
+  kubelet:
+    cluster_domain: cluster.local
+    extra_args:
+      max-pods: 250
+      feature-gates: RotateKubeletServerCertificate=true
+
+network:
+  plugin: calico
+
+authentication:
+  strategy: x509
+  sans:
+    - "192.168.56.100"
+    - "192.168.56.101"
+    - "192.168.56.102"
+    - "192.168.56.103"
+    - "master.kube.mecan.ir"
+    - "master1.kube.mecan.ir"
+    - "master2.kube.mecan.ir"
+    - "master3.kube.mecan.ir"
+
+authorization:
+  mode: rbac
+
+ignore_docker_version: true
+kubernetes_version: "v1.25.5-rancher1-1"
+cluster_name: "MeCan"
+
+private_registries:
+  - url: repo.rke.mecan.ir
+    user: MeCan
+    password: yYdU3w6DbbN9QsximSPBkRAN6Syrs7
+    is_default: true
