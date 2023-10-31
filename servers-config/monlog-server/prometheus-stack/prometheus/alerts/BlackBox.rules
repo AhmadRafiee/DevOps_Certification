@@ -1,0 +1,57 @@
+groups:
+- name: BlackBox_Alerts
+  rules:
+
+  - alert: ProbeFailed
+    expr: probe_success == 0
+    for: 5m
+    labels:
+      severity: error
+    annotations:
+      summary: "Probe failed (instance {{ $labels.instance }})"
+      description: "Probe failed\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: StatusCode
+    expr: probe_http_status_code <= 199 OR probe_http_status_code >= 402
+    for: 5m
+    labels:
+      severity: error
+    annotations:
+      summary: "Status Code (instance {{ $labels.instance }})"
+      description: "HTTP status code is not 200-402\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: SslCertificateWillExpireSoon
+    expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 30
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "SSL certificate will expire soon (instance {{ $labels.instance }})"
+      description: "SSL certificate expires in 30 days\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: SslCertificateHasExpired
+    expr: probe_ssl_earliest_cert_expiry - time()  <= 0
+    for: 5m
+    labels:
+      severity: error
+    annotations:
+      summary: "SSL certificate has expired (instance {{ $labels.instance }})"
+      description: "SSL certificate has expired already\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: BlackboxSlowRequests
+    expr: probe_http_duration_seconds > 2
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Blackbox slow requests (instance {{ $labels.instance }})"
+      description: "Blackbox request took more than 2s\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+  - alert: BlackboxSlowPing
+    expr: probe_icmp_duration_seconds > 2
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Blackbox slow ping (instance {{ $labels.instance }})"
+      description: "Blackbox ping took more than 2s\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"

@@ -1,0 +1,89 @@
+version: "3.8"
+
+networks:
+  app_net:
+    external: true
+    name: app_net
+  web_net:
+    external: true
+    name: web_net
+
+volumes:
+  mimir1_data:
+    name: mimir1_data
+  mimir2_data:
+    name: mimir2_data
+  mimir3_data:
+    name: mimir3_data
+
+services:
+  load-balancer:
+    image: nginx:latest
+    restart: ${RESTART_POLICY}
+    container_name: load-balancer
+    hostname: load-balancer
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      mimir1:
+        condition: service_healthy
+      mimir2:
+        condition: service_healthy
+      mimir3:
+        condition: service_healthy
+    networks:
+      - app_net
+
+  mimir1:
+    image: grafana/mimir:2.10.2
+    command: ["-config.file=/etc/mimir.yaml"]
+    hostname: mimir1
+    container_name: mimir1
+    restart: ${RESTART_POLICY}
+    volumes:
+      - ./mimir/mimir.yaml:/etc/mimir.yaml
+      - ./mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
+      - mimir1_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app_net
+
+  mimir2:
+    image: grafana/mimir:2.10.2
+    command: ["-config.file=/etc/mimir.yaml"]
+    hostname: mimir2
+    container_name: mimir2
+    restart: ${RESTART_POLICY}
+    volumes:
+      - ./mimir/mimir.yaml:/etc/mimir.yaml
+      - ./mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
+      - mimir2_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app_net
+
+  mimir3:
+    image: grafana/mimir:2.10.2
+    command: ["-config.file=/etc/mimir.yaml"]
+    hostname: mimir3
+    container_name: mimir3
+    restart: ${RESTART_POLICY}
+    volumes:
+      - ./mimir/mimir.yaml:/etc/mimir.yaml
+      - ./mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
+      - mimir3_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app_net

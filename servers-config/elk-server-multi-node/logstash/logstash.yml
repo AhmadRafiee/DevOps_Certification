@@ -1,0 +1,8 @@
+---
+http.host: "0.0.0.0"
+
+## X-Pack security credentials
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch.hosts: ['http://elasticsearch-node1:9200','http://elasticsearch-node2:9200','http://elasticsearch-node3:9200']
+xpack.monitoring.elasticsearch.username: ${ELASTICSEARCH_USERNAME}
+xpack.monitoring.elasticsearch.password: ${ELASTICSEARCH_PASSWORD}

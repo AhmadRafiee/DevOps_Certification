@@ -1,0 +1,76 @@
+heartbeat.monitors:
+#Monitor all containers using an icmp ping
+- type: icmp
+  schedule: '*/5 * * * * * *'
+  hosts: ["filebeat-logstash", "filebeat-elasticsearch", "metricbeat","packetbeat","elasticsearch","kibana","traefik", "fleet", "auditbeat"]
+  ipv4: true
+  ipv6: true
+  mode: any
+  timeout: 16s
+  wait: 1s
+
+#Monitor the ES instance over http with a GET to the /  - checking for a 200 response
+- type: http
+  enabled: true
+  schedule: '@every 5s'
+  urls: ["${ELASTICSEARCH_HOSTNAME}"]
+  ipv4: true
+  ipv6: true
+  mode: any
+  timeout: 5s
+  username: '${ELASTICSEARCH_USERNAME}'
+  password: '${ELASTICSEARCH_PASSWORD}'
+  check.request:
+    method: "GET"
+  check.response:
+    status: 200
+
+#Monitor the Kibana instance with a http GET to / - checking for a 302 response code
+- type: http
+  enabled: true
+  schedule: '@every 5s'
+  urls: ["${KIBANA_HOSTNAME}"]
+  ipv4: true
+  ipv6: true
+  mode: any
+  timeout: 5s
+  username: '${ELASTICSEARCH_USERNAME}'
+  password: '${ELASTICSEARCH_PASSWORD}'
+  check.request:
+    method: "GET"
+  check.response:
+    status: 302
+
+#Monitor the public urls over https with a GET to the /  - checking for a 200 response
+- type: http
+  enabled: true
+  schedule: '@every 5s'
+  urls:
+    - https://dockerme.ir
+    - https://sudoer.ir
+  ipv4: true
+  ipv6: true
+  mode: all
+  timeout: 5s
+  check.request:
+    method: "GET"
+  check.response:
+    status: 200
+  max_redirects: 2
+
+#========================== Elasticsearch output ===============================
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTNAME}"]
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${ELASTICSEARCH_PASSWORD}
+
+#============================== Kibana =========================================
+setup.kibana:
+  host: "${KIBANA_HOSTNAME}"
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${ELASTICSEARCH_PASSWORD}
+
+#============================== Xpack Monitoring ===============================
+xpack.monitoring:
+  enabled: true
+  elasticsearch:

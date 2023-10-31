@@ -1,0 +1,33 @@
+version: "3.8"
+
+networks:
+  app_net:
+    external: true
+    name: app_net
+  web_net:
+    external: true
+    name: web_net
+
+volumes:
+  tempo_data:
+    name: tempo_data
+
+services:
+  tempo:
+    image: grafana/tempo:main-67fd171
+    container_name: tempo
+    hostname: tempo
+    restart: ${RESTART_POLICY}
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo_data:/tmp/tempo
+    ports:
+      - "14268:14268"   # jaeger ingest
+      - "3200:3200"     # tempo
+      - "9095:9095"     # tempo grpc
+      - "4317:4317"     # otlp grpc
+      - "4318:4318"     # otlp http
+      - "9411:9411"     # zipkin
+    networks:
+      - app_net

@@ -1,0 +1,20 @@
+version: '3.8'
+
+networks:
+  elk_net:
+    external: false
+    name: elk_net
+
+services:
+  elastic-agent:
+    image: elastic/elastic-agent:${ELK_VERSION}
+    restart: ${RESTART_POLICY}
+    container_name: elastic-agent
+    hostname: "${HOSTNAME}.${DOMAIN_NAME}"
+    user: root
+    environment:
+      FLEET_ENROLLMENT_TOKEN: "${FLEET_ENROLLMENT_TOKEN}"
+      FLEET_ENROLL: 1
+      FLEET_URL: "${FLEET_URL}"
+    networks:
+      - elk_net

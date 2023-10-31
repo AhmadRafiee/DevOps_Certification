@@ -1,0 +1,124 @@
+version: '3.8'
+
+volumes:
+  elasticsearch_data:
+    name: elasticsearch_data
+
+networks:
+  web_net:
+    external: true
+    name: web_net
+  app_net:
+    external: true
+    name: app_net
+
+services:
+  elasticsearch:
+    image: elasticsearch:${ELK_VERSION}
+    container_name: elasticsearch
+    restart: ${RESTART_POLICY}
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+      ELASTIC_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+      node.name: elasticsearch
+      network.host: 0.0.0.0
+      http.port: 9200
+      cluster.name: docker-cluster
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      http.cors.enabled: "true"
+      xpack.security.authc.api_key.enabled: "true"
+      xpack.license.self_generated.type: basic
+      xpack.security.enabled: "true"
+      xpack.monitoring.collection.enabled: "true"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - web_net
+      - app_net
+    healthcheck:
+      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      interval: 30s
+      timeout: 3s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.elasticsearch.entrypoints=http
+      - traefik.http.routers.elasticsearch.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.elasticsearch.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.elasticsearch-secure.entrypoints=https
+      - traefik.http.routers.elasticsearch-secure.rule=Host(`${ELASTICSEARCH_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.elasticsearch-secure.tls=true
+      - traefik.http.routers.elasticsearch-secure.tls.options=default
+      - traefik.http.routers.elasticsearch-secure.tls.certresolver=mycert
+      - traefik.http.services.elasticsearch.loadbalancer.server.port=9200
+
+  logstash:
+    image: logstash:${ELK_VERSION}
+    container_name: logstash
+    restart: ${RESTART_POLICY}
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx1g -Xms1g"
+      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
+    networks:
+      - app_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  kibana:
+    image: kibana:${ELK_VERSION}
+    container_name: kibana
+    restart: ${RESTART_POLICY}
+    environment:
+      - "SERVERNAME=kibana"
+      - "ELASTICSEARCH_HOSTNAME=${ELASTICSEARCH_HOSTNAME}"
+      - "ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}"
+      - "ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}"
+      - "KIBANA_PUBLIC_URL=${KIBANA_PUBLIC_URL}"
+      - "MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED=true"
+      - "XPACK_FLEET_ENABLED=true"
+      - "XPACK_FLEET_AGENTS_ENABLED=true"
+      - "XPACK_FLEET_AGENTS_ELASTICSEARCH_HOST=${ELASTICSEARCH_HOSTNAME}"
+      - "XPACK_FLEET_AGENTS_FLEET_SERVER_HOSTS=[\"http://fleet:8220\"]"
+      - "XPACK_FLEET_AGENTS_TLSCHECKDISABLED=true"
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    healthcheck:
+      test: "curl -f http://localhost:5601/login | grep kbn-injected-metadata 2>&1 >/dev/null"
+      retries: 600
+      interval: 1s
+    networks:
+      - web_net
+      - app_net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_net"
+      - "traefik.http.routers.kibana.entrypoints=http"
+      - "traefik.http.routers.kibana.rule=Host(`${KIBANA_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.kibana.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.kibana-secure.entrypoints=https"
+      - "traefik.http.routers.kibana-secure.rule=Host(`${KIBANA_SUB_DOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.kibana-secure.tls=true"
+      - "traefik.http.routers.kibana-secure.tls.options=default"
+      - "traefik.http.routers.kibana-secure.tls.certresolver=mycert"
+      - "traefik.http.services.kibana.loadbalancer.server.port=5601"
