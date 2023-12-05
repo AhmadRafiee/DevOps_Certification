@@ -5,25 +5,25 @@ IMAGE_2204 = "bento/ubuntu-22.04"
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure(2) do |config|
-  config.vm.provision "shell", path: "bootstrap.sh"
+  config.vm.provision "shell", patlh: "bootstrap.sh"
 
-  NodeType1 = 1
+  NodeType1 = 0
   (1..NodeType1).each do |type1_id|
     config.vm.define "type1#{type1_id}" do |type1_vm|
       type1_vm.vm.box = IMAGE_2204
-      type1_vm.vm.hostname = "type1#{type1_id}.example.com"
+      type1_vm.vm.hostname = "type1#{type1_id}"
       type1_vm.vm.network "private_network", ip: "192.168.56.10#{type1_id}"
       type1_vm.vm.provider "virtualbox" do |v|
         v.name = "type1#{type1_id}"
-        v.memory = 2048
-        v.cpus = 2
+        v.memory = 1024
+        v.cpus = 1
       end
       type1_vm.vm.provision "shell", path: "bootstrap_t1.sh"
     end
   end
 
 
-  NodeType2 = 1
+  NodeType2 = 2
   (1..NodeType2).each do |type2_id|
     config.vm.define "type2#{type2_id}" do |type2_vm|
       type2_vm.vm.box = IMAGE_2204

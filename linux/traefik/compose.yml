@@ -1,0 +1,77 @@
+version: '3.8'
+
+networks:
+  web_net:
+    name: web_net
+    external: true
+
+volumes:
+  traefik-acme:
+    name: traefik-acme
+
+services:
+  traefik:
+    image: traefik:v2.10.4
+    restart: always
+    container_name: traefik
+    command:
+      - --log.level=ERROR
+      - --log.filepath=/log-file.log
+      - --log.format=json
+      - --api=true
+      - --api.insecure=true
+      - --ping=true
+      - --accesslog=true
+      - --accesslog.fields.names.StartUTC=drop
+      - --accesslog.bufferingsize=250
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=web_net
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --metrics.prometheus=true
+      - --entryPoints.metrics.address=:8082
+      - --metrics.prometheus.entryPoint=metrics
+      - --certificatesresolvers.mycert.acme.email=cert@mecan.ir
+      - --certificatesresolvers.mycert.acme.storage=/acme/acme.json
+      - --certificatesresolvers.mycert.acme.tlschallenge=true
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-acme:/acme
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:8080/ping || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.middlewares.web-auth.basicauth.users=MeCan:{SHA}CoRQvjVmLEf/Boi7dqaR84EijYo=
+      - traefik.http.routers.traefik.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.traefik.entrypoints=http
+      - traefik.http.routers.traefik.rule=Host(`${SUB}.${DOMAIN_ADDR}`)
+      - traefik.http.routers.traefik-secure.entrypoints=https
+      - traefik.http.routers.traefik-secure.rule=Host(`${SUB}.${DOMAIN_ADDR}`)
+      - traefik.http.routers.traefik-secure.tls=true
+      - traefik.http.routers.traefik-secure.tls.options=default
+      - traefik.http.routers.traefik-secure.middlewares=secure@file,web-auth
+      - traefik.http.routers.traefik-secure.tls.certresolver=mycert
+      - traefik.http.routers.traefik-secure.service=traefik
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik_metrics.entrypoints=http
+      - traefik.http.routers.traefik_metrics.rule=Host(`${TRA_METRICS}.${DOMAIN_ADDR}`)
+      - traefik.http.routers.traefik_metrics-secure.entrypoints=https
+      - traefik.http.routers.traefik_metrics-secure.rule=Host(`${TRA_METRICS}.${DOMAIN_ADDR}`)
+      - traefik.http.routers.traefik_metrics-secure.tls=true
+      - traefik.http.routers.traefik_metrics-secure.tls.options=default
+      - traefik.http.routers.traefik_metrics-secure.middlewares=secure@file,web-auth
+      - traefik.http.routers.traefik_metrics-secure.tls.certresolver=mycert
+      - traefik.http.routers.traefik_metrics-secure.service=metrics
+      - traefik.http.services.metrics.loadbalancer.server.port=8082
+    networks:
+      - web_net

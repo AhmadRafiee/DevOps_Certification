@@ -89,8 +89,28 @@ If using Docker and other registry mirror, add these lines after registry.mirror
           endpoint = ["https://quay.mecan.ir"]
 ```
 
-After all configuration restart containerd service:
+
+**Optional:** Create containerd systemd file and set proxy
+```
+# Check and create directory path
+DIR_PATH=/etc/systemd/system/containerd.service.d
+[ -d "${DIR_PATH}" ] || sudo mkdir "${DIR_PATH}"
+
+# Create config file
+cat <<EOF >${DIR_PATH}/http-proxy.conf
+[Service]
+Environment="HTTP_PROXY=http://asir.mecan.ir:8123"
+Environment="HTTPS_PROXY=http://asir.mecan.ir:8123"
+Environment="NO_PROXY=localhost,127.0.0.1,10.233.0.0/18,10.233.64.0/18,.mecan.ir"
+EOF
+
+# Check config file
+cat ${DIR_PATH}/http-proxy.conf
+```
+
+After all configuration reload systemd file and restart containerd service:
 ```bash
+sudo systemctl daemon-reload
 sudo systemctl restart containerd
 sudo systemctl status containerd
 ```
@@ -161,6 +181,21 @@ Enable and start kubelet service:
 systemctl enable kubelet
 systemctl start kubelet
 systemctl status kubelet
+```
+
+Create crictl config file for using containerd:
+```
+cat << EOF > /etc/crictl.yaml
+runtime-endpoint: "unix:///run/containerd/containerd.sock"
+timeout: 0
+debug: false
+EOF
+
+# Check config file
+cat /etc/crictl.yaml
+
+# Test
+crictl info
 ```
 
 ##### Create access on Kubernetes nodes for communication between all nodes:

@@ -1,5 +1,3 @@
-IMAGE_1804 = "bento/ubuntu-18.04"
-IMAGE_2004 = "bento/ubuntu-20.04"
 IMAGE_2204 = "bento/ubuntu-22.04"
 
 Vagrant.configure("2") do |config|

@@ -1,4 +1,5 @@
 #!/bin/bash
 # update and upgrade os
 apt-get update
-apt-get upgrade -y
+sudo apt install -y vim iptables-persistent bash-completion
+#apt-get upgrade -y

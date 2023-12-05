@@ -2,3 +2,4 @@
 *.iso
 *iso
 .trunk
+elastic-docker

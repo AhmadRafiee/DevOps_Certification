@@ -26,6 +26,26 @@ networks:
     external: true
     name: app_net
 
+secrets:
+  elasticsearch.keystore:
+    file: ./secrets/keystore/elasticsearch.keystore
+  elasticsearch.service_tokens:
+    file: ./secrets/service_tokens
+  elastic.ca:
+    file: ./secrets/certs/ca/ca.crt
+  elasticsearch.certificate:
+    file: ./secrets/certs/elasticsearch/elasticsearch.crt
+  elasticsearch.key:
+    file: ./secrets/certs/elasticsearch/elasticsearch.key
+  kibana.certificate:
+    file: ./secrets/certs/kibana/kibana.crt
+  kibana.key:
+    file: ./secrets/certs/kibana/kibana.key
+  apm-server.certificate:
+    file: ./secrets/certs/apm-server/apm-server.crt
+  apm-server.key:
+    file: ./secrets/certs/apm-server/apm-server.key
+
 services:
   elasticsearch-node1:
     image: elasticsearch:${ELK_VERSION}
@@ -47,10 +67,31 @@ services:
       xpack.security.authc.api_key.enabled: "true"
       xpack.license.self_generated.type: basic
       xpack.security.enabled: "true"
-      xpack.monitoring.collection.enabled: "true"
+      xpack.security.transport.ssl.enabled: true
+      xpack.security.transport.ssl.verification_mode: certificate
+      xpack.security.transport.ssl.key: certs/elasticsearch.key
+      xpack.security.transport.ssl.certificate: certs/elasticsearch.crt
+      xpack.security.transport.ssl.certificate_authorities: certs/ca.crt
+      xpack.security.http.ssl.enabled: true
+      xpack.security.http.ssl.key: certs/elasticsearch.key
+      xpack.security.http.ssl.certificate: certs/elasticsearch.crt
+      xpack.security.http.ssl.certificate_authorities: certs/ca.crt
+      xpack.security.http.ssl.client_authentication: optional
     volumes:
       - elasticsearch_node1_data:/usr/share/elasticsearch/data
       - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
+      - ./elasticsearch/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties
+    secrets:
+      - source: elasticsearch.keystore
+        target: /usr/share/elasticsearch/config/elasticsearch.keystore
+      - source: elasticsearch.service_tokens
+        target: /usr/share/elasticsearch/config/service_tokens
+      - source: elastic.ca
+        target: /usr/share/elasticsearch/config/certs/ca.crt
+      - source: elasticsearch.certificate
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.crt
+      - source: elasticsearch.key
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.key
     ulimits:
       memlock:
         soft: -1
@@ -59,7 +100,7 @@ services:
       - web_net
       - app_net
     healthcheck:
-      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      test: curl --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
       timeout: 3s
     labels:
@@ -96,10 +137,31 @@ services:
       xpack.security.authc.api_key.enabled: "true"
       xpack.license.self_generated.type: basic
       xpack.security.enabled: "true"
-      xpack.monitoring.collection.enabled: "true"
+      xpack.security.transport.ssl.enabled: true
+      xpack.security.transport.ssl.verification_mode: certificate
+      xpack.security.transport.ssl.key: certs/elasticsearch.key
+      xpack.security.transport.ssl.certificate: certs/elasticsearch.crt
+      xpack.security.transport.ssl.certificate_authorities: certs/ca.crt
+      xpack.security.http.ssl.enabled: true
+      xpack.security.http.ssl.key: certs/elasticsearch.key
+      xpack.security.http.ssl.certificate: certs/elasticsearch.crt
+      xpack.security.http.ssl.certificate_authorities: certs/ca.crt
+      xpack.security.http.ssl.client_authentication: optional
     volumes:
       - elasticsearch_node2_data:/usr/share/elasticsearch/data
       - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
+      - ./elasticsearch/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties
+    secrets:
+      - source: elasticsearch.keystore
+        target: /usr/share/elasticsearch/config/elasticsearch.keystore
+      - source: elasticsearch.service_tokens
+        target: /usr/share/elasticsearch/config/service_tokens
+      - source: elastic.ca
+        target: /usr/share/elasticsearch/config/certs/ca.crt
+      - source: elasticsearch.certificate
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.crt
+      - source: elasticsearch.key
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.key
     ulimits:
       memlock:
         soft: -1
@@ -108,7 +170,7 @@ services:
       - web_net
       - app_net
     healthcheck:
-      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      test: curl --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
       timeout: 3s
     labels:
@@ -145,10 +207,31 @@ services:
       xpack.security.authc.api_key.enabled: "true"
       xpack.license.self_generated.type: basic
       xpack.security.enabled: "true"
-      xpack.monitoring.collection.enabled: "true"
+      xpack.security.transport.ssl.enabled: true
+      xpack.security.transport.ssl.verification_mode: certificate
+      xpack.security.transport.ssl.key: certs/elasticsearch.key
+      xpack.security.transport.ssl.certificate: certs/elasticsearch.crt
+      xpack.security.transport.ssl.certificate_authorities: certs/ca.crt
+      xpack.security.http.ssl.enabled: true
+      xpack.security.http.ssl.key: certs/elasticsearch.key
+      xpack.security.http.ssl.certificate: certs/elasticsearch.crt
+      xpack.security.http.ssl.certificate_authorities: certs/ca.crt
+      xpack.security.http.ssl.client_authentication: optional
     volumes:
       - elasticsearch_node3_data:/usr/share/elasticsearch/data
       - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
+      - ./elasticsearch/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties
+    secrets:
+      - source: elasticsearch.keystore
+        target: /usr/share/elasticsearch/config/elasticsearch.keystore
+      - source: elasticsearch.service_tokens
+        target: /usr/share/elasticsearch/config/service_tokens
+      - source: elastic.ca
+        target: /usr/share/elasticsearch/config/certs/ca.crt
+      - source: elasticsearch.certificate
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.crt
+      - source: elasticsearch.key
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.key
     ulimits:
       memlock:
         soft: -1
@@ -157,7 +240,7 @@ services:
       - web_net
       - app_net
     healthcheck:
-      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      test: curl --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
       timeout: 3s
     labels:
@@ -179,8 +262,9 @@ services:
     container_name: logstash
     restart: ${RESTART_POLICY}
     volumes:
+      - ./logstash/pipeline.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
-      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
     ports:
       - 5044:5044
       - 9600:9600
@@ -189,6 +273,13 @@ services:
       - "ELASTICSEARCH_LOGSTASH_HOSTNAME=${ELASTICSEARCH_LOGSTASH_HOSTNAME}"
       - "ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}"
       - "ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}"
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+    healthcheck:
+      test: ["CMD", "curl", "-s" ,"-XGET", "http://127.0.0.1:9600"]
+      retries: 600
+      interval: 30s
     networks:
       - app_net
     depends_on:
@@ -206,20 +297,29 @@ services:
     environment:
       - SERVERNAME=kibana
       - ELASTICSEARCH_HOSTNAME=${ELASTICSEARCH_HOSTNAME}
-      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
       - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      - xpack.security.enabled=false
       - KIBANA_PUBLIC_URL=${KIBANA_PUBLIC_URL}
       - MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED=true
       - XPACK_FLEET_ENABLED=true
       - XPACK_FLEET_AGENTS_ENABLED=true
       - "XPACK_FLEET_AGENTS_FLEET_SERVER_HOSTS=[\"http://fleet:8220\"]"
       - "XPACK_FLEET_AGENTS_TLSCHECKDISABLED=true"
+    env_file:
+      - ./secrets/.env.kibana.token
     volumes:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: kibana.certificate
+        target: /certs/kibana.crt
+      - source: kibana.key
+        target: /certs/kibana.key
     healthcheck:
       test: "curl -f http://localhost:5601/login | grep kbn-injected-metadata 2>&1 >/dev/null"
       retries: 600
-      interval: 1s
+      interval: 30s
     networks:
       - web_net
       - app_net
@@ -494,3 +594,10 @@ services:
         condition: service_healthy
       kibana:
         condition: service_healthy
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: apm-server.certificate
+        target: /certs/apm-server.crt
+      - source: apm-server.key
+        target: /certs/apm-server.key

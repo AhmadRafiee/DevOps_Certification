@@ -75,11 +75,19 @@ services:
         alertmanager['enable'] = false
         pgbouncer_exporter['enable'] = false
         puma['exporter_enabled'] = false
-        gitlab_exporter['enable'] = false
         node_exporter['enable'] = false
         sidekiq['metrics_enabled'] = false
-        redis_exporter['enable'] = false
-        postgres_exporter['enable'] = false
+
+        # gitlab exporter enable
+        gitlab_exporter['enable'] = true
+        gitlab_exporter['listen_address'] = '0.0.0.0'
+        gitlab_exporter['listen_port'] = '9168'
+
+        redis_exporter['enable'] = true
+        redis_exporter['listen_address'] = '0.0.0.0:9121'
+
+        postgres_exporter['enable'] = true
+        postgres_exporter['listen_address'] = '0.0.0.0:9187'
 
         # gitlab backup config
         gitlab_rails['manage_backup_path'] = true
@@ -136,6 +144,45 @@ services:
       - traefik.http.routers.gitlab-registry-secure.tls.options=default
       - traefik.http.routers.gitlab-registry-secure.tls.certresolver=mycert
       - traefik.http.services.gitlab-registry.loadbalancer.server.port=5100
+      # gitlab exporter config
+      - traefik.http.routers.gitlab-exporter.entrypoints=http
+      - traefik.http.routers.gitlab-exporter.rule=Host(`${GIT_EXPORTER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.gitlab-exporter.middlewares=https-redirect
+      - traefik.http.routers.gitlab-exporter-secure.entrypoints=https
+      - traefik.http.routers.gitlab-exporter.service=gitlab-exporter
+      - traefik.http.routers.gitlab-exporter-secure.service=gitlab-exporter
+      - traefik.http.routers.gitlab-exporter-secure.rule=Host(`${GIT_EXPORTER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.gitlab-exporter-secure.tls=true
+      - traefik.http.routers.gitlab-exporter-secure.tls.options=default
+      - traefik.http.routers.gitlab-exporter-secure.middlewares=web-auth
+      - traefik.http.routers.gitlab-exporter-secure.tls.certresolver=mycert
+      - traefik.http.services.gitlab-exporter.loadbalancer.server.port=9168
+      # gitlab redis exporter config
+      - traefik.http.routers.redis-exporter.entrypoints=http
+      - traefik.http.routers.redis-exporter.rule=Host(`${REDIS_EXPORTER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.redis-exporter.middlewares=https-redirect
+      - traefik.http.routers.redis-exporter-secure.entrypoints=https
+      - traefik.http.routers.redis-exporter.service=redis-exporter
+      - traefik.http.routers.redis-exporter-secure.service=redis-exporter
+      - traefik.http.routers.redis-exporter-secure.rule=Host(`${REDIS_EXPORTER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.redis-exporter-secure.tls=true
+      - traefik.http.routers.redis-exporter-secure.tls.options=default
+      - traefik.http.routers.redis-exporter-secure.middlewares=web-auth
+      - traefik.http.routers.redis-exporter-secure.tls.certresolver=mycert
+      - traefik.http.services.redis-exporter.loadbalancer.server.port=9121
+      # gitlab postgres exporter config
+      - traefik.http.routers.postgresql-exporter.entrypoints=http
+      - traefik.http.routers.postgresql-exporter.rule=Host(`${PSG_EXPORTER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.postgresql-exporter.middlewares=https-redirect
+      - traefik.http.routers.postgresql-exporter-secure.entrypoints=https
+      - traefik.http.routers.postgresql-exporter.service=postgresql-exporter
+      - traefik.http.routers.postgresql-exporter-secure.service=postgresql-exporter
+      - traefik.http.routers.postgresql-exporter-secure.rule=Host(`${PSG_EXPORTER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.postgresql-exporter-secure.tls=true
+      - traefik.http.routers.postgresql-exporter-secure.tls.options=default
+      - traefik.http.routers.postgresql-exporter-secure.middlewares=web-auth
+      - traefik.http.routers.postgresql-exporter-secure.tls.certresolver=mycert
+      - traefik.http.services.postgresql-exporter.loadbalancer.server.port=9187
     volumes:
       - gitlab_backup:/var/opt/gitlab/backups
       - gitlab_data:/var/opt/gitlab

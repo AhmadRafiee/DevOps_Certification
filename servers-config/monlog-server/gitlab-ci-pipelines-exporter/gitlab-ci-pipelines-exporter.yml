@@ -1,0 +1,36 @@
+gitlab:
+  url: https://git.mecan.ir
+  token: glpat-B9JkSB2HGurh2w94ezQo
+
+wildcards:
+  - owner:
+      name: DevOps
+      kind: group
+      include_subgroups: true
+    pull:
+      environments:
+        enabled: true
+        exclude_stopped: false
+      refs:
+        branches:
+          enabled: true
+          exclude_deleted: true
+        tags:
+          enabled: true
+        merge_requests:
+          enabled: true
+      pipeline:
+        jobs:
+          enabled: true
+          from_child_pipelines:
+            enabled: true
+          runner_description:
+            enabled: true
+        variables:
+          enabled: true
+        test_reports:
+          enabled: true
+          from_child_pipelines:
+            enabled: true
+          test_cases:
+            enabled: true

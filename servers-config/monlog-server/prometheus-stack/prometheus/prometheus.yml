@@ -24,23 +24,22 @@ scrape_configs:
     static_configs:
       - targets:
         - pod.monlog-server.mecan.ir
-        - pod.foo-server.mecan.ir
-        - pod.bar-server.mecan.ir
+        - pod.repo-server.mecan.ir
+        - pod.tools-server.mecan.ir
     scheme: https
     basic_auth:
       username: 'MeCan'
       password: 'UNojpA3tXsYiH9gzZcCCCaEVhfL3gw'
 
   - job_name: 'node-exporter'
-    static_configs:
-      - targets:
-        - node.monlog-server.mecan.ir
-        - node.foo-server.mecan.ir
-        - node.bar-server.mecan.ir
+    file_sd_configs:
+      - files:
+        - '/etc/prometheus/sd-file.yml'
     scheme: https
     basic_auth:
       username: 'MeCan'
       password: 'UNojpA3tXsYiH9gzZcCCCaEVhfL3gw'
+
 
   - job_name: 'blackbox_exporter'
     static_configs:
@@ -91,7 +90,18 @@ scrape_configs:
   - job_name: 'traefik'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['traefik:8082']
+      - targets:
+        - trametr.monlog-server.mecan.ir
+        - trametr.repo-server.mecan.ir
+        - trametr.tools-server.mecan.ir
+        - trametr.elk-server.mecan.ir
+        - trametr.production.mecan.ir
+        - trametr.pre-production.mecan.ir
+        - trametr.development.mecan.ir
+    scheme: https
+    basic_auth:
+      username: 'MeCan'
+      password: 'UNojpA3tXsYiH9gzZcCCCaEVhfL3gw'
 
   - job_name: 'tempo'
     static_configs:
@@ -108,6 +118,12 @@ scrape_configs:
       - targets: ["mimir3:8080"]
         labels:
           pod: "mimir3"
+
+  - job_name: 'gitlab-ci-pipelines-exporter'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['gitlab-ci-pipelines-exporter:8080']
 
 remote_write:
   - url: http://load-balancer:9009/api/v1/push
