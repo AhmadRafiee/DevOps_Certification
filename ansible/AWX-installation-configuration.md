@@ -15,12 +15,11 @@ curl -fsSL https://get.docker.com | bash
 ```bash
 apt update
 apt install -y python3-pip
-pip3 install docker
-pip3 install docker-compose
+pip3 install docker==6.1.3
+pip3 install docker-compose==1.29.2
 ```
 
 ### Step 4: Download Ansible AWX
-
 
 ```bash
 [ -d /var/services/ ] || mkdir /var/services/
@@ -52,6 +51,11 @@ Create directory for postgres
 [ -d /var/lib/pgdocker ] || mkdir /var/lib/pgdocker
 ```
 
+
+#### install docker-compose command line
+```bash
+curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+```
 
 ### Install AWX
 ```bash
@@ -91,10 +95,12 @@ install certbot for get certificate
 which certbot || apt install -y certbot
 ```
 
+
 Create certificate with certbot command
 ```bash
+docker stop awx_web
 DOMAIN=awx.MeCan.ir
-EMAIL=ahmad@DockerMe.ir
+EMAIL=ahmad@MeCan.ir
 certbot certonly \
     --standalone \
     --non-interactive \
@@ -109,8 +115,8 @@ Add Domain variable on inventory file and certificate path
 ```bash
 DOMAIN=awx.MeCan.ir
 cat installer/inventory | grep DOMAIN || sed -i '/host_port_ssl=443/a DOMAIN='${DOMAIN}'' installer/inventory
-sed -i 's/ssl_certificate=/ssl_certificate=\/etc\/letsencrypt\/archive\/${DOMAIN}\/fullchain1.pem/g' installer/inventory
-sed -i 's/ssl_certificate_key=/ssl_certificate_key=\/etc\/letsencrypt\/archive\/${DOMAIN}\/privkey1.pem/g' installer/inventory
+sed -i 's/#ssl_certificate=/ssl_certificate=\/etc\/letsencrypt\/archive\/${DOMAIN}\/fullchain1.pem/g' installer/inventory
+sed -i 's/#ssl_certificate_key=/ssl_certificate_key=\/etc\/letsencrypt\/archive\/${DOMAIN}\/privkey1.pem/g' installer/inventory
 ```
 
 Change server_name on nginx template
