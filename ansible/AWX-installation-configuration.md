@@ -99,8 +99,8 @@ which certbot || apt install -y certbot
 Create certificate with certbot command
 ```bash
 docker stop awx_web
-DOMAIN=awx.MeCan.ir
-EMAIL=ahmad@MeCan.ir
+DOMAIN=awx.mecan.ir
+EMAIL=ahmad@mecan.ir
 certbot certonly \
     --standalone \
     --non-interactive \
@@ -113,10 +113,10 @@ certbot certonly \
 
 Add Domain variable on inventory file and certificate path
 ```bash
-DOMAIN=awx.MeCan.ir
+DOMAIN=awx.mecan.ir
 cat installer/inventory | grep DOMAIN || sed -i '/host_port_ssl=443/a DOMAIN='${DOMAIN}'' installer/inventory
-sed -i 's/#ssl_certificate=/ssl_certificate=\/etc\/letsencrypt\/archive\/${DOMAIN}\/fullchain1.pem/g' installer/inventory
-sed -i 's/#ssl_certificate_key=/ssl_certificate_key=\/etc\/letsencrypt\/archive\/${DOMAIN}\/privkey1.pem/g' installer/inventory
+sed -i "s/#ssl_certificate=/ssl_certificate=\/etc\/letsencrypt\/archive\/${DOMAIN}\/fullchain1.pem/g" installer/inventory
+sed -i "s/#ssl_certificate_key=/ssl_certificate_key=\/etc\/letsencrypt\/archive\/${DOMAIN}\/privkey1.pem/g" installer/inventory
 ```
 
 Change server_name on nginx template
