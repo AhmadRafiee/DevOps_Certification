@@ -37,6 +37,12 @@ Add Docker’s official GPG key:
 sudo mkdir -p /etc/apt/keyrings && sudo chmod -R 0755 /etc/apt/keyrings
 curl -fsSL "https://download.docker.com/linux/debian/gpg" | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
 ```
+
+OR Download docker.gpg from `store.DockerMe.ir`
+```bash
+curl -fsSL "https://store.dockerme.ir/Software/docker.gpg" | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+```
+
 **NOTE:** if your servers are in Iran too, you should do this with an HTTP proxy; otherwise, you will get a 403 error.
 ```bash
 chmod a+r /etc/apt/keyrings/docker.gpg
@@ -62,17 +68,17 @@ sudo apt-get update
 sudo apt-get install containerd.io
 
 # Start and enable Containerd service
-systemctl enable containerd
-systemctl restart containerd
-systemctl status containerd
+sudo systemctl enable containerd
+sudo systemctl restart containerd
+sudo systemctl status containerd
 ```
 
 Configure the containerd service to change the Cgroup driver:
 ```bash
 sudo mkdir -p /etc/containerd
-containerd config default | sudo tee /etc/containerd/config.toml
-sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
-cat /etc/containerd/config.toml | grep SystemdCgroup
+sudo containerd config default | sudo tee /etc/containerd/config.toml
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+sudo cat /etc/containerd/config.toml | grep SystemdCgroup
 ```
 
 Configure the containerd service to set the mirror registry:
@@ -87,6 +93,8 @@ If using Docker and other registry mirror, add these lines after registry.mirror
           endpoint = ["https://k8s.mecan.ir"]
         [plugins."io.containerd.grpc.v1.cri".registry.mirrors."quay.io"]
           endpoint = ["https://quay.mecan.ir"]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."mirror.gcr.io"]
+          endpoint = ["https://gcr.mecan.ir"]
 ```
 
 
@@ -136,7 +144,12 @@ swapoff -a
 Download the Google Cloud public signing key:
 ```bash
 sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://dl.k8s.io/apt/doc/apt-key.gpg
-sudo ls /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+
+# OR Download from Store.DockerMe.ir
+sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://store.dockerme.ir/Software/kubernetes-apt-keyring.gpg
+
+# Check gpg key
+sudo ls -alh /etc/apt/keyrings/kubernetes-archive-keyring.gpg
 ```
 
 Add the Kubernetes apt repository:
