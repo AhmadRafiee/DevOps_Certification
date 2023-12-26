@@ -1,13 +1,13 @@
-IMAGE_1804 = "bento/ubuntu-18.04"
-IMAGE_2004 = "bento/ubuntu-20.04"
+#IMAGE_1804 = "bento/ubuntu-18.04"
+#IMAGE_2004 = "bento/ubuntu-20.04"
 IMAGE_2204 = "bento/ubuntu-22.04"
 
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure(2) do |config|
-  config.vm.provision "shell", patlh: "bootstrap.sh"
+  config.vm.provision "shell", path: "bootstrap.sh"
 
-  NodeType1 = 0
+  NodeType1 = 1
   (1..NodeType1).each do |type1_id|
     config.vm.define "type1#{type1_id}" do |type1_vm|
       type1_vm.vm.box = IMAGE_2204
@@ -15,8 +15,8 @@ Vagrant.configure(2) do |config|
       type1_vm.vm.network "private_network", ip: "192.168.56.10#{type1_id}"
       type1_vm.vm.provider "virtualbox" do |v|
         v.name = "type1#{type1_id}"
-        v.memory = 1024
-        v.cpus = 1
+        v.memory = 2048
+        v.cpus = 2
       end
       type1_vm.vm.provision "shell", path: "bootstrap_t1.sh"
     end
