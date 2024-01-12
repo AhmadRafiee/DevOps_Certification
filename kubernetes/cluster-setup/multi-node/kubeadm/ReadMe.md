@@ -135,6 +135,11 @@ EOF
 sysctl --system >/dev/null 2>&1
 ```
 
+Enable netfilter:
+```bash
+modprobe br_netfilter
+```
+
 Disable and turn off SWAP:
 ```bash
 sed -i '/swap/d' /etc/fstab
