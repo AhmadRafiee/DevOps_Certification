@@ -3,3 +3,4 @@
 *iso
 .trunk
 elastic-docker
+.vagrant.d
