@@ -29,14 +29,35 @@ https://download.ceph.com/debian-{version}
 
 Add ceph repository on debian 12
 ```bash
-# add ceph repo
+# add ceph repo [18.2.1]
 cat << ROS > /etc/apt/sources.list.d/ceph.list
 deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-18.2.1 bookworm main
 ROS
 
-# OR add MeCan repo
+# add ceph repo [17.2.7]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-17.2.7 bookworm main
+ROS
+
+# add ceph repo [17.2.1]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-17.2.1 bookworm main
+ROS
+
+
+# OR add MeCan repo [18.2.1]
 cat << ROS > /etc/apt/sources.list.d/ceph.list
 deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://repo.mecan.ir/repository/debian-ceph-18.2.1 bookworm main
+ROS
+
+# OR add MeCan repo [17.2.7]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://repo.mecan.ir/repository/debian-ceph-17.2.7 bookworm main
+ROS
+
+# OR add MeCan repo [17.2.1]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://repo.mecan.ir/repository/debian-ceph-17.2.1 bookworm main
 ROS
 
 # check repo file
@@ -49,7 +70,7 @@ apt update
 apt install -y cephadm ceph-common ceph-base
 
 # check cephadm version
-cephadm version
+ceph --version
 ```
 
 #### Step4: Pull all docker image
@@ -134,7 +155,6 @@ cephadm bootstrap --cluster-network 192.168.100.0/24 \
                   --cleanup-on-failure \
                   --skip-pull \
                   --skip-firewalld \
-                  --ssh-user root \
                   --ssh-config /root/.ssh/config \
                   --ssh-private-key ~/.ssh/id_rsa \
                   --ssh-public-key ~/.ssh/id_rsa.pub \

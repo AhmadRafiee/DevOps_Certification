@@ -1,0 +1,58 @@
+version: '3.8'
+
+networks:
+  app_net:
+    external: true
+    name: app_net
+  web_net:
+    external: true
+    name: web_net
+
+services:
+  cadvisor:
+    image: docker.io/ahmadrafiee/cadvisor
+    command: --disable_metrics=disk,udp,percpu
+    restart: ${RESTART_POLICY}
+    hostname: '${HOSTNAME}'
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8080:8080
+    networks:
+      - app_net
+
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    restart: ${RESTART_POLICY}
+    hostname: '${HOSTNAME}'
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    ports:
+      - 9100:9100
+    networks:
+      - app_net
+
+  promtail:
+    image: grafana/promtail:k171-b5eaae1
+    restart: ${RESTART_POLICY}
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail:/etc/promtail/
+    command: -config.file=/etc/promtail/promtail.yml
+    networks:
+      - app_net
