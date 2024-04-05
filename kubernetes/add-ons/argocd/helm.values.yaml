@@ -1,0 +1,19 @@
+server:
+  extraArgs:
+    - --insecure
+
+  ingress:
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      certmanager.k8s.io/acme-http01-edit-in-place: "false"
+      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    enabled: true
+    hosts:
+      - argocd.kube.mecan.ir
+    ingressClassName: nginx
+    https: true
+    tls:
+      - secretName: argocd-general-tls
+        hosts:
+          - argocd.kube.mecan.ir

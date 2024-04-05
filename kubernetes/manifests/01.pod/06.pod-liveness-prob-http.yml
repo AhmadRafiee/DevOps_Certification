@@ -1,0 +1,25 @@
+---
+# For the first 10 seconds that the container is alive,
+# the /healthz handler returns a status of 200.
+# After that, the handler returns a status of 500.
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-http
+spec:
+  containers:
+  - name: liveness
+    image: registry.mecan.ir/devops_certification/kubernetes/liveness
+    args:
+    - /server
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+        httpHeaders:
+        - name: Custom-Header
+          value: Awesome
+      initialDelaySeconds: 3
+      periodSeconds: 3

@@ -1,0 +1,25 @@
+replicas: 1
+auditInterval: 60
+constraintViolationsLimit: 20
+auditFromCache: false
+disableValidatingWebhook: false
+auditChunkSize: 0
+logLevel: INFO
+emitAdmissionEvents: false
+emitAuditEvents: false
+image:
+  repository: openpolicyagent/gatekeeper
+  release: v3.11.0
+  pullPolicy: IfNotPresent
+nodeSelector: { kubernetes.io/os: linux }
+podAnnotations:
+  { container.seccomp.security.alpha.kubernetes.io/manager: runtime/default }
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+customResourceDefinitions:
+  create: true

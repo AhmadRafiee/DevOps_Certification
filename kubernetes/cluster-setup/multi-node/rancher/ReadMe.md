@@ -4,7 +4,7 @@ RKE is a CNCF-certified Kubernetes distribution that runs entirely within Docker
 
 #### Install rke commands:
 ```bash
-wget https://github.com/rancher/rke/releases/download/v1.5.0-rc9/rke_linux-amd64
+wget https://github.com/rancher/rke/releases/download/v1.5.7/rke_linux-amd64
 chmod +x rke_linux-amd64
 mv rke_linux-amd64 rke
 sudo mv rke /usr/local/bin
@@ -14,13 +14,13 @@ sudo mv rke /usr/local/bin
 Get scripts for download, save and load images to registry:
 ```bash
 # rancher container images list:
-wget https://github.com/rancher/rancher/releases/download/v2.8.0-rc3/rancher-images.txt
+wget https://github.com/rancher/rancher/releases/download/v2.8.3/rancher-images.txt
 
 # download and save images to file:
-wget https://github.com/rancher/rancher/releases/download/v2.8.0-rc3/rancher-save-images.sh
+wget https://github.com/rancher/rancher/releases/download/v2.8.3/rancher-save-images.sh
 
 # load image from file:
-wget https://github.com/rancher/rancher/releases/download/v2.8.0-rc3/rancher-load-images.sh
+wget https://github.com/rancher/rancher/releases/download/v2.8.3/rancher-load-images.sh
 ```
 
 #### Get all kubernetes version support image list

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodename
+spec:
+  containers:
+    - name: web
+      image: ahmadrafiee/mecan-sample-app:ver1
+      resources:
+        requests:
+          memory: 10Mi
+          cpu: 10m
+        limits:
+          memory: 20Mi
+          cpu: 20m
+  nodeName: worker1

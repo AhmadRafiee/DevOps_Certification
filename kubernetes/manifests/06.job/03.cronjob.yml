@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+spec:
+  # https://crontab.guru/
+  schedule: "* * * * *"
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 10
+  successfulJobsHistoryLimit: 10
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: cronjob
+              image: busybox
+              args:
+                - /bin/sh
+                - -c
+                - date; echo Hello from the Kubernetes cluster; sleep 10
+          restartPolicy: OnFailure

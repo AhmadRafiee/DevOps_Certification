@@ -1,4 +1,4 @@
-# Kubectl Commands
+# Kubectl Commands Tips
 
 #
 ### Installation and configuration:

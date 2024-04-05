@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    certmanager.k8s.io/acme-http01-edit-in-place: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/tls-acme: "true"
+  name: weave
+  namespace: weave
+spec:
+  rules:
+  - host: scope.kube.mecan.ir
+    http:
+      paths:
+      - backend:
+          service:
+            name: weave-scope-app
+            port:
+                number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - scope.kube.mecan.ir
+    secretName: scope-mecan-tls-secret

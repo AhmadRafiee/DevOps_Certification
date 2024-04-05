@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-word-v1
+  annotations:
+    kubernetes.io/change-cause: ver1
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: hello-word-v1
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: hello-word-v1
+        svc: example
+    spec:
+      containers:
+        - name: hello-world
+          image: ahmadrafiee/mecan-sample-app:ver1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              memory: 20Mi
+              cpu: 20m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-word-v2
+  annotations:
+    kubernetes.io/change-cause: ver1
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: hello-word-v1
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hello-word-v1
+        svc: example
+    spec:
+      containers:
+        - name: hello-world
+          image: ahmadrafiee/mecan-sample-app:ver2
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              memory: 20Mi
+              cpu: 20m

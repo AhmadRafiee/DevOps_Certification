@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup-cronjob
+  namespace: kube-system
+spec:
+  schedule: "0 0/4 * * *"
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          tolerations:
+          # Tolerate master taint
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+            effect: NoSchedule
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+          hostNetwork: true
+          containers:
+          - name: etcd-backup
+            image: ahmadrafiee/etcd-mc:v3.5.6-2024-04-03
+            args:
+            - https://127.0.0.1:2379
+            volumeMounts:
+            - mountPath: /var/lib/etcd
+              name: etcd-datadir
+            - mountPath: /certs
+              name: etcd-certs
+            env:
+              - name: MINIO_ALIAS_NAME
+                value: taav
+              - name: MINIO_SERVER
+                value: https://object.kube.mecan.ir
+              - name: MINIO_BUCKET
+                value: mecan-kube-etcd-backup
+              - name: MINIO_API_VERSION
+                value: S3v4
+              - name: MINIO_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: etcd-backup-secret
+                    key: MINIO_ACCESS_KEY
+              - name: MINIO_SECRET_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: etcd-backup-secret
+                    key: MINIO_SECRET_KEY
+          volumes:
+          - name: etcd-datadir
+            hostPath:
+              path: /var/lib/etcd
+          - name: etcd-certs
+            hostPath:
+              path: /etc/kubernetes/pki/etcd/
+          restartPolicy: Never
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: etcd-backup-secret
+  namespace: kube-system
+type: Opaque
+data:
+  MINIO_ACCESS_KEY: "bDFEQjNwRsdfsfUVlZGRRVFZKdwrwrwnAyWkhQbA=="
+  MINIO_SECRET_KEY: "YWtQRUtJdsdsewvsvsmt3ZXdlZjdCYkvsvwewwehHZDdWNzNYZ2JqZ1dTQjVodm5Ld3h5WktKelFV"

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-label
+  namespace: web
+  labels:
+    web: public
+spec:
+  containers:
+  - name: nginx
+    image: ahmadrafiee/mecan-sample-app:ver1
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: private
+  namespace: web
+spec:
+  selector:
+    web: private
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: public
+  namespace: web
+spec:
+  selector:
+    web: public
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80

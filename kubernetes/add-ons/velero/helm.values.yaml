@@ -1,0 +1,65 @@
+---
+resources:
+  requests:
+    cpu: 1000m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 1024Mi
+
+initContainers:
+  - name: velero-plugin-for-csi
+    image: velero/velero-plugin-for-csi:v0.4.2
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.6.1
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+metrics:
+  enabled: true
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8085"
+    prometheus.io/path: "/metrics"
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus-stack
+    namespace: monitoring
+
+configuration:
+  provider: aws
+  backupStorageLocation:
+    bucket: aban-backup
+    config:
+      region: minio
+      s3ForcePathStyle: true
+      s3Url: https://object.kube.vone.abanchange.me/
+
+  volumeSnapshotLocation:
+    name: snapshot-location
+    provider: aws
+    config:
+      region: minio
+
+credentials:
+  useSecret: true
+  name: velero-credential
+  existingSecret:
+  secretContents:
+    cloud: |
+        [default]
+        aws_access_key_id=l1DB3pEEeQTVJvp2ZHPl
+        aws_secret_access_key=akPEKIvk7BbHGd7V73XgbjgWSB5hvnKwxyZKJzQU
+
+backupsEnabled: true
+snapshotsEnabled: true
+deployNodeAgent: true

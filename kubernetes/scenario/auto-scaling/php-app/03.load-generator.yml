@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+spec:
+  selector:
+    matchLabels:
+      run: load-generator
+  replicas: 2 # 100
+  template:
+    metadata:
+      labels:
+        run: load-generator
+    spec:
+      containers:
+      - name: load-generator
+        image: busybox:1.28
+        args: [/bin/sh, -c, 'while true; do wget -q -O- http://php-apache; done']

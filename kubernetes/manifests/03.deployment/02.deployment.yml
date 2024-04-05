@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world
+  annotations:
+    kubernetes.io/change-cause: ver1
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: hello-world-deploy
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: hello-world-deploy
+        svc: example
+    spec:
+      containers:
+        - name: hello-world
+          image: ahmadrafiee/mecan-sample-app:ver1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              memory: 20Mi
+              cpu: 20m

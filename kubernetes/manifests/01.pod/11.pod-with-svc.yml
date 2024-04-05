@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  labels:
+    app: web
+spec:
+  containers:
+    - name: test
+      image: ahmadrafiee/mecan-sample-app:ver1
+      ports:
+        - containerPort: 80
+      resources:
+        requests:
+          memory: 10Mi
+          cpu: 10m
+        limits:
+          memory: 20Mi
+          cpu: 20m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test
+spec:
+  type: NodePort
+  ports:
+  - targetPort: 80
+    port: 80
+    nodePort: 32070
+  selector:
+    app: web

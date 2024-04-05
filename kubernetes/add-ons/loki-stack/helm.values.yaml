@@ -1,0 +1,30 @@
+---
+loki:
+  enabled: true
+  replicas: 1
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 50Gi
+    type: pvc
+  limits:
+    cpu: 1500m
+    memory: 4096Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  image:
+    pullPolicy: IfNotPresent
+    repository: grafana/loki
+    tag: 2.9.3
+
+promtail:
+  enabled: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 248Mi

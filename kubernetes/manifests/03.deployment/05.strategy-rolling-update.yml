@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rolling-update
+  annotations:
+    kubernetes.io/change-cause: ver1
+spec:
+  selector:
+    matchLabels:
+      app: rolling-update
+  replicas: 20
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: rolling-update
+        svc: example
+    spec:
+      containers:
+        - name: hello-world
+          image: ahmadrafiee/mecan-sample-app:ver1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              memory: 20Mi
+              cpu: 20m

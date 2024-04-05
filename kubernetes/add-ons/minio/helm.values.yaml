@@ -1,0 +1,35 @@
+mode: standalone
+
+image:
+  repository: quay.io/minio/minio
+  tag: RELEASE.2024-03-30T09-41-56Z
+  pullPolicy: IfNotPresent
+
+accessKey: "l1DB3pEEeQTwecwewverrwecweccweweVJvp2ZHPl"
+secretKey: "akPEKIvk7BbsdcswefwevwecHGd7V73XgbjgWSB5hvnKwxyZKJzQU"
+mountPath: "/data"
+
+resources:
+  requests:
+    memory: 1G
+    cpu: 500m
+  limit:
+    memory: 5G
+    cpu: 1000m
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 50Gi
+
+service:
+  name: minio
+  type: ClusterIP
+  port: 9000
+
+extraArgs:
+  - --console-address :9090
+
+environment:
+  MINIO_SERVER_URL: https://object.kube.mecan.ir
+  MINIO_BROWSER_REDIRECT_URL: https://minio.kube.mecan.ir

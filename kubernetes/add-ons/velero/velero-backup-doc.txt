@@ -1,0 +1,54 @@
+
+–include-namespaces
+velero backup create <backup-name> --include-namespaces <namespace>
+
+–include-resources
+velero backup create <backup-name> --include-resources deployments
+
+–include-cluster-resources
+true: all cluster-scoped resources are included.
+false: no cluster-scoped resources are included.
+
+–selector
+velero backup create <backup-name> --selector <key>=<value>
+
+–exclude-namespaces
+velero backup create <backup-name> --exclude-namespaces kube-system
+
+–exclude-resources
+velero backup create <backup-name> --exclude-resources secrets
+
+
+# URL: https://docs.vmware.com/en/VMware-Tanzu-Kubernetes-Grid-Integrated-Edition/1.13/tkgi/GUID-velero-stateless-ns.html
+
+# Backup entire cluster including cluster-scoped resources.
+velero backup create <backup-name>
+
+# Restore only namespaced resources in the cluster.
+velero restore create <restore-name> --include-cluster-resources=false --from-backup <backup-name>
+
+# Backup a namespace and include cluster-scoped resources.
+velero backup create <backup-name> --include-namespaces <namespace> --include-cluster-resources=true
+
+# Sample
+velero backup create ingress-backup --include-resources ingress
+velero backup create argocd-backup --include-namespaces argocd
+velero backup create all-cluster-resource
+
+
+kubectl -n minio annotate pod minio-76d98d447d-kc67r backup.velero.io/backup-volumes=minio annotated
+velero backup create minio-backup --include-namespaces minio
+
+# check backup locations
+velero backup-location get
+
+# velero snapshot location
+velero snapshot-location get
+
+
+# anotate pvc to pod
+kubectl -n loki-stack annotate pod loki-0 backup.velero.io/backup-volumes=storage-loki-0
+kubectl -n loki-stack describe pod loki-0 | grep Annotations
+
+
+kubectl -n minio annotate pod minio-7dcdd87c75-cswmw backup.velero.io/backup-volumes=minio

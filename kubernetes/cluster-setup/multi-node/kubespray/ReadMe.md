@@ -44,7 +44,7 @@ These limits are safeguarded by Kubespray. Actual requirements for your workload
 
 #### Clone kubespray project with specific tag.
 ```
-git clone -b release-2.23 https://github.com/kubernetes-sigs/kubespray.git
+git clone -b release-2.24 https://github.com/kubernetes-sigs/kubespray.git
 ```
 
 #
@@ -92,6 +92,7 @@ node6 ansible_host=95.54.0.17 ip=10.3.0.6
 [kube_control_plane]
 node1
 node2
+node3
 
 [etcd]
 node1
@@ -99,6 +100,7 @@ node2
 node3
 
 [kube_node]
+node1
 node2
 node3
 node4
@@ -187,6 +189,8 @@ We are using the Containerd for container runtime in Kubernetes.  changed contai
 
 Registries mirror defined within containerd:
 ```
+# Registries defined within containerd.
+containerd_registries_mirrors:
   - prefix: docker.io
     mirrors:
       - host: https://hub.mecan.ir
@@ -267,82 +271,10 @@ local_path_provisioner_storage_class: "local-path"
 local_path_provisioner_reclaim_policy: Delete
 local_path_provisioner_claim_root: /var/lib/local-path-provisioner/
 local_path_provisioner_debug: false
-local_path_provisioner_image_repo: "rancher/local-path-provisioner"
+local_path_provisioner_image_repo: "registry.mecan.ir/rancher/local-path-provisioner"
 local_path_provisioner_image_tag: "v0.0.24"
 local_path_provisioner_helper_image_repo: "busybox"
 local_path_provisioner_helper_image_tag: "latest"
-```
-
-Nginx ingress controller deployment:
-```
-ingress_nginx_enabled: true
-ingress_nginx_host_network: true
-# ingress_publish_status_address: ""
-ingress_nginx_nodeselector:
-  kubernetes.io/os: "linux"
-ingress_nginx_tolerations:
-  - key: "node-role.kubernetes.io/master"
-    operator: "Equal"
-    value: ""
-    effect: "NoSchedule"
-  - key: "node-role.kubernetes.io/control-plane"
-    operator: "Equal"
-    value: ""
-    effect: "NoSchedule"
-ingress_nginx_namespace: "ingress-nginx"
-ingress_nginx_insecure_port: 80
-ingress_nginx_secure_port: 443
-ingress_nginx_configmap:
-  map-hash-bucket-size: "128"
-  ssl-protocols: "TLSv1.2 TLSv1.3"
-# ingress_nginx_configmap_tcp_services:
-#   9000: "default/example-go:8080"
-# ingress_nginx_configmap_udp_services:
-#   53: "kube-system/coredns:53"
-# ingress_nginx_extra_args:
-#   - --default-ssl-certificate=default/foo-tls
-# ingress_nginx_termination_grace_period_seconds: 300
-ingress_nginx_class: nginx
-ingress_nginx_without_class: true
-ingress_nginx_default: true
-```
-
-Cert manager deployment:
-```
-cert_manager_enabled: true
-cert_manager_namespace: "cert-manager"
-cert_manager_tolerations:
-  - key: node-role.kubernetes.io/master
-    effect: NoSchedule
-  - key: node-role.kubernetes.io/control-plane
-    effect: NoSchedule
-cert_manager_affinity:
-  nodeAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 100
-      preference:
-        matchExpressions:
-        - key: node-role.kubernetes.io/control-plane
-          operator: In
-          values:
-          - ""
-cert_manager_nodeselector:
-  kubernetes.io/os: "linux"
-# cert_manager_trusted_internal_ca: |
-#   -----BEGIN CERTIFICATE-----
-#   [REPLACE with your CA certificate]
-#   -----END CERTIFICATE-----
-# cert_manager_leader_election_namespace: kube-system
-
-cert_manager_dns_policy: "ClusterFirst"
-cert_manager_dns_config:
-  nameservers:
-    - "1.1.1.1"
-    - "8.8.8.8"
-
-# cert_manager_controller_extra_args:
-#   - "--dns01-recursive-nameservers-only=true"
-#   - "--dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53"
 ```
 
 #
@@ -351,7 +283,7 @@ cert_manager_dns_config:
 
 Change this to use another Kubernetes version, e.g. a current beta release:
 ```
-kube_version: v1.27.7
+kube_version: v1.28.6
 ```
 
 Choose network plugin (cilium, calico, kube-ovn, weave or flannel. Use cni for generic cni plugin)
@@ -794,11 +726,3 @@ ansible-playbook upgrade-cluster.yml -b -i inventory/sample/hosts.ini -e system_
 Nodes will be rebooted when there are package upgrades (system_upgrade_reboot: on-upgrade). This can be changed to always or never.
 
 **Note:** Downloads will happen twice unless system_upgrade_reboot is never.
-
-
-
-
-todo:
-- arvan cdn for api-server
-- arvan cdn for ingress 80 and 443
-- 

@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue-deployment
+  annotations:
+    kubernetes.io/change-cause: ver1
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: blue-deployment
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: blue-deployment
+        svc: example
+    spec:
+      containers:
+        - name: myapp
+          image: ahmadrafiee/mecan-sample-app:ver1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              memory: 20Mi
+              cpu: 20m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: green-deployment
+  annotations:
+    kubernetes.io/change-cause: ver1
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: green-deployment
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: green-deployment
+        svc: example
+    spec:
+      containers:
+        - name: myapp
+          image: ahmadrafiee/mecan-sample-app:ver2
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              memory: 20Mi
+              cpu: 20m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blue-green
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: blue-deployment
+

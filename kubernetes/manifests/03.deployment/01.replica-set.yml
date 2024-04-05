@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: hello-world-rs
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: hello-world-rs
+  template:
+    metadata:
+      labels:
+        app: hello-world-rs
+        svc: example
+    spec:
+      containers:
+        - name: hello-world
+          image: busybox
+          command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi

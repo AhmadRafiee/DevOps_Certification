@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - name: php-apache
+        image: registry.mecan.ir/devops_certification/kubernetes/php-example
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 30m
+            memory: 30Mi
+          requests:
+            cpu: 10m
+            memory: 10Mi

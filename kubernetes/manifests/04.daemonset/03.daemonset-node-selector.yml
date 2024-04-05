@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: myapp-test
+  labels:
+    app: myapp-test-ds
+  annotations:
+    kubernetes.io/change-cause: ver1
+spec:
+  selector:
+    matchLabels:
+      app: myapp-test-ds
+  template:
+    metadata:
+      labels:
+        app: myapp-test-ds
+        svc: example
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+        - name: myapp-test
+          image: ahmadrafiee/mecan-sample-app:ver1
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+            limits:
+              memory: 20Mi
+              cpu: 20m

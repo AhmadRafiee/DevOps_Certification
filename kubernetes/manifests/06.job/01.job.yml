@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi
+spec:
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      name: pi
+    spec:
+      containers:
+        - name: pi
+          image: perl:slim
+          command: ["perl"]
+          args: ["-Mbignum=bpi", "-wle", "print bpi(1000)"]
+      restartPolicy: Never
