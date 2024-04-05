@@ -59,7 +59,7 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 kubectl get all -n ingress-nginx
 ```
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 #### Deploy and config cert-manager
 
@@ -107,7 +107,7 @@ kubectl apply -f cert-manager/clusterIssuer.yaml
 kubectl get clusterIssuer
 ```
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 #### Deploy and config kube prometheus stack
 
@@ -167,7 +167,7 @@ kubectl get secret -n monitoring
 kubectl get ingress -n monitoring
 ```
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 #### Deploy and config loki stack
 
@@ -202,7 +202,7 @@ kubectl get all -n loki-stack
 
 **Add loki datastore on grafana**
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 #### Deploy and config argo-cd
 
@@ -241,7 +241,7 @@ kubectl get all -n argocd
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 #### Deploy VPA on kube
 
@@ -265,7 +265,7 @@ cd autoscaler/vertical-pod-autoscaler
 kubectl -n kube-system get pod | grep vpa
 ```
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 #### Deploy and config minio
 
@@ -313,7 +313,7 @@ ACCESS_KEY=$(kubectl -n minio get secret minio -o jsonpath="{.data.accesskey}" |
 SECRET_KEY=$(kubectl -n minio get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
 ```
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 
 #### Deploy and config velero

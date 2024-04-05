@@ -1,3 +1,5 @@
+![kube component](images/kube.png)
+
 ### [Kubectl installation, configuration, add-ons, and validator](kubectl)
 
 - [kubectl command tips](kubectl/ReadMe.md)
@@ -5,13 +7,13 @@
 
 ### [Kubernetes cluster setup](cluster-setup)
 
-- #### [Single-node Installation and configuration kubernetes cluster](cluster-setup/single-node)
+  - #### [Single-node Installation and configuration kubernetes cluster](cluster-setup/single-node)
     - [kind - kubernetes in docker](cluster-setup/kind/ReadMe.md)
     - [minikube - kubernetes for development](cluster-setup/minikube/ReadMe.md)
     - [k3d - k3s in docker](cluster-setup/k3d/ReadMe.md)
 
 
-- #### [Multi-node Installation, configuration, and upgrade kubernetes cluster](cluster-setup/multi-node)
+  - #### [Multi-node Installation, configuration, and upgrade kubernetes cluster](cluster-setup/multi-node)
     - ##### [Kubeadm:](https://kubernetes.io/docs/reference/setup-tools/kubeadm/)
         - [Setup and config kubernetes cluster with kubeadm](cluster-setup/kubeadm/ReadMe.md)
         - [Update multi-node kubernetes cluster](cluster-setup/kubeadm/kubeadm-multi-node-update.md)
