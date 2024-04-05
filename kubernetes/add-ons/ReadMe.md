@@ -25,7 +25,7 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 helm version
 ```
 
-<p align="right"><a href="#Table of Contents">🔼 Back to Top</a></p>
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 #### Deploy and config Ingress-nginx
 
