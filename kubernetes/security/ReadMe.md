@@ -366,7 +366,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ahmad
+  name: ali
   namespace: default
 EOF
 ```
@@ -390,7 +390,7 @@ EOF
 
 **Step 3:** create cluster role binding
 cluster role: reader
-service account: ahmad
+service account: ali
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
@@ -403,14 +403,14 @@ roleRef:
   name: reader
 subjects:
 - kind: ServiceAccount
-  name: ahmad
+  name: ali
   namespace: default
 EOF
 ```
 
-**Step 4:** get token for ahmad service account
+**Step 4:** get token for ali service account
 ```bash
-kubectl -n default create token ahmad
+kubectl -n default create token ali
 ```
 
 ### Network policy

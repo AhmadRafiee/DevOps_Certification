@@ -551,8 +551,46 @@ Retrieve the node port assigned to the nginx service:
 NODE_PORT=$(kubectl get svc nginx \
   --output=jsonpath='{range .spec.ports[0]}{.nodePort}')
 ```
+Create a firewall rule that allows remote access to the nginx node port:
+
+Retrieve the external IP address of a worker instance and make an HTTP request using the external
+IP address and the nginx node port:
+
+```bash
+curl -I http://${EXTERNAL_IP}:${NODE_PORT}
+```
+
+You should get 200 OK!
+
+#### DNS
+In this section you will verify the proper functioning of DNS for Services and Pods.
+Create a busybox deployment:
+
+```bash
+kubectl run busybox --image=busybox --command -- sleep 3600
+```
+
+List the pod created by the busybox deployment:
+
+```bash
+kubectl get pods -l run=busybox
+```
+
+Retrieve the full name of the busybox pod:
+
+```bash
+POD_NAME=$(kubectl get pods -l run=busybox -o jsonpath="{.items[0].metadata.name}")
+```
+
+Execute a DNS lookup for the kubernetes service inside the busybox pod:
+
+```bash
+kubectl exec -ti $POD_NAME -- nslookup kubernetes
+```
+
 
 #### Local DNS
+
 We will now also verify that kubernetes built-in DNS works across namespaces. Create a namespace:
 ```
 kubectl create namespace dev
@@ -568,8 +606,184 @@ kubectl run curly -it --rm --image curlimages/curl:7.70.0 -- /bin/sh
 curl --head http://nginx.dev:80
 ```
 
+### Data Encryption
+Verify the cluster's ability to perform data encryption.
+Create a test secret:
+```bash
+kubectl create secret generic kubernetes-the-hard-way --from-literal="mykey=mydata"
+```
+
+Log in to one of your controller servers, and get the raw data for the test secret from etcd:
+```bash
+sudo ETCDCTL_API=3 etcdctl get \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/etcd/ca.pem \
+  --cert=/etc/etcd/kubernetes.pem \
+  --key=/etc/etcd/kubernetes-key.pem\
+  /registry/secrets/default/kubernetes-the-hard-way | hexdump -C
+```
+Your output should look something like this:
+```
+00000000  2f 72 65 67 69 73 74 72  79 2f 73 65 63 72 65 74  |/registry/secret|
+00000010  73 2f 64 65 66 61 75 6c  74 2f 6b 75 62 65 72 6e  |s/default/kubern|
+00000020  65 74 65 73 2d 74 68 65  2d 68 61 72 64 2d 77 61  |etes-the-hard-wa|
+00000030  79 0a 6b 38 73 3a 65 6e  63 3a 61 65 73 63 62 63  |y.k8s:enc:aescbc|
+00000040  3a 76 31 3a 6b 65 79 31  3a fc 21 ee dc e5 84 8a  |:v1:key1:.!.....|
+00000050  53 8e fd a9 72 a8 75 25  65 30 55 0e 72 43 1f 20  |S...r.u%e0U.rC. |
+00000060  9f 07 15 4f 69 8a 79 a4  70 62 e9 ab f9 14 93 2e  |...Oi.y.pb......|
+00000070  e5 59 3f ab a7 b2 d8 d6  05 84 84 aa c3 6f 8d 5c  |.Y?..........o.\|
+00000080  09 7a 2f 82 81 b5 d5 ec  ba c7 23 34 46 d9 43 02  |.z/.......#4F.C.|
+00000090  88 93 57 26 66 da 4e 8e  5c 24 44 6e 3e ec 9c 8e  |..W&f.N.\$Dn>...|
+000000a0  83 ff 40 9a fb 94 07 3c  08 52 0e 77 50 81 c9 d0  |..@....<.R.wP...|
+000000b0  b7 30 68 ba b1 b3 26 eb  b1 9f 3f f1 d7 76 86 09  |.0h...&...?..v..|
+000000c0  d8 14 02 12 09 30 b0 60  b2 ad dc bb cf f5 77 e0  |.....0.`......w.|
+000000d0  4f 0b 1f 74 79 c1 e7 20  1d 32 b2 68 01 19 93 fc  |O..ty.. .2.h....|
+000000e0  f5 c8 8b 0b 16 7b 4f c2  6a 0a                    |.....{O.j.|
+000000ea
+```
+Look for k8s:enc:aescbc:v1:key1 on the right of the output to verify that the data is stored in an encrypted format!
+
+#### Untrusted workloads
+Verify that untrusted workloads run using gVisor.
+Our Kubernetes cluster has been configured to run untrusted workloads under a more secure configuration using runsc. In this lesson, we will make sure that this functionality is working correctly. We will create a pod that is marked as untrusted, then we will log in to the worker node and dig into the runsc data to make sure that the container is actually running under runsc. This will verify that our cluster is running untrusted workloads with the correct configuration on the worker node.
+First, create an untrusted pod:
+```bash
+cat << EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: untrusted
+  annotations:
+    io.kubernetes.cri.untrusted-workload: "true"
+spec:
+  containers:
+    - name: webserver
+      image: gcr.io/hightowerlabs/helloworld:2.0.0
+EOF
+```
+Make sure that the untrusted pod is running:
+```bash
+kubectl get pods untrusted -o wide
+```
+Take note of which worker node the untrusted pod is running on, then log into that worker node.
+
+On the worker node, list all of the containers running under gVisor:
+```bash
+sudo runsc --root  /run/containerd/runsc/k8s.io list
+```
+Get the pod ID of the untrusted pod and store it in an environment variable:
+```bash
+POD_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock \
+  pods --name untrusted -q)
+```
+Get the container ID of the container running in the untrusted pod and store it in an environment variable:
+```bash
+CONTAINER_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock \
+  ps -p ${POD_ID} -q)
+```
+Get information about the process running in the container:
+```bash
+sudo runsc --root /run/containerd/runsc/k8s.io ps ${CONTAINER_ID}
+```
+Since we were able to get the process info using runsc, we know that the untrusted container is running securely as expected.
+
+
 #
-## Step 11: Scale your cluster:
+## Step 11: Sonobuoy
+
+#### Overview
+
+Sonobuoy is a diagnostic tool that makes it easier to understand the state of a Kubernetes cluster by running a set of
+plugins (including Kubernetes conformance tests) in an accessible and non-destructive manner. It is a
+customizable, extendable, and cluster-agnostic way to generate clear, informative reports about your cluster.
+
+Its selective data dumps of Kubernetes resource objects and cluster nodes allow for the following use cases:
+
+* Integrated end-to-end (e2e) conformance-testing
+* Workload debugging
+* Custom data collection via extensible plugins
+
+#### Installation
+
+The following methods exist for installing Sonobuoy:
+
+
+1. Download the [latest release](https://github.com/vmware-tanzu/sonobuoy/releases) for your client platform.
+2. Extract the tarball:
+
+   ```
+   tar -xvf <RELEASE_TARBALL_NAME>.tar.gz
+   ```
+
+   Move the extracted sonobuoy executable to somewhere on your `PATH`.
+
+
+
+#### Getting Started
+
+To launch conformance tests (ensuring CNCF conformance) and wait until they are finished run:
+
+```bash
+sonobuoy run --wait
+```
+
+> Note: Using `--mode quick` will significantly shorten the runtime of Sonobuoy. It runs just a single test, helping to quickly validate your Sonobuoy and Kubernetes configuration. It can be somehow a smoke test.
+
+Get the results from the plugins (e.g. e2e test results):
+
+```bash
+results=$(sonobuoy retrieve)
+```
+
+Inspect results for test failures. This will list the number of tests failed and their names:
+
+```bash
+sonobuoy results $results
+```
+
+> Note: The results command has lots of useful options for various situations. See the results page for more details.
+
+You can also extract the entire contents of the file to get much more detailed data about your cluster.
+
+Sonobuoy creates a few resources in order to run and expects to run within its own namespace.
+
+Deleting Sonobuoy entails removing its namespace as well as a few cluster scoped resources.
+
+```bash
+sonobuoy delete --wait
+```
+
+> Note: The --wait option ensures the Kubernetes namespace is deleted, avoiding conflicts if another Sonobuoy run is started quickly.
+
+
+#### Other Tests
+
+By default, `sonobuoy run` runs the Kubernetes conformance tests but this can easily be configured. The same plugin that
+has the conformance tests has all the Kubernetes end-to-end tests which include other tests such as:
+
+* tests for specific storage features
+* performance tests
+* scaling tests
+* provider specific tests
+* and many more
+
+
+#### Monitoring Sonobuoy during a run
+
+You can check on the status of each of the plugins running with:
+
+```bash
+sonobuoy status
+```
+
+You can also inspect the logs of all Sonobuoy containers:
+
+```bash
+sonobuoy logs
+```
+
+#
+## Step 12: Scale your cluster:
 You can add worker nodes from your cluster by running the scale playbook. For more information, see "Adding nodes". You can remove worker nodes from your cluster by running the remove-node playbook. For more information, see "Remove nodes".
 
 
@@ -614,7 +828,7 @@ ansible-playbook -i inventory/mycluster/hosts.yml remove-node.yml -b -v \
 If a node is completely unreachable by ssh, add `--extra-vars reset_nodes=false` to skip the node reset step. If one node is unavailable, but others you wish to remove are able to connect via SSH, you could set `reset_nodes=false` as a host var in inventory.
 
 #
-## Step 12: Upgrading Kubernetes in Kubespray. [link](https://github.com/kubernetes-sigs/kubespray/blob/release-2.23/docs/upgrades.md#upgrading-kubernetes-in-kubespray)
+## Step 13: Upgrading Kubernetes in Kubespray. [link](https://github.com/kubernetes-sigs/kubespray/blob/release-2.23/docs/upgrades.md#upgrading-kubernetes-in-kubespray)
 
 Kubespray handles upgrades the same way it handles initial deployment. That is to say that each component is laid down in a fixed order.
 
