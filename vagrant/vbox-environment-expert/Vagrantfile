@@ -1,12 +1,12 @@
 IMAGE_ubuntu_2204   = "bento/ubuntu-22.04"
-IMAGE_Debian_12     = "bento/ubuntu-22.04"
+IMAGE_Debian_12     = "bento/debian-12"
 
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure(2) do |config|
   config.vm.provision "shell", path: "bootstrap.sh"
 
-  NodeType1 = 3
+  NodeType1 = 2
   (1..NodeType1).each do |type1_id|
     config.vm.define "type1#{type1_id}" do |type1_vm|
       type1_vm.vm.box = IMAGE_Debian_12

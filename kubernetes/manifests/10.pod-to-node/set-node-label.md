@@ -29,3 +29,7 @@ worker2   Ready     <none>   1d      v1.13.0        ...,kubernetes.io/hostname=w
 ```
 In the preceding output, you can see that the worker0 node has a disktype=ssd label.
 
+You add a taint to a node using kubectl taint. For example,
+```
+kubectl taint nodes node1 key1=value1:NoSchedule
+```

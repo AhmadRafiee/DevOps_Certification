@@ -4,7 +4,7 @@ metadata:
   name: pi10
 spec:
   activeDeadlineSeconds: 600
-  completions: 30
+  completions: 100
   parallelism: 10
   template:
     metadata:

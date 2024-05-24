@@ -309,8 +309,8 @@ kubectl get ingress,secret -n minio
 kubectl get all -n minio
 
 # get access key and secret key
-ACCESS_KEY=$(kubectl -n minio get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode)
-SECRET_KEY=$(kubectl -n minio get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
+ACCESS_KEY=$(kubectl -n minio get secret minio -o jsonpath="{.data.rootUser}" | base64 --decode)
+SECRET_KEY=$(kubectl -n minio get secret minio -o jsonpath="{.data.rootPassword}" | base64 --decode)
 ```
 
 <p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
@@ -332,7 +332,13 @@ helm repo list
 helm repo update
 ```
 
-**Step3:** Deploy velero
+**Step3** Create BackupStorageLocation for velero
+```bash
+kubectl create ns velero
+kubectl apply -f velero/manifest.yml
+```
+
+**Step4:** Deploy velero
 ```bash
 helm upgrade --install velero vmware-tanzu/velero \
     --namespace velero \
@@ -340,7 +346,7 @@ helm upgrade --install velero vmware-tanzu/velero \
     --create-namespace
 ```
 
-**Step4:** check all resource on velero ns
+**Step5:** check all resource on velero ns
 ```bash
 kubectl get all -n velero
 ```

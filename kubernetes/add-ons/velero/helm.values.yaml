@@ -9,13 +9,13 @@ resources:
 
 initContainers:
   - name: velero-plugin-for-csi
-    image: velero/velero-plugin-for-csi:v0.4.2
+    image: velero/velero-plugin-for-csi:v0.7.1
     imagePullPolicy: IfNotPresent
     volumeMounts:
       - mountPath: /target
         name: plugins
   - name: velero-plugin-for-aws
-    image: velero/velero-plugin-for-aws:v1.6.1
+    image: velero/velero-plugin-for-aws:v1.9.0
     imagePullPolicy: IfNotPresent
     volumeMounts:
       - mountPath: /target
@@ -36,17 +36,24 @@ metrics:
     namespace: monitoring
 
 configuration:
-  provider: aws
   backupStorageLocation:
-    bucket: aban-backup
+  - name: default
+    provider: aws
+    bucket: mecan-backup
+    credential:
+      name: velero-credential
+      key: cloud
     config:
       region: minio
-      s3ForcePathStyle: true
-      s3Url: https://object.kube.vone.abanchange.me/
+      s3ForcePathStyle:  "true"
+      s3Url: https://object.kube.mecan.ir/
 
   volumeSnapshotLocation:
-    name: snapshot-location
+  - name: default
     provider: aws
+    credential:
+      name: velero-credential
+      key: cloud
     config:
       region: minio
 
@@ -57,8 +64,8 @@ credentials:
   secretContents:
     cloud: |
         [default]
-        aws_access_key_id=l1DB3pEEeQTVJvp2ZHPl
-        aws_secret_access_key=akPEKIvk7BbHGd7V73XgbjgWSB5hvnKwxyZKJzQU
+        aws_access_key_id=velero-backup
+        aws_secret_access_key=SnIz1xok36WfZcEUhPJao0GpsIXWnKdm4fA5WtfA
 
 backupsEnabled: true
 snapshotsEnabled: true

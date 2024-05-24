@@ -31,7 +31,7 @@ alertmanager:
 
 grafana:
   defaultDashboardsTimezone: Asia/Tehran
-  adminPassword: Grafana_Admin_Password       # Grafana admin user Password
+  adminPassword: Grafana_Admin_Password_sdfsfewkmrkjnrsjfnwek       # Grafana admin user Password
   ingress:
     enabled: true
     annotations:

@@ -14,5 +14,5 @@ spec:
     spec:
       containers:
       - name: load-generator
-        image: busybox:1.28
+        image: busybox
         args: [/bin/sh, -c, 'while true; do wget -q -O- http://php-apache; done']

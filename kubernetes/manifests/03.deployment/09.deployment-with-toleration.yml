@@ -1,23 +1,23 @@
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
-  name: myapp-test-1
-  labels:
-    app: myapp-test-ds
+  name: taint-and-toleration
   annotations:
     kubernetes.io/change-cause: ver1
 spec:
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: myapp-test-ds
+      app: taint-and-toleration-deploy
+  replicas: 5
   template:
     metadata:
       labels:
-        app: myapp-test-ds
+        app: taint-and-toleration-deploy
         svc: example
     spec:
       containers:
-        - name: myapp-test
+        - name: taint-and-toleration
           image: ahmadrafiee/mecan-sample-app:ver1
           ports:
             - containerPort: 80
@@ -28,3 +28,8 @@ spec:
             limits:
               memory: 20Mi
               cpu: 20m
+      tolerations:
+        - key: "hala"
+          operator: "Equal"
+          value: "harchi"
+          effect: "NoSchedule"

@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: sample-node-name
 spec:
-  nodeName: kind-worker
+  nodeName: worker1
   containers:
   - name: mecan-sample-app
     image: ahmadrafiee/mecan-sample-app:ver1

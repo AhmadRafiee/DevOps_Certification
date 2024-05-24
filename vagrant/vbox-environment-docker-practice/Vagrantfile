@@ -1,5 +1,5 @@
 IMAGE_ubuntu_2204   = "bento/ubuntu-22.04"
-IMAGE_Debian_12     = "bento/ubuntu-22.04"
+IMAGE_Debian_12     = "bento/debian-12"
 
 Vagrant.configure("2") do |config|
   config.proxy.http = "http://192.168.56.1:8123"

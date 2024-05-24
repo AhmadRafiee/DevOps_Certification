@@ -8,12 +8,12 @@ spec:
   revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: hello-word-v1
-  replicas: 5
+      app: canary-test
+  replicas: 9
   template:
     metadata:
       labels:
-        app: hello-word-v1
+        app: canary-test
         svc: example
     spec:
       containers:
@@ -34,7 +34,7 @@ kind: Deployment
 metadata:
   name: hello-word-v2
   annotations:
-    kubernetes.io/change-cause: ver1
+    kubernetes.io/change-cause: ver2
 spec:
   revisionHistoryLimit: 3
   selector:
@@ -44,7 +44,7 @@ spec:
   template:
     metadata:
       labels:
-        app: hello-word-v1
+        app: canary-test
         svc: example
     spec:
       containers:

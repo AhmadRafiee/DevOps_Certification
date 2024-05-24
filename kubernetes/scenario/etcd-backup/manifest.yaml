@@ -4,7 +4,7 @@ metadata:
   name: etcd-backup-cronjob
   namespace: kube-system
 spec:
-  schedule: "0 0/4 * * *"
+  schedule: "* * * * *"
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 2
   jobTemplate:
@@ -65,5 +65,5 @@ metadata:
   namespace: kube-system
 type: Opaque
 data:
-  MINIO_ACCESS_KEY: "bDFEQjNwRsdfsfUVlZGRRVFZKdwrwrwnAyWkhQbA=="
-  MINIO_SECRET_KEY: "YWtQRUtJdsdsewvsvsmt3ZXdlZjdCYkvsvwewwehHZDdWNzNYZ2JqZ1dTQjVodm5Ld3h5WktKelFV"
+  MINIO_ACCESS_KEY: "ZXRjZC1iYWNrdXA="
+  MINIO_SECRET_KEY: "U25JejF4b2szNldmWmNFVWhQSmFvMEdwc0lYV25LZG00ZkE1V3RmQQ=="
