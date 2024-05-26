@@ -15,8 +15,10 @@ curl -fsSL https://get.docker.com | bash
 ```bash
 apt update
 apt install -y python3-pip
-pip3 install docker==6.1.3
-pip3 install docker-compose==1.29.2
+pip3 install --force-reinstall docker==6.1.3
+pip3 install --force-reinstall docker-compose==1.29.2
+pip3 install --force-reinstall 'requests<2.29.0' 'urllib3<2.0'
+
 ```
 
 ### Step 4: Download Ansible AWX
