@@ -175,6 +175,10 @@ location /api/ {
   - `location /api/ { ... }`: This matches URIs that start with /api/.
   - `proxy_pass http://backend_server;`: Forwards requests to the backend server (replace backend_server with the actual backend server address).
   - `proxy_set_header ...;`: Sets headers to pass along with the proxied request.
+  - `proxy_set_header Host $host;`: Sets the Host header in the proxied request to the value of the original Host header.
+  - `proxy_set_header X-Real-IP $remote_addr;`: Passes the client's IP address to the backend server.
+  - `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`: Adds the client's IP address to the X-Forwarded-For header.
+  - `proxy_set_header X-Forwarded-Proto $scheme;`: Passes the original request scheme (http or https) to the backend server.
 
 **Location with Basic Authentication**
 ```bash
@@ -198,6 +202,8 @@ location /downloads/ {
   - `location /downloads/ { ... }`: This matches URIs that start with /downloads/.
   - `alias /var/www/files/;`: Specifies the directory to serve files from. Note that alias replaces the entire URI part.
   - `autoindex on;`: Enables automatic directory listing if no index file is found.
+  - `index index.html index.htm;`: This directive defines the index files that Nginx will look for when a directory is requested.
+
 
 **Denying Access**
 ```bash
@@ -220,7 +226,7 @@ location / {
   - `error_page 500 502 503 504 /50x.html;`: Specifies the custom error page for server errors.
 
 
-### Description of Common Directives
+### Description of Common Directives on location
   - `root`: Specifies the root directory for the location block. The full file path is constructed by appending the URI to this directory.
   - `alias`: Specifies the directory to serve files from, but unlike root, alias replaces the entire URI part.
   - `try_files`: Tries to serve the requested URI as a file or directory. If neither exists, it serves the specified fallback URI.
@@ -230,3 +236,329 @@ location / {
   - `auth_basic_user_file`: Specifies the password file for HTTP authentication.
   - `deny`: Denies access to the specified location.
   - `autoindex`: Enables or disables automatic directory listing.
+  - `satisfy any;`: This directive allows access if any of the access conditions are met. In this case, it means that a request will be allowed if it satisfies either the IP address restriction or the Basic Authentication requirement.
+  - `allow 192.168.1.0/24;`: This directive allows access from the IP address range 192.168.1.0 to 192.168.1.255.
+
+#### Additional Notes:
+  - **root vs. alias:** The root directive specifies the document root for the server or location block, appending the URI to this path. The alias directive specifies the exact path to serve the files from, replacing the entire URI part.
+  - **try_files:** This directive is useful for handling pretty URLs, where you might want to serve an index file or show a 404 error if the file or directory does not exist.
+  - **autoindex:** Enabling autoindex allows users to see a directory listing if no index file is found, which can be useful for directories meant to serve downloadable files.
+
+### Description of Upstream Context Components:
+```bash
+upstream backend {
+    server backend1.example.com;
+    server backend2.example.com;
+    server backend3.example.com;
+}
+
+server {
+    listen 80;
+    server_name example.com;
+
+    location / {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+  - `upstream backend { ... }`:The upstream block defines a group of backend servers that Nginx will use for proxying requests.
+  - `backend`: The name given to this upstream block. This name is used in the proxy_pass directive to refer to this group of servers.
+  - `server backend1.example.com;`: server backend1.example.com;: This directive specifies a backend server. You can list multiple servers within the upstream block.
+
+#### Load Balancing Methods:
+Nginx supports several load balancing methods that can be specified within the upstream block:
+
+```bash
+upstream backend {
+    server backend1.example.com;
+    server backend2.example.com;
+    server backend3.example.com;
+}
+```
+  - **Round-robin (default):** Distributes requests to the servers in a circular manner.
+
+```bash
+upstream backend {
+    least_conn;
+    server backend1.example.com;
+    server backend2.example.com;
+    server backend3.example.com;
+}
+```
+  - **Least Connections:** Distributes requests to the server with the fewest active connections.
+
+```bash
+upstream backend {
+    ip_hash;
+    server backend1.example.com;
+    server backend2.example.com;
+    server backend3.example.com;
+}
+```
+  - **IP Hash:** Distributes requests based on the client IP address, ensuring the same client is always directed to the same server.
+
+```bash
+upstream backend {
+    hash $request_uri consistent;
+    server backend1.example.com;
+    server backend2.example.com;
+    server backend3.example.com;
+}
+```
+  - **Generic Hash:** Distributes requests based on a custom hash key.
+
+
+#### Server Parameters
+Each server directive within an upstream block can be configured with several parameters:
+
+```bash
+upstream backend {
+    server backend1.example.com weight=3;
+    server backend2.example.com;
+}
+```
+  - **weight=number:** Assigns a weight to the server. Higher weights mean more requests are sent to that server.
+
+```bash
+upstream backend {
+    server backend1.example.com max_fails=3;
+    server backend2.example.com;
+}
+```
+  - **max_fails=number:** Specifies the number of failed attempts after which the server is considered unavailable.
+
+```bash
+upstream backend {
+    server backend1.example.com fail_timeout=30s;
+    server backend2.example.com;
+}
+```
+  - **fail_timeout=time:** Specifies the time during which the server will be considered unavailable after max_fails failures.
+
+```bash
+upstream backend {
+    server backend1.example.com;
+    server backend2.example.com backup;
+}
+```
+  - **backup:** Designates the server as a backup. It will only be used when the primary servers are unavailable.
+
+
+#### Additional Notes:
+ - **Health Checks:** Nginx can be configured to perform health checks on backend servers to ensure they are available before sending requests. This requires the Nginx Plus version or a third-party module.
+ - **Sticky Sessions:** To maintain session persistence (sticky sessions), you can use the ip_hash method or use a third-party module for more advanced configurations.
+
+
+**Testing Configuration:** Ensure to test the Nginx configuration after making changes:
+```bash
+nginx -t
+```
+
+**Reload Nginx:** Apply the changes by reloading Nginx:
+
+```bash
+sudo systemctl reload nginx
+```
+
+### Nginx Redirection and Rewrite configuration:
+
+#### Simple Redirection with return
+The return directive is a straightforward way to perform redirections.
+```bash
+server {
+    listen 80;
+    server_name example.com;
+
+    location /old-page {
+        return 301 /new-page;
+    }
+
+    location / {
+        root /var/www/html;
+        index index.html index.htm;
+    }
+}
+```
+  - `location /old-page { ... }`: This block matches requests to /old-page.
+  - `return 301 /new-page;`: This directive sends a 301 Moved Permanently response, redirecting the client to /new-page.
+
+#### Redirection with rewrite
+The rewrite directive allows for more complex URL manipulations using regular expressions.
+
+```bash
+server {
+    listen 80;
+    server_name example.com;
+
+    location / {
+        rewrite ^/old-section/(.*)$ /new-section/$1 permanent;
+    }
+}
+```
+
+  - `rewrite ^/old-section/(.*)$ /new-section/$1 permanent;`: This directive matches any URL starting with /old-section/, captures the rest of the URL, and redirects it to /new-section/ with the captured part appended. The permanent keyword sends a 301 Moved Permanently response.
+
+#### Enforcing HTTPS
+
+Redirecting HTTP requests to HTTPS is a common use case for redirection to ensure secure communication.
+
+```bash
+server {
+    listen 80;
+    server_name example.com;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name example.com;
+
+    ssl_certificate /etc/nginx/ssl/example.com.crt;
+    ssl_certificate_key /etc/nginx/ssl/example.com.key;
+
+    location / {
+        root /var/www/html;
+        index index.html index.htm;
+    }
+}
+
+```
+
+  - `listen 80;`: Listens for HTTP requests.
+  - `return 301 https://$host$request_uri;`: Redirects all HTTP requests to the corresponding HTTPS URL.
+  - `listen 443 ssl;`: Listens for HTTPS requests.
+  - `ssl_certificate` and `ssl_certificate_key`: Specifies the SSL certificate and key files.
+
+
+#### Redirection with Conditional Logic
+You can use if statements for conditional redirections.
+
+```bash
+server {
+    listen 80;
+    server_name example.com;
+
+    location / {
+        if ($request_uri ~* "^/old-page") {
+            return 301 /new-page;
+        }
+
+        root /var/www/html;
+        index index.html index.htm;
+    }
+}
+```
+  - `*if ($request_uri ~ "^/old-page") { ... }**`: Checks if the request URI matches /old-page.
+  - `return 301 /new-page;`: Redirects the client to /new-page.
+
+#### Redirecting to an External URL
+Redirect to an external website or URL.
+
+```bash
+server {
+    listen 80;
+    server_name example.com;
+
+    location /redirect-me {
+        return 302 https://www.external.com;
+    }
+
+    location / {
+        root /var/www/html;
+        index index.html index.htm;
+    }
+}
+```
+  - `return 302 https://www.external.com;`: Sends a 302 Found response, redirecting the client to an external URL `https://www.external.com`.
+
+**301 vs. 302 Redirects:**
+  - `301 Moved Permanently:` Indicates that the resource has permanently moved to a new location. This redirect is cached by browsers.
+  - `302 Found:` Indicates a temporary redirection. Browsers do not cache this redirect.
+
+### Configure Nginx to Use SSL/TLS:
+Here is a full configuration example:
+
+```bash
+server {
+    listen 80;
+    server_name example.com www.example.com;
+
+    # Redirect all HTTP requests to HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name example.com www.example.com;
+
+    ssl_certificate /etc/nginx/ssl/example.com.crt;
+    ssl_certificate_key /etc/nginx/ssl/example.com.key;
+
+    # Recommended security settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_session_tickets off;
+
+    # Enable OCSP Stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+
+    # Add HTTP Strict Transport Security (HSTS)
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+    # Protect against clickjacking
+    add_header X-Frame-Options DENY;
+
+    # Enable XSS protection
+    add_header X-XSS-Protection "1; mode=block";
+
+    # Prevent MIME type sniffing
+    add_header X-Content-Type-Options nosniff;
+
+    # Specify a content security policy
+    add_header Content-Security-Policy "default-src 'self'";
+
+    root /var/www/html;
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+**Explanation of Configuration Components**
+  - `listen 80;`: Listens for HTTP traffic.
+  - `server_name example.com www.example.com;`: Specifies the domain names.
+  - `return 301 https://$host$request_uri;`: Redirects all HTTP requests to HTTPS.
+  - `listen 443 ssl;`: Listens for HTTPS traffic.
+  - `ssl_certificate /etc/nginx/ssl/example.com.crt;`: Path to the SSL certificate.
+  - `ssl_certificate_key /etc/nginx/ssl/example.com.key;`: Path to the private key.
+  - `ssl_protocols TLSv1.2 TLSv1.3;`: Specifies allowed SSL/TLS protocols.
+  - `ssl_prefer_server_ciphers on;`: Prefer server ciphers over client ciphers.
+  - `ssl_ciphers "...";`: Specifies the ciphers to use.
+  - `ssl_session_cache shared:SSL:10m;`: Configures SSL session caching.
+  - `ssl_session_timeout 10m;`: Sets the timeout for cached sessions.
+  - `ssl_session_tickets off;`: Disables session tickets for added security.
+  - `ssl_stapling on;`: Enables OCSP stapling.
+  - `ssl_stapling_verify on;`: Verifies the OCSP response.
+  - `resolver 8.8.8.8 8.8.4.4 valid=300s;`: Sets the DNS resolvers for OCSP.
+  - `resolver_timeout 5s;`: Sets the resolver timeout.
+  - `Strict-Transport-Security`: Enforces HSTS.
+  - `X-Frame-Options DENY`: Protects against clickjacking.
+  - `X-XSS-Protection "1; mode=block"`: Enables XSS protection.
+  - `X-Content-Type-Options nosniff`: Prevents MIME type sniffing.
+  - `Content-Security-Policy "default-src 'self'"`: Sets a basic content security policy.
+  - `root /var/www/html;`: Specifies the document root.
+  - `index index.html index.htm;`: Defines index files.
+  - `location / { ... }`: Handles requests to the root URL.
+
