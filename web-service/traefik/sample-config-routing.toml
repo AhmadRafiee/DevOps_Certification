@@ -1,0 +1,11 @@
+[http]
+  [http.routers]
+    [http.routers.my-router]
+      rule = "Host(`example.com`)"
+      service = "my-service"
+
+  [http.services]
+    [http.services.my-service]
+      [http.services.my-service.loadBalancer]
+        [[http.services.my-service.loadBalancer.servers]]
+          url = "http://127.0.0.1:8080"

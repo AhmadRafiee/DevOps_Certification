@@ -1,0 +1,11 @@
+http:
+  routers:
+    my-router:
+      rule: "Host(`example.com`)"
+      service: my-service
+
+  services:
+    my-service:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:8080"

@@ -1,0 +1,7 @@
+version: '3'
+services:
+  my-service:
+    image: my-image
+    labels:
+      - "traefik.http.routers.my-router.rule=Host(`example.com`)"
+      - "traefik.http.services.my-service.loadbalancer.server.port=80"
