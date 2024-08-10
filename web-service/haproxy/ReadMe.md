@@ -348,6 +348,205 @@ listen stats
     stats admin if LOCALHOST
 ```
 
+**Common ACL Options**
+
+  **1.hdr (Header):**
+    Matches an HTTP header.
+    Example: Match requests with a specific User-Agent header.
+```bash
+acl is_chrome hdr(User-Agent) -i Mozilla
+use_backend chrome_backend if is_chrome
+```
+
+  **2.hdr_beg (Header Begins With)**
+    Matches if an HTTP header starts with a specified string.
+    Example: Match requests where the Host header begins with admin.
+```bash
+acl is_admin hdr_beg(Host) -i admin
+use_backend admin_backend if is_admin
+```
+
+  **3.hdr_end (Header Ends With)**
+    Matches if an HTTP header ends with a specified string.
+    Example: Match requests where the Host header ends with .example.com.
+```bash
+acl is_example_domain hdr_end(Host) -i .example.com
+use_backend example_backend if is_example_domain
+```
+
+  **4.hdr_sub (Header Contains Substring)**
+    Matches if an HTTP header contains a specific substring.
+    Example: Match requests with a Referer header that contains example.
+```bash
+acl is_example_referer hdr_sub(Referer) -i example
+use_backend example_referer_backend if is_example_referer
+```
+
+  **5.path (Request Path)**
+    Matches based on the request URL path.
+    Example: Match requests with a path starting with /api.
+```bash
+acl is_api path_beg /api
+use_backend api_backend if is_api
+```
+
+  **6.path_beg (Path Begins With)**
+    Matches if the request path begins with a specific string.
+    Example: Match requests where the path starts with /images.
+```bash
+acl is_images path_beg /images
+use_backend images_backend if is_images
+```
+
+  **7.path_end (Path Ends With)**
+    Matches if the request path ends with a specific string.
+    Example: Match requests where the path ends with .jpg.
+```bash
+acl is_jpg path_end .jpg
+use_backend jpg_backend if is_jpg
+```
+
+  **8.path_reg (Path Matches Regex)**
+    Matches if the request path matches a regular expression.
+    Example: Match requests where the path contains numbers.
+```bash
+acl has_numbers path_reg -i [0-9]
+use_backend numbers_backend if has_numbers
+```
+
+  **9.src (Source IP Address)**
+    Matches based on the client’s source IP address.
+    Example: Match requests from the IP range 192.168.1.0/24.
+```bash
+acl is_internal src 192.168.1.0/24
+use_backend internal_backend if is_internal
+```
+
+  **10.dst (Destination IP Address)**
+    Matches based on the destination IP address (useful in multi-IP setups).
+    Example: Match requests directed to a specific IP.
+```bash
+acl is_specific_ip dst 192.168.1.10
+use_backend specific_ip_backend if is_specific_ip
+```
+
+  **11.req_ssl_sni (SSL SNI)**
+    Matches based on the Server Name Indication (SNI) in an SSL request.
+    Example: Match requests for app1.example.com.
+```bash
+acl is_app1 req.ssl_sni -i app1.example.com
+use_backend app1_backend if is_app1
+```
+
+  **12.ssl_fc (SSL Frontend Connection)**
+    Matches if the frontend connection is using SSL.
+    Example: Match requests that arrive over HTTPS.
+```bash
+acl is_https ssl_fc
+use_backend https_backend if is_https
+```
+
+  **13.ssl_fc_sni (SSL Frontend SNI)**
+    Matches based on the SNI in an SSL frontend connection.
+    Example: Match requests for secure.example.com.
+```bash
+acl is_secure req.ssl_sni -i secure.example.com
+use_backend secure_backend if is_secure
+```
+
+  **14.method (HTTP Method)**
+    Matches based on the HTTP method (GET, POST, etc.).
+    Example: Match requests that use the POST method.
+```bash
+acl is_post method POST
+use_backend post_backend if is_post
+```
+
+  **15.req_len (Request Length)**
+    Matches based on the size of the request.
+    Example: Match requests larger than 100KB.
+```bash
+acl large_request req_len gt 100000
+use_backend large_request_backend if large_request
+```
+
+  **16.cookie (HTTP Cookie)**
+    Matches based on a specific HTTP cookie value.
+    Example: Match requests where the session_id cookie is abc123.
+```bash
+acl valid_session cookie(session_id) -i abc123
+use_backend session_backend if valid_session
+```
+
+  **17.req_fhdr (First Header)**
+    Matches based on the first occurrence of a specific header.
+    Example: Match the first X-Forwarded-For header value.
+```bash
+acl first_xff req.fhdr(X-Forwarded-For) -m found
+use_backend xff_backend if first_xff
+```
+
+  **18.req_rdp_cookie (RDP Cookie)**
+    Matches based on a specific RDP cookie.
+    Example: Match RDP requests with a specific cookie.
+```bash
+acl rdp_cookie_present req_rdp_cookie mstshash -m found
+use_backend rdp_backend if rdp_cookie_present
+```
+
+Example HAProxy Configuration with ACLs
+Here's a sample configuration that uses multiple ACLs to route traffic:
+```bash
+haproxy
+Copy code
+frontend http_front
+    bind *:80
+
+    # ACLs
+    acl is_api path_beg /api
+    acl is_images path_beg /images
+    acl is_jpg path_end .jpg
+    acl is_chrome hdr_sub(User-Agent) Chrome
+    acl is_internal src 192.168.1.0/24
+    acl is_post method POST
+    acl is_app1 req.ssl_sni -i app1.example.com
+    acl large_request req_len gt 100000
+
+    # Routing decisions based on ACLs
+    use_backend api_backend if is_api
+    use_backend images_backend if is_images
+    use_backend jpg_backend if is_jpg
+    use_backend chrome_backend if is_chrome
+    use_backend internal_backend if is_internal
+    use_backend post_backend if is_post
+    use_backend app1_backend if is_app1
+    use_backend large_request_backend if large_request
+
+backend api_backend
+    server api_server 192.168.1.101:80
+
+backend images_backend
+    server images_server 192.168.1.102:80
+
+backend jpg_backend
+    server jpg_server 192.168.1.103:80
+
+backend chrome_backend
+    server chrome_server 192.168.1.104:80
+
+backend internal_backend
+    server internal_server 192.168.1.105:80
+
+backend post_backend
+    server post_server 192.168.1.106:80
+
+backend app1_backend
+    server app1_server 192.168.1.107:80
+
+backend large_request_backend
+    server large_request_server 192.168.1.108:80
+```
+
 ## Content Switching Configuration
 
 Content switching typically involves defining Access Control Lists (ACLs) and using those ACLs to determine the appropriate backend for each request.

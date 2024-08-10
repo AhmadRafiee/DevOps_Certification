@@ -1,0 +1,58 @@
+networks:
+  app_net:
+    name: app_net
+    external: true
+
+services:
+  nginx-srv1:
+    image: nginx:latest
+    container_name: nginx-srv1
+    hostname: nginx-srv1
+    volumes:
+      - ./nginx.srv1.html:/usr/share/nginx/html/index.html
+    networks:
+      - app_net
+
+  nginx-srv2:
+    image: nginx:latest
+    container_name: nginx-srv2
+    hostname: nginx-srv2
+    volumes:
+      - ./nginx.srv2.html:/usr/share/nginx/html/index.html
+    networks:
+      - app_net
+
+  nginx-srv3:
+    image: nginx:latest
+    container_name: nginx-srv3
+    hostname: nginx-srv3
+    volumes:
+      - ./nginx.srv3.html:/usr/share/nginx/html/index.html
+    networks:
+      - app_net
+
+  nginx-srv4:
+    image: nginx:latest
+    container_name: nginx-srv4
+    hostname: nginx-srv4
+    ports:
+      - 7080:80
+    volumes:
+      - ./nginx.srv4.html:/usr/share/nginx/html/index.html
+    networks:
+      - app_net
+
+  haproxy:
+    image: haproxy:lts
+    container_name: haproxy
+    hostname: haproxy
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./haproxy.pem:/usr/local/etc/haproxy/haproxy.pem
+    ports:
+      - 9090:9090
+      - 8080:8080
+      - 443:443
+      - 80:80
+    networks:
+      - app_net
