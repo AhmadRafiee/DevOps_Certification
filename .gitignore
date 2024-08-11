@@ -2,4 +2,5 @@
 *.iso
 *iso
 .trunk
+*.pem
 elastic-docker
