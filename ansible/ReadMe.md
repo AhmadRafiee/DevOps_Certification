@@ -1,4 +1,6 @@
 # Ansible
+![Ansible](../images/ansible.png)
+
 - [Ansible](#ansible)
     - [Installation ansible on Debian](#installation-ansible-on-debian)
       - [Install dependencies and configure Ansible Repository](#install-dependencies-and-configure-ansible-repository)
