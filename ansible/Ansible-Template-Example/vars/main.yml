@@ -1,0 +1,10 @@
+services:
+  - name: "nginx"
+    port: 80
+    enabled: true
+  - name: "mysql"
+    port: 3306
+    enabled: true
+  - name: "redis"
+    port: 6379
+    enabled: false

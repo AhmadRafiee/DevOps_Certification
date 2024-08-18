@@ -1,0 +1,48 @@
+---
+- name: Ansible Lookup Examples
+  hosts: localhost
+  gather_facts: false
+  vars:
+    username: "{{ lookup('env', 'USER') }}"
+  vars_files:
+    - Ansible-Template-Example/vars/main.yml
+  tasks:
+    - name: Read a file content
+      debug:
+        msg: "File content: {{ lookup('file', '/etc/motd') }}"
+
+    - name: Get home directory from environment
+      debug:
+        msg: "Home directory: {{ lookup('env', 'HOME') }}"
+
+    - name: List .conf files in /etc
+      debug:
+        msg: "Config files: {{ lookup('fileglob', '/etc/*.conf', wantlist=True) }}"
+
+    - name: Run a command and capture output
+      debug:
+        msg: "Current date: {{ lookup('pipe', 'date') }}"
+
+    - name: Perform DNS lookup
+      debug:
+        msg: "DNS lookup: {{ lookup('dig', 'DockerMe.ir') }}"
+
+    - name: Render a template
+      debug:
+        msg: "Rendered template: {{ lookup('template', 'Ansible-Template-Example/templates/service_config.conf.j2') }}"
+
+    - name: Convert list to dictionary
+      debug:
+        msg: "{{ lookup('dict', '[{\"key1\": \"value1\"}, {\"key2\": \"value2\"}]') }}"
+
+    - name: Ansible Built-in Lookups
+      debug:
+        msg: "{{ item }}"
+      loop:
+        - "{{ lookup('file', '/etc/resolv.conf') }}"
+        - "{{ lookup('env', 'PATH') }}"
+        - "{{ lookup('pipe', 'uptime') }}"
+        - "{{ lookup('fileglob', '/var/log/*.log', wantlist=True) }}"
+        - "{{ lookup('dig', 'DockerMe.ir') }}"
+        - "{{ lookup('url', 'https://DockerMe.ir') }}"
+

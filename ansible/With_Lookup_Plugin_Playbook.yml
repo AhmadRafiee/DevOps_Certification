@@ -1,0 +1,79 @@
+---
+- name: Check Ansible Lookup With Plugin
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Check loops
+      debug:
+        msg: "Hi {{ item }}."
+      with_items:
+        - ahmad
+        - sara
+        - ali
+        - DockerMe Users
+
+    - name: Process all log file in /var/log directory
+      command: cat {{ item }}
+      become: true
+      with_fileglob:
+        - /var/log/*.log
+
+    - name: write message for admin
+      debug:
+        msg: "My name is {{ item.key }} {{ item.value.family }} , and I am {{ item.value.role }} at {{ item.value.company }}."
+      with_dict:
+        ahmad:
+          family: rafiee
+          role: DevOps
+          company: DockerMe
+        sara:
+          family: godarzy
+          role: Developer
+          company: MeCan
+
+    - name: Check dns service line in resolv.conf and hosts file
+      debug:
+        msg: "{{ item }}"
+      with_lines:
+        - cat /etc/resolv.conf
+        - cat /etc/hosts
+
+    - name: Read and output the contents of a file
+      debug:
+        msg: "{{ item }}"
+      with_file:
+        - /etc/resolv.conf
+        - /etc/hosts
+
+    # The with_flattened lookup allows you to iterate over a list of lists, flattening it into a single list.
+    - name: Create directories from a list of lists
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_flattened:
+        -
+          - /tmp/dir1
+          - /tmp/dir2
+        -
+          - /tmp/dir3
+          - /tmp/dir4
+
+    # The with_sequence lookup generates a list based on a sequence of numbers or letters.
+    - name: Create multiple files with a sequence
+      file:
+        path: "/tmp/source{{ item }}"
+        state: touch
+      with_sequence: start=1 end=5
+
+    # The with_together lookup allows you to iterate over multiple lists together.
+    - name: Copy files to different destinations
+      copy:
+        src: "{{ item.0 }}"
+        dest: "{{ item.1 }}"
+      with_together:
+        -
+          - /tmp/source1
+          - /tmp/source2
+        -
+          - /tmp/dest1
+          - /tmp/dest2

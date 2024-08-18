@@ -1,0 +1,7 @@
+---
+{% for service in services %}
+{% if service.enabled %}
+# {{ service.name }} service configuration
+{{ service.name }}_port = {{ service.port }}
+{% endif %}
+{% endfor %}

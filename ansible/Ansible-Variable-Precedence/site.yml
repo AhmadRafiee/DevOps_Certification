@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  vars:
+    webapp_port: 6666
+    webapp_env: "playbook_vars"
+    webapp_version: "6"
+  roles:
+    - webapp
+
+
+# ansible-playbook site.yml -e "webapp_version=5 webapp_port=5555 webapp_env=extra_vars"

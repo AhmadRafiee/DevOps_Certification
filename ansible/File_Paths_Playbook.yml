@@ -1,0 +1,34 @@
+---
+- name: Check Ansible File Path
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Get the base name of a file path
+      debug:
+        msg: "{{ '/var/www/html/index.html' | basename }}"
+
+    - name: Get the directory name of a file path
+      debug:
+        msg: "{{ '/var/www/html/index.html' | dirname }}"
+
+    - name: Expand user home directory
+      debug:
+        msg: "{{ '~/myfile.txt' | expanduser }}"
+
+    - name: Split file name into name and extension
+      debug:
+        msg: "{{ 'index.html' | splitext }}"
+
+    - name: Get the real (absolute) path
+      debug:
+        msg: "{{ '/var/www/html/../index.html' | realpath }}"
+
+    - name: Get relative path from one directory to another
+      debug:
+        msg: "{{ '/var/www/html/index.html' | relpath('/var/www') }}"
+
+    - name: Get absolute path
+      vars:
+        relative_path: "index.html"
+      debug:
+        msg: "{{ lookup('pipe', 'pwd') }}/{{ relative_path }}"

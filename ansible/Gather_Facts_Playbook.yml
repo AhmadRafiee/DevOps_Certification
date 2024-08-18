@@ -1,0 +1,29 @@
+---
+- name: Gather and use Ansible facts
+  hosts: localhost
+  gather_facts: yes
+
+  tasks:
+    - name: Display the operating system
+      debug:
+        msg: "The operating system is {{ ansible_os_family }}"
+
+    - name: Display the IP address of the default interface
+      debug:
+        msg: "The default interface IP address is {{ ansible_default_ipv4.address }}"
+
+    - name: Display the total memory in MB
+      debug:
+        msg: "Total memory: {{ ansible_memtotal_mb }} MB"
+
+    - name: Display the Threads per Core
+      debug:
+        msg: "Threads per Core: {{ ansible_processor_threads_per_core }}"
+
+    - name: Display Total CPU
+      debug:
+        msg: "Total CPU Count: {{ ansible_processor_vcpus }}"
+
+    - name: Display all mounted filesystems
+      debug:
+        msg: "{{ ansible_mounts }}"

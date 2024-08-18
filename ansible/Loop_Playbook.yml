@@ -1,0 +1,35 @@
+---
+- name: Check Ansible loops
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Check loops
+      debug:
+        msg: "Hi {{ item }}."
+      loop:
+        - ahmad
+        - sara
+        - ali
+        - DockerMe Users
+
+    - name: Check dic
+      debug:
+        msg: "Hi {{ item.Name }} {{ item.Family }}"
+      loop:
+        - { Name: 'ahmad', Family: 'rafiee' }
+        - { Name: 'ali', Family: 'morady' }
+
+    - name: Check dic
+      debug:
+        msg: "Hi {{ item.Name }} {{ item.Family }}"
+      loop:
+        - Name: ahmad
+          Family: rafiee
+        - Name: ali
+          Family: moradi
+
+    - name: with_sequence example
+      file:
+        path: "/tmp/dir{{ item }}"
+        state: directory
+      with_sequence: start=2 end=10

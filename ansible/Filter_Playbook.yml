@@ -1,0 +1,50 @@
+---
+- name: Check Ansible Filter
+  hosts: localhost
+  gather_facts: false
+  vars:
+    - my_var: test
+  tasks:
+    - name: Show default value
+      debug:
+        msg: "{{ my_var | default('default-variables') }}"
+
+    - name: Join list into a string
+      debug:
+        msg: "{{ ['apple', 'banana', 'cherry'] | join('_^_') }}"
+
+    - name: Split string into a list
+      debug:
+        msg: "{{ 'apple^banana^cherry' | split('^') }}"
+
+    - name: Get length of list
+      debug:
+        msg: "{{ ['apple', 'banana', 'cherry'] | length }}"
+
+    - name: Sort list
+      debug:
+        msg: "{{ ['hi', 'banana', 'apple', 'cherry'] | sort }}"
+
+    - name: Remove duplicates from list
+      debug:
+        msg: "{{ ['apple', 'banana', 'apple', 'apple', 'banana', 'cherry'] | unique }}"
+
+    - name: Replace substring in string
+      debug:
+        msg: "{{ 'hello world' | replace('world', 'Ansible') }}"
+
+    - name: Convert string to uppercase
+      debug:
+        msg: "{{ 'hello world' | upper }}"
+
+    - name: Convert string to lowercase
+      debug:
+        msg: "{{ 'HELLO WORLD' | lower }}"
+
+    - name: Convert data to YAML
+      debug:
+        msg: "{{ {'name': 'John', 'age': 30} | to_yaml }}"
+
+    - name: Convert data to JSON
+      debug:
+        msg: "{{ {'name': 'John', 'age': 30} | to_json }}"

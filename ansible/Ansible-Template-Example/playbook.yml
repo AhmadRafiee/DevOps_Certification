@@ -1,0 +1,11 @@
+---
+- name: Generate service configuration file
+  hosts: localhost
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Create service configuration file
+      template:
+        src: service_config.conf.j2
+        dest: /tmp/service_config.conf

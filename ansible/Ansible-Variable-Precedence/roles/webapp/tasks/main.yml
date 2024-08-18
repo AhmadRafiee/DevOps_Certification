@@ -1,0 +1,7 @@
+- name: Deploy the web application
+  vars:
+      webapp_port: 2222
+      webapp_env: "task_vars"
+      webapp_version: "2"
+  debug:
+    msg: "Deploying version {{ webapp_version }} to {{ inventory_hostname }} on port {{ webapp_port }} in {{ webapp_env }} environment."
