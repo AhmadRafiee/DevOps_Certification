@@ -1,6 +1,39 @@
-## Installation ansible on Debian
+# Ansible
+- [Ansible](#ansible)
+    - [Installation ansible on Debian](#installation-ansible-on-debian)
+      - [Install dependencies and configure Ansible Repository](#install-dependencies-and-configure-ansible-repository)
+      - [Install latest version of ansible](#install-latest-version-of-ansible)
+    - [Directory Structure:](#directory-structure)
+    - [Simple Modules](#simple-modules)
+    - [Limit to one or more hosts](#limit-to-one-or-more-hosts)
+    - [Limiting Tasks with Tags](#limiting-tasks-with-tags)
+    - [Check for bad syntax](#check-for-bad-syntax)
+    - [Running a playbook in dry-run mode](#running-a-playbook-in-dry-run-mode)
+    - [Managing files](#managing-files)
+    - [Install packages](#install-packages)
+    - [ansible fact and filter data](#ansible-fact-and-filter-data)
+    - [Managing services](#managing-services)
+    - [Simple Ansible Hosts File Example (hosts)](#simple-ansible-hosts-file-example-hosts)
+    - [Complex Example with Additional Features](#complex-example-with-additional-features)
+    - [General Pattern for Ansible Ad-Hoc Commands](#general-pattern-for-ansible-ad-hoc-commands)
+    - [Example of Using Ansible Facts in a Playbook](#example-of-using-ansible-facts-in-a-playbook)
+    - [Ansible File Path Testing](#ansible-file-path-testing)
+    - [Ansible Filter Testing](#ansible-filter-testing)
+    - [Ansible Gather Fact Testing](#ansible-gather-fact-testing)
+    - [Ansible Lookup Testing](#ansible-lookup-testing)
+    - [Ansible Lookup With Plugin Testing](#ansible-lookup-with-plugin-testing)
+    - [Ansible Loop Testing](#ansible-loop-testing)
+    - [Ansible Configuration](#ansible-configuration)
+      - [Ansible Configuration Sample](#ansible-configuration-sample)
+    - [Ansible Practice](#ansible-practice)
+    - [Ansible Nginx Practice](#ansible-nginx-practice)
+    - [Ansible Template Testing](#ansible-template-testing)
+    - [Ansible Variable Precedence](#ansible-variable-precedence)
+    - [Ansible Sample Files](#ansible-sample-files)
 
-### Install dependencies and configure Ansible Repository
+### Installation ansible on Debian
+
+#### Install dependencies and configure Ansible Repository
 Install ansible dependencies by running the following apt command,
 ```bash
 sudo apt install -y software-properties-common
@@ -14,7 +47,7 @@ Now update repository by running beneath apt command.
 sudo apt update
 ```
 
-### Install latest version of ansible
+#### Install latest version of ansible
 Now we are ready to install latest version of Ansible on Ubuntu 20.04 LTS / 21.04, run following command.
 ```bash
 sudo apt install -y ansible
@@ -27,7 +60,6 @@ ansible --version
 Great, above output confirms that Ansible version 2.9.6 is installed.
 
 
-## Ansible useful commands
 
 ### Directory Structure:
  To create a role using the ansible-galaxy command, we can simply use the below syntax in our terminal:
@@ -328,3 +360,27 @@ ansible all -m apt -a "name=nginx state=present" --become
 ansible-playbook -i hosts use_facts.yml
 ```
 
+### [Ansible File Path Testing](File_Paths_Playbook.yml)
+
+### [Ansible Filter Testing](Filter_Playbook.yml)
+
+### [Ansible Gather Fact Testing](Gather_Facts_Playbook.yml)
+
+### [Ansible Lookup Testing](Lookup_Playbook.yml)
+
+### [Ansible Lookup With Plugin Testing](With_Lookup_Plugin_Playbook.yml)
+
+### [Ansible Loop Testing](Loop_Playbook.yml)
+
+### [Ansible Configuration](ansible-configuration)
+#### [Ansible Configuration Sample](ansible-configuration/ansible.cfg)
+
+### [Ansible Practice](ansible-practice)
+
+### [Ansible Nginx Practice](nginx-practices)
+
+### [Ansible Template Testing](Ansible-Template-Example)
+
+### [Ansible Variable Precedence](Ansible-Variable-Precedence)
+
+### [Ansible Sample Files](sample-files)

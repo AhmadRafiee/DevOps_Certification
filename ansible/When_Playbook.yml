@@ -1,5 +1,0 @@
----
-- name: Check Ansible When
-  hosts: localhost
-  gather_facts: true
-  tasks:
