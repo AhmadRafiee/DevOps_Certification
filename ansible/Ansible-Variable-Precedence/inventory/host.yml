@@ -1,0 +1,17 @@
+---
+all:
+  vars:
+    ansible_user: root
+  children:
+    web-servers:
+      hosts:
+        amoo1:
+
+    db-servers:
+      hosts:
+        amoo2:
+
+    mecan-service:
+      children:
+        db-servers:
+        web-servers:

@@ -1,7 +1,13 @@
+- name: Include all .json and .jsn files in vars/all and all nested directories (2.3)
+  ansible.builtin.include_vars:
+    dir: vars/
+    extensions:
+      - 'yml'
+
 - name: Deploy the web application
   vars:
-      webapp_port: 2222
-      webapp_env: "task_vars"
-      webapp_version: "2"
+    webapp_port: 2222
+    webapp_env: "task_vars"
+    webapp_version: "2"
   debug:
     msg: "Deploying version {{ webapp_version }} to {{ inventory_hostname }} on port {{ webapp_port }} in {{ webapp_env }} environment."

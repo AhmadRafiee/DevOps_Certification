@@ -1,7 +1,7 @@
 # Ansible AWX with Docker Install and configuration
 
 ### Step 1: Install Ansible
-Install ansible with this [link](https://github.com/AhmadRafiee/DevOps_training_with_DockerMe/blob/main/ansible/ansible-installation.md)
+Install ansible with this [link](../../ReadMe.md)
 
 ### Step 2: Install Docker
 Install docker with this commands.

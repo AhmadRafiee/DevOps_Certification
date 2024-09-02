@@ -1,0 +1,69 @@
+volumes:
+  semaphore-mysql:
+    name: semaphore-mysql
+
+networks:
+  app_net:
+    name: app_net
+    external: true
+  web_net:
+    name: web_net
+    external: true
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-semaphore
+    hostname: mysql-semaphore
+    restart: unless-stopped
+    volumes:
+      - mysql-semaphore:/var/lib/mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+      MYSQL_DATABASE: ${MYSQL_DB_NAME}
+      MYSQL_USER: ${MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${MYSQL_DB_PASS}
+    networks:
+      - app_net
+
+  semaphore:
+    restart: unless-stopped
+    container_name: semaphore
+    hostname: semaphore
+    image: semaphoreui/semaphore:latest
+    environment:
+      SEMAPHORE_DB_USER: ${MYSQL_DB_USER}
+      SEMAPHORE_DB_PASS: ${MYSQL_DB_PASS}
+      SEMAPHORE_DB_HOST: ${MYSQL_DB_HOST}
+      SEMAPHORE_DB_PORT: 3306
+      SEMAPHORE_DB_DIALECT: mysql
+      SEMAPHORE_DB: ${MYSQL_DB_NAME}
+      SEMAPHORE_PLAYBOOK_PATH: /home/semaphore/projects
+      SEMAPHORE_ADMIN_PASSWORD: ${SEMA_ADMIN_PASS}
+      SEMAPHORE_ADMIN_NAME: ${SEMA_ADMIN_USER}
+      SEMAPHORE_ADMIN_EMAIL: admin@localhost
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: gs72mPntFATGJs9qK0pQ0rKtfidlexiMjYCH9gWKhTU=
+      SEMAPHORE_LDAP_ACTIVATED: 'no'
+      TZ: Asia/Tehran
+    depends_on:
+      - mysql
+    volumes:
+      - ./project:/home/semaphore/projects
+    networks:
+      - web_net
+      - app_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.sema.entrypoints=http
+      - traefik.http.routers.sema.rule=Host(`${SAB}.${DOMAIN_NAME}`)
+      - traefik.http.routers.sema.middlewares=https-redirect
+      - traefik.http.routers.sema-secure.entrypoints=https
+      - traefik.http.routers.sema.service=sema-secure
+      - traefik.http.routers.sema-secure.rule=Host(`${SAB}.${DOMAIN_NAME}`)
+      - traefik.http.routers.sema-secure.tls=true
+      - traefik.http.routers.sema-secure.tls.options=default
+      - traefik.http.routers.sema-secure.service=sema-secure
+      - traefik.http.routers.sema-secure.tls.certresolver=mycert
+      - traefik.http.services.sema-secure.loadbalancer.server.port=3000
