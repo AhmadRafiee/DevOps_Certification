@@ -583,12 +583,15 @@ The container for a daemon can be stopped, recreated, and restarted with the red
 To create a manifest for an external Ceph dashboard using Kubernetes, you need to set up an Ingress, Service, and Endpoint that expose the Ceph dashboard externally. This assumes that the Ceph dashboard is running outside of the Kubernetes cluster, and you want to access it through Kubernetes' Ingress and Service resources.
 
 [ceph panel manifest](kubernetes-ingress-for-ceph/panel-service-endpoint-ingress.yml)
+
 [prometheus dashboard manifest](kubernetes-ingress-for-ceph/prometheus-service-endpoint-ingress.yml)
+
 [alert dashboard manifest](kubernetes-ingress-for-ceph/alerts-service-endpoint-ingress.yml)
+
 [grafana panel manifest](kubernetes-ingress-for-ceph/grafana-service-endpoint-ingress.yml)
 
 
-Good link:
+**Good link:**
   - https://www.redhat.com/sysadmin/ceph-cluster-single-machine
   - https://docs.ceph.com/en/latest/cephadm/services/monitoring/
   - https://www.ibm.com/docs/en/storage-ceph/5?topic=access-setting-admin-user-password-grafana
