@@ -18,8 +18,8 @@ EXPOSE 80
 docker build -t <TAG_NAME> -f <Dockerfile path> .
 # For example
 docker build -t nginx:test .
-``` 
+```
 ### Run nginx image
-```bash 
+```bash
 docker run -d --name web -p 80:80 nginx:test
 ```

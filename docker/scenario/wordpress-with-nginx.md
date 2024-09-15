@@ -117,7 +117,7 @@ tree nginx
 
 ### run nginx services and check it
 ```bash
-docker run -itd --name nginx --hostname nginx \
+docker run -d --name nginx --hostname nginx \
 --network=wp-net --restart=always \
 -v ${PWD}/nginx/conf.d:/etc/nginx/conf.d \
 -v ${PWD}/nginx/certs:/etc/nginx/certs \

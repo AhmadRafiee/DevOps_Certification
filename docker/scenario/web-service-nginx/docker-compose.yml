@@ -1,0 +1,23 @@
+---
+version: '3.4'
+
+networks:
+  http_net:
+    external: true
+  web_net:
+    external: false
+
+services:
+  web:
+    image: nginx:alpine
+    restart: on-failure
+    container_name: web
+    ports:
+      - 443:443
+      - 80:80
+    volumes:
+      - ./certs/:/etc/nginx/certs
+      - ./conf.d/:/etc/nginx/conf.d
+    networks:
+      - http_net
+      - web_net

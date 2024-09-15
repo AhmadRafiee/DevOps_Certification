@@ -1,0 +1,20 @@
+global:
+  # The smarthost and SMTP sender used for mail notifications.
+  smtp_smarthost: 'smtp.SENDER-SITE:587'
+  smtp_from: 'EMAIL-MAILBOX-FOR-SENDER'
+  smtp_auth_username: 'EMAIL-MAILBOX-FOR-SENDER'     
+  smtp_auth_password: 'PASSWORD-SENDER-MAILBOX'
+  smtp_auth_identity: 'USER-SENDER-MAILBOX'
+
+route:
+  group_by: ['instance', 'severity']
+  group_wait: 30s
+  group_interval: 30s
+  repeat_interval: 30m
+  receiver: 'stage'
+
+receivers:
+- name: 'stage'
+  email_configs:
+    - send_resolved: true
+      to: 'EMAIL-MAILBOX-FOR-RECEIVER'

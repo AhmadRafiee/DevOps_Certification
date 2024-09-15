@@ -1,0 +1,78 @@
+# DockerMe.ir <ahmad@dockerme.ir>
+version: '3.4'
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    command:
+      - "--api=true"
+      - "--api.insecure=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=http_network"
+      - "--entrypoints.http.address=:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=http_network"
+      - "traefik.http.routers.tra.entrypoints=http"
+      - "traefik.http.routers.tra.rule=Host(`web.DockerMe.ir`)"
+      - "traefik.http.services.tra.loadbalancer.server.port=8080"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - http_network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    volumes:
+      - grafana:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=http_network"
+      - "traefik.http.routers.gra.entrypoints=http"
+      - "traefik.http.routers.gra.rule=Host(`grafana.DockerMe.ir`)"
+      - "traefik.http.services.gra.loadbalancer.server.port=3000"
+    networks:
+     - http_network
+     - services_network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes: 
+      - loki:/tmp/loki
+      - ./loki/local-config.yaml:/etc/loki/local-config.yaml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=http_network"
+      - "traefik.http.routers.lok.entrypoints=http"
+      - "traefik.http.routers.lok.rule=Host(`loki.DockerMe.ir`)"
+      - "traefik.http.services.lok.loadbalancer.server.port=3100"
+    networks:
+     - http_network
+     - services_network
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - ./promtail/docker-config.yaml:/etc/promtail/docker-config.yaml
+    command: -config.file=/etc/promtail/docker-config.yaml
+    networks:
+     - services_network
+
+networks:
+  http_network:
+  services_network:
+
+volumes:
+  grafana:
+    name: grafana
+  loki:
+    name: loki
+# DockerMe.ir <ahmad@dockerme.ir>

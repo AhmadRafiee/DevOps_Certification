@@ -1,0 +1,120 @@
+# DockerMe.ir <ahmad@dockerme.ir>
+version: '3.4'
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    command:
+      - "--api=true"
+      - "--api.insecure=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=http_network"
+      - "--entrypoints.http.address=:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=http_network"
+      - "traefik.http.routers.tra.entrypoints=http"
+      - "traefik.http.routers.tra.rule=Host(`web.DockerMe.ir`)"
+      - "traefik.http.services.tra.loadbalancer.server.port=8080"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - http_network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=http_network"
+      - "traefik.http.routers.pro.entrypoints=http"
+      - "traefik.http.routers.pro.rule=Host(`prometheus.DockerMe.ir`)"
+      - "traefik.http.services.pro.loadbalancer.server.port=9090"
+    networks:
+     - http_network
+     - services_network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=http_network"
+      - "traefik.http.routers.gra.entrypoints=http"
+      - "traefik.http.routers.gra.rule=Host(`grafana.DockerMe.ir`)"
+      - "traefik.http.services.gra.loadbalancer.server.port=3000"
+    networks:
+     - http_network
+     - services_network
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: alertmanager
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=http_network"
+      - "traefik.http.routers.ale.entrypoints=http"
+      - "traefik.http.routers.ale.rule=Host(`alert.DockerMe.ir`)"
+      - "traefik.http.services.ale.loadbalancer.server.port=9093"
+    networks:
+     - http_network
+     - services_network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    volumes:
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+    - /:/rootfs:ro
+    command:
+    - --path.procfs=/host/proc
+    - --path.sysfs=/host/sys
+    - --collector.filesystem.ignored-mount-points
+    - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
+    networks:
+     - services_network
+
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /dev/disk/:/dev/disk:ro
+    networks:
+     - services_network
+
+networks:
+  http_network:
+  services_network:
+
+volumes:
+  grafana:
+    name: grafana
+  prometheus:
+    name: prometheus
+# DockerMe.ir <ahmad@dockerme.ir>
