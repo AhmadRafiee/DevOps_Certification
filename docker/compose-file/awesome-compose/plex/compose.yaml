@@ -1,0 +1,10 @@
+services:
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    network_mode: host
+    environment:
+      - VERSION=docker
+    restart: always
+    volumes:
+      - ${PLEX_MEDIA_PATH}:/media/
