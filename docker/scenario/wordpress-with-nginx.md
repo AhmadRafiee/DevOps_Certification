@@ -1,22 +1,23 @@
 # Running wordpress with docker
-## 
+##
+![wordpress with DockerMe](../images/wordpress.png)
 
 ## Step1: running wordpress with docker commands
-### pull all needed images 
+### pull all needed images
 ```bash
 docker pull wordpress:latest
 docker pull nginx:latest
 docker pull mysql:5.7
 ```
 
-### create network and check it 
+### create network and check it
 ```bash
 docker network create --driver bridge wp-net
 docker network ls
 docker inspect wp-net
 ```
 
-### create volume and check it 
+### create volume and check it
 ```bash
 docker volume create --name wp-data
 docker volume create --name db-data
@@ -31,8 +32,8 @@ docker run -d --name mysql --hostname mysql \
 --network=wp-net --restart=always \
 --mount=source=db-data,target=/var/lib/mysql \
 -e MYSQL_ROOT_PASSWORD=sdvfsacsiojoijsaefawefmwervs \
--e MYSQL_DATABASE=MeCan \
--e MYSQL_USER=MeCan \
+-e MYSQL_DATABASE=DockerMe \
+-e MYSQL_USER=DockerMe \
 -e MYSQL_PASSWORD=sdvfsacsiojoijsaefawefmwervs \
 mysql:5.7
 
@@ -50,14 +51,14 @@ docker run -d --name wordpress --hostname wordpress \
 --mount=source=wp-data,target=/var/www/html/ \
 -e WORDPRESS_DB_PASSWORD=sdvfsacsiojoijsaefawefmwervs \
 -e WORDPRESS_DB_HOST=mysql:3306 \
--e WORDPRESS_DB_USER=MeCan \
--e WORDPRESS_DB_NAME=MeCan \
+-e WORDPRESS_DB_USER=DockerMe \
+-e WORDPRESS_DB_NAME=DockerMe \
 wordpress:latest
 
 # check wordpress services
 docker ps
 docker stats --no-stream
-docker logs wordpress 
+docker logs wordpress
 ```
 
 ### create nginx directory
@@ -69,13 +70,12 @@ tree ./nginx
 
 ### create nginx config file for wordpress proxy pass
 ```bash
-vim ./nginx/conf.d/wordpress.conf
+cat <<ROT > ./nginx/conf.d/wordpress.conf
 server {
-  listen 443;
-  server_name wp.MeCan.ir;
+  listen 443 ssl;
+  server_name wp.dockerme.ir;
 
   # SSL
-  ssl on;
   ssl_certificate /etc/nginx/certs/cert.pem;
   ssl_certificate_key /etc/nginx/certs/key.pem;
 
@@ -91,9 +91,10 @@ server {
 
  server {
     listen 80;
-    server_name wp.MeCan.ir;
+    server_name wp.dockerme.ir;
     return 301 https://$host$request_uri;
 }
+ROT
 ```
 
 ### create self sign certificate with openssl command and check it
@@ -168,8 +169,8 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: sdfascsdvsfdvweliuoiquowecefcwaefef
-      MYSQL_DATABASE: MeCan
-      MYSQL_USER: MeCan
+      MYSQL_DATABASE: DockerMe
+      MYSQL_USER: DockerMe
       MYSQL_PASSWORD: sdfascsdvsfdvweliuoiquowecefcwaefef
     networks:
       - wp_net
@@ -184,8 +185,8 @@ services:
     restart: always
     environment:
       WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_USER: MeCan
-      WORDPRESS_DB_NAME: MeCan
+      WORDPRESS_DB_USER: DockerMe
+      WORDPRESS_DB_NAME: DockerMe
       WORDPRESS_DB_PASSWORD: sdfascsdvsfdvweliuoiquowecefcwaefef
     ports:
       - 8000:80
