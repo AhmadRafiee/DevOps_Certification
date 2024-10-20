@@ -44,7 +44,7 @@ These limits are safeguarded by Kubespray. Actual requirements for your workload
 
 #### Clone kubespray project with specific tag.
 ```
-git clone -b release-2.26 https://github.com/kubernetes-sigs/kubespray.git
+git clone -b release-2.25 https://github.com/kubernetes-sigs/kubespray.git
 ```
 
 #
@@ -143,7 +143,7 @@ External LB sample config:
 ## External LB example config
 apiserver_loadbalancer_domain_name: "vip.kubespray.mecan.ir"
 loadbalancer_apiserver:
-  address: <LB_ADDRESS>
+  address: 192.168.200.10
   port: 6443
 ```
 
@@ -283,7 +283,7 @@ local_path_provisioner_helper_image_tag: "latest"
 
 Change this to use another Kubernetes version, e.g. a current beta release:
 ```
-kube_version: v1.30.4
+kube_version: v1.29.7
 ```
 
 Choose network plugin (cilium, calico, kube-ovn, weave or flannel. Use cni for generic cni plugin)
@@ -692,7 +692,7 @@ The following methods exist for installing Sonobuoy:
 To launch conformance tests (ensuring CNCF conformance) and wait until they are finished run:
 
 ```bash
-sonobuoy run --wait
+sonobuoy run --mode quick --wait
 ```
 
 > Note: Using `--mode quick` will significantly shorten the runtime of Sonobuoy. It runs just a single test, helping to quickly validate your Sonobuoy and Kubernetes configuration. It can be somehow a smoke test.
