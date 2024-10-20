@@ -16,6 +16,8 @@ listen Stats-Page
   stats uri /
   stats show-legends
   stats show-node
+  stats admin if LOCALHOST
+  stats auth MeCan:MeCan-port-of-DockerMe
 
 frontend fe-apiserver
    bind 0.0.0.0:6443
@@ -28,9 +30,9 @@ backend be-apiserver
    option tcp-check
    balance roundrobin
    default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
-   server control-plane-1 ${master1_ip}:6443 check
-   server control-plane-2 ${master2_ip}:6443 check
-   server control-plane-3 ${master3_ip}:6443 check
+   server master1 ${master1_ip}:6443 check
+   server master2 ${master2_ip}:6443 check
+   server master3 ${master3_ip}:6443 check
 EOT
 cat /etc/haproxy/haproxy.cfg
 

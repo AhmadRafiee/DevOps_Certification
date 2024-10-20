@@ -44,7 +44,7 @@ These limits are safeguarded by Kubespray. Actual requirements for your workload
 
 #### Clone kubespray project with specific tag.
 ```
-git clone -b release-2.24 https://github.com/kubernetes-sigs/kubespray.git
+git clone -b release-2.26 https://github.com/kubernetes-sigs/kubespray.git
 ```
 
 #
@@ -283,7 +283,7 @@ local_path_provisioner_helper_image_tag: "latest"
 
 Change this to use another Kubernetes version, e.g. a current beta release:
 ```
-kube_version: v1.28.6
+kube_version: v1.30.4
 ```
 
 Choose network plugin (cilium, calico, kube-ovn, weave or flannel. Use cni for generic cni plugin)
@@ -316,11 +316,6 @@ Graceful Node Shutdown:
 # non-critical podsa to also terminate gracefully
 kubelet_shutdown_grace_period: 60s
 kubelet_shutdown_grace_period_critical_pods: 20s
-```
-
-Deploy [netchecker](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/netcheck.md) app to verify DNS resolve as an HTTP service:
-```
-deploy_netchecker: true
 ```
 
 Container runtime:
@@ -383,16 +378,17 @@ Supplementary addresses that can be added in kubernetes ssl keys:
 ```
 ## That can be useful for example to setup a keepalived virtual IP
 supplementary_addresses_in_ssl_keys:
-  - vip.kubespray.mecan.ir
-  - master1.kubespray.mecan.ir
-  - master2.kubespray.mecan.ir
-  - master3.kubespray.mecan.ir
-  - spray-master1
-  - spray-master2
-  - spray-master3
-  - spray-master1.kube.mecan.ir
-  - spray-master2.kube.mecan.ir
-  - spray-master3.kube.mecan.ir
+  - 192.168.200.10
+  - 192.168.200.11
+  - 192.168.200.12
+  - 192.168.200.13
+  - vip.kube.mecan.ir
+  - master1
+  - master2
+  - master3
+  - master1.kube.mecan.ir
+  - master2.kube.mecan.ir
+  - master3.kube.mecan.ir
 ```
 
 Support tls min version, Possible values: VersionTLS10, VersionTLS11, VersionTLS12, VersionTLS13:
@@ -443,6 +439,20 @@ calico_node_readinessprobe_timeout: 30
 
 #
 ## Step 09: run ansible playbook
+
+Before running Ansible, ensure that access is allowed in iptables for Kubernetes cluster connectivity, and persist all rules in the iptables rule file.
+
+```
+iptables -A INPUT -s 192.168.200.10/32 -j ACCEPT -m comment --comment "The Trusted lb server"
+iptables -A INPUT -s 192.168.200.11/32 -j ACCEPT -m comment --comment "The Trusted master1 server"
+iptables -A INPUT -s 192.168.200.12/32 -j ACCEPT -m comment --comment "The Trusted master2 server"
+iptables -A INPUT -s 192.168.200.13/32 -j ACCEPT -m comment --comment "The Trusted master3 server"
+iptables -A INPUT -s 192.168.200.14/32 -j ACCEPT -m comment --comment "The Trusted worker1 server"
+iptables -A INPUT -s 192.168.200.15/32 -j ACCEPT -m comment --comment "The Trusted worker2 server"
+iptables -A INPUT -s 192.168.200.16/32 -j ACCEPT -m comment --comment "The Trusted worker3 server"
+iptables -A INPUT -s 10.233.0.0/18 -j ACCEPT -m comment --comment "Kubernetes internal network for services"
+iptables -A INPUT -s 10.233.64.0/18 -j ACCEPT -m comment --comment "Kubernetes internal network for pod"
+```
 
 The first step download all container image on all nodes:
 ```
@@ -617,76 +627,34 @@ Log in to one of your controller servers, and get the raw data for the test secr
 ```bash
 sudo ETCDCTL_API=3 etcdctl get \
   --endpoints=https://127.0.0.1:2379 \
-  --cacert=/etc/etcd/ca.pem \
-  --cert=/etc/etcd/kubernetes.pem \
-  --key=/etc/etcd/kubernetes-key.pem\
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
   /registry/secrets/default/kubernetes-the-hard-way | hexdump -C
-```
-Your output should look something like this:
-```
+
+# sample output
 00000000  2f 72 65 67 69 73 74 72  79 2f 73 65 63 72 65 74  |/registry/secret|
 00000010  73 2f 64 65 66 61 75 6c  74 2f 6b 75 62 65 72 6e  |s/default/kubern|
 00000020  65 74 65 73 2d 74 68 65  2d 68 61 72 64 2d 77 61  |etes-the-hard-wa|
-00000030  79 0a 6b 38 73 3a 65 6e  63 3a 61 65 73 63 62 63  |y.k8s:enc:aescbc|
-00000040  3a 76 31 3a 6b 65 79 31  3a fc 21 ee dc e5 84 8a  |:v1:key1:.!.....|
-00000050  53 8e fd a9 72 a8 75 25  65 30 55 0e 72 43 1f 20  |S...r.u%e0U.rC. |
-00000060  9f 07 15 4f 69 8a 79 a4  70 62 e9 ab f9 14 93 2e  |...Oi.y.pb......|
-00000070  e5 59 3f ab a7 b2 d8 d6  05 84 84 aa c3 6f 8d 5c  |.Y?..........o.\|
-00000080  09 7a 2f 82 81 b5 d5 ec  ba c7 23 34 46 d9 43 02  |.z/.......#4F.C.|
-00000090  88 93 57 26 66 da 4e 8e  5c 24 44 6e 3e ec 9c 8e  |..W&f.N.\$Dn>...|
-000000a0  83 ff 40 9a fb 94 07 3c  08 52 0e 77 50 81 c9 d0  |..@....<.R.wP...|
-000000b0  b7 30 68 ba b1 b3 26 eb  b1 9f 3f f1 d7 76 86 09  |.0h...&...?..v..|
-000000c0  d8 14 02 12 09 30 b0 60  b2 ad dc bb cf f5 77 e0  |.....0.`......w.|
-000000d0  4f 0b 1f 74 79 c1 e7 20  1d 32 b2 68 01 19 93 fc  |O..ty.. .2.h....|
-000000e0  f5 c8 8b 0b 16 7b 4f c2  6a 0a                    |.....{O.j.|
-000000ea
+00000030  79 0a 6b 38 73 00 0a 0c  0a 02 76 31 12 06 53 65  |y.k8s.....v1..Se|
+00000040  63 72 65 74 12 db 01 0a  bf 01 0a 17 6b 75 62 65  |cret........kube|
+00000050  72 6e 65 74 65 73 2d 74  68 65 2d 68 61 72 64 2d  |rnetes-the-hard-|
+00000060  77 61 79 12 00 1a 07 64  65 66 61 75 6c 74 22 00  |way....default".|
+00000070  2a 24 36 32 34 62 32 62  37 62 2d 33 62 30 35 2d  |*$624b2b7b-3b05-|
+00000080  34 38 66 35 2d 61 62 33  38 2d 31 64 39 39 63 36  |48f5-ab38-1d99c6|
+00000090  33 37 33 33 63 65 32 00  38 00 42 08 08 94 a1 d3  |3733ce2.8.B.....|
+000000a0  b8 06 10 00 8a 01 62 0a  0e 6b 75 62 65 63 74 6c  |......b..kubectl|
+000000b0  2d 63 72 65 61 74 65 12  06 55 70 64 61 74 65 1a  |-create..Update.|
+000000c0  02 76 31 22 08 08 94 a1  d3 b8 06 10 00 32 08 46  |.v1".........2.F|
+000000d0  69 65 6c 64 73 56 31 3a  2e 0a 2c 7b 22 66 3a 64  |ieldsV1:..,{"f:d|
+000000e0  61 74 61 22 3a 7b 22 2e  22 3a 7b 7d 2c 22 66 3a  |ata":{".":{},"f:|
+000000f0  6d 79 6b 65 79 22 3a 7b  7d 7d 2c 22 66 3a 74 79  |mykey":{}},"f:ty|
+00000100  70 65 22 3a 7b 7d 7d 42  00 12 0f 0a 05 6d 79 6b  |pe":{}}B.....myk|
+00000110  65 79 12 06 6d 79 64 61  74 61 1a 06 4f 70 61 71  |ey..mydata..Opaq|
+00000120  75 65 1a 00 22 00 0a                              |ue.."..|
+00000127
 ```
 Look for k8s:enc:aescbc:v1:key1 on the right of the output to verify that the data is stored in an encrypted format!
-
-#### Untrusted workloads
-Verify that untrusted workloads run using gVisor.
-Our Kubernetes cluster has been configured to run untrusted workloads under a more secure configuration using runsc. In this lesson, we will make sure that this functionality is working correctly. We will create a pod that is marked as untrusted, then we will log in to the worker node and dig into the runsc data to make sure that the container is actually running under runsc. This will verify that our cluster is running untrusted workloads with the correct configuration on the worker node.
-First, create an untrusted pod:
-```bash
-cat << EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: untrusted
-  annotations:
-    io.kubernetes.cri.untrusted-workload: "true"
-spec:
-  containers:
-    - name: webserver
-      image: gcr.io/hightowerlabs/helloworld:2.0.0
-EOF
-```
-Make sure that the untrusted pod is running:
-```bash
-kubectl get pods untrusted -o wide
-```
-Take note of which worker node the untrusted pod is running on, then log into that worker node.
-
-On the worker node, list all of the containers running under gVisor:
-```bash
-sudo runsc --root  /run/containerd/runsc/k8s.io list
-```
-Get the pod ID of the untrusted pod and store it in an environment variable:
-```bash
-POD_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock \
-  pods --name untrusted -q)
-```
-Get the container ID of the container running in the untrusted pod and store it in an environment variable:
-```bash
-CONTAINER_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock \
-  ps -p ${POD_ID} -q)
-```
-Get information about the process running in the container:
-```bash
-sudo runsc --root /run/containerd/runsc/k8s.io ps ${CONTAINER_ID}
-```
-Since we were able to get the process info using runsc, we know that the untrusted container is running securely as expected.
-
 
 #
 ## Step 11: Sonobuoy

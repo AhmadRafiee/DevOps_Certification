@@ -145,43 +145,49 @@ Disable and turn off SWAP:
 sed -i '/swap/d' /etc/fstab
 swapoff -a
 ```
+Update the apt package index and install packages needed to use the Kubernetes apt repository:
+```bash
+sudo apt-get update
+# apt-transport-https may be a dummy package; if so, you can skip that package
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+```
 
 Download the Google Cloud public signing key:
 ```bash
-sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://dl.k8s.io/apt/doc/apt-key.gpg
+# If the directory `/etc/apt/keyrings` does not exist, it should be created before the curl command, read the note below.
+# sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 # OR Download from Store.DockerMe.ir
-sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://store.dockerme.ir/Software/kubernetes-apt-keyring.gpg
-
+curl -fsSL https://repo.mecan.ir/repository/apt-kube/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 # Check gpg key
-sudo ls -alh /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+sudo ls -alh /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 ```
 
 Add the Kubernetes apt repository:
 ```bash
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
 cat /etc/apt/sources.list.d/kubernetes.list
 apt-get update -y
 ```
 
 If apt mirror repository, add this line instead. We are using mirror repository `repo.mecan.ir`
 ```bash
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://repo.mecan.ir/repository/debian-kubernetes/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# for kubernetes 1.30
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://repo.mecan.ir/repository/apt-kube/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
 cat /etc/apt/sources.list.d/kubernetes.list
-apt-get update -y
+
+apt-get update
 ```
 
 Check and install Kubernetes kubeadm, kubelet and kubectl:
 ```bash
 # check package version:
-apt-cache policy kubelet
-apt-cache policy kubectl
-apt-cache policy kubeadm
+apt-cache policy kubelet kubectl kubeadm
 
-# install specific version:
-sudo apt-get install -y kubelet=1.26.5-00
-sudo apt-get install -y kubectl=1.26.5-00
-sudo apt-get install -y kubeadm=1.26.5-00
+# install kubernetes tools:
+sudo apt-get install -y kubelet kubeadm kubectl
 
 # check install versions:
 kubelet --version
@@ -212,7 +218,7 @@ EOF
 # Check config file
 cat /etc/crictl.yaml
 
-# Test
+# check crictl command and mirror containerd registry
 crictl info
 ```
 
@@ -242,17 +248,12 @@ iptables -A INPUT -s ${worker2_ip} -j ACCEPT -m comment --comment "The Trusted $
 **NOTE:** It is better to persist the iptables rule in the iptables config file. Default path `/etc/iptables/rules.v4`
 
 #
-## Step3: Set up load balancer configuration on Arvan CDN with the domain
+## Step3: Set up load balancer configuration on HAProxy service
 
 We are using `vip.kubeadm.mecan.ir` domain for api-server load balancer.
 api-server port numbers 6443. we are using 3 api-server for load balancing (LB) and high availability (HA).
-This configuration on Arvan CDN helps us to divide the requests between the api-server nodes, ensuring both load balancing and high availability.
 
-##### Arvan CDN VIP domain config:
-![api-server load-balancer dns config - setting](../../../images/api-server-lb-dns-setting.png)
-
-##### Arvan CDN VIP domain result:
-![api-server load-balancer dns config - result](../../../images/api-server-lb-dns-result.png)
+### [Load balancer doc](../load-balancer/ReadMe.md)
 
 #
 ## Step4: Create kubeadm config and prepare the first master node. Only on node `master1`
@@ -262,13 +263,14 @@ This configuration on Arvan CDN helps us to divide the requests between the api-
 Please change all variables and set your node IPs and names. for example:
 ```bash
 # set specific variables content
+vip_ip=192.168.200.10
+master1_ip=192.168.200.11
+master2_ip=192.168.200.12
+master3_ip=192.168.200.13
 domain_name=mecan.ir
-master1_ip=37.32.9.196
-master2_ip=37.32.10.241
-master3_ip=37.32.13.142
-master1_name=adm-master1
-master2_name=adm-master2
-master3_name=adm-master3
+master1_name=master1
+master2_name=master2
+master3_name=master3
 vip_api_name=vip.kubeadm
 ```
 
@@ -302,6 +304,7 @@ apiServer:
   extraArgs:
     authorization-mode: "Node,RBAC"
   certSANs:
+    - "${vip_ip}"
     - "${master1_ip}"
     - "${master2_ip}"
     - "${master3_ip}"
@@ -325,6 +328,7 @@ etcd:
       - "${master1_ip}"
       - "${master2_ip}"
       - "${master3_ip}"
+      - "${vip_ip}"
       - "${master1_name}"
       - "${master2_name}"
       - "${master3_name}"
@@ -337,6 +341,7 @@ etcd:
       - "${master1_ip}"
       - "${master2_ip}"
       - "${master3_ip}"
+      - "${vip_ip}"
       - "${master1_name}"
       - "${master2_name}"
       - "${master3_name}"
@@ -347,7 +352,7 @@ etcd:
       - "${master3_name}.${domain_name}"
 imageRepository: registry.k8s.io
 kind: ClusterConfiguration
-kubernetesVersion: 1.26.5
+kubernetesVersion: 1.30.5
 controlPlaneEndpoint: "${vip_api_name}.${domain_name}:6443"
 networking:
   dnsDomain: cluster.local
@@ -486,13 +491,3 @@ kubeadm join 37.32.9.196:6443 --token  <token> --discovery-token-ca-cert-hash sh
 This command is used to join a node to the cluster. If a master node is joining the cluster, run this command with the option `--control-plane`.
 
 ## Setting up the Kubernetes cluster is complete. Let's enjoy!
-
-
-todo list:
-- set proxy for bash
-- HTTP_PROXY=http://asir.mecan.ir:8123
-HTTPS_PROXY=http://asir.mecan.ir:8123
-
-- set no-proxy
-- arvan dns config with check backend
-- 

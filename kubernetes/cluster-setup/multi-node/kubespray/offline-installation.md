@@ -29,7 +29,7 @@ in [your inventory](/inventory/sample/group_vars/all/offline.yml) to match your 
 
 ```yaml
 ## Global Offline settings
-files_repo: "https://repo.mecan.ir/repository/file/"
+files_repo: "https://repo.mecan.ir/repository/kube/"
 
 ### If using Debian
 debian_repo: "https://repo.mecan.ir/repository/debian/"
