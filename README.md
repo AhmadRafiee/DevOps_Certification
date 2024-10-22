@@ -154,7 +154,7 @@ You can also contribute by opening issues or pull requests with suggestions, imp
 <table>
   <tr>
     <td>
-      <img src="https://avatars.githubusercontent.com/u/19145573?v=4" alt="Ahmad Rafiee" width="750" style="border-radius: 50%;">
+      <img src="https://avatars.githubusercontent.com/u/19145573?v=4" alt="Ahmad Rafiee" width="750" style="border-radius: 750%;">
     </td>
     <td>
       <h2>Ahmad Rafiee</h2>
