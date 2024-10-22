@@ -1,12 +1,12 @@
 
-# Rahbia Workshop
+# RahBia Workshop
 ### Organized by DockerMe group
 SUMMERY
 
 # Workshop Information:
-  - **Subject:** 
+  - **Subject:**
   - **Speaker:** [Ahmad Rafiee](https://www.linkedin.com/in/ahmad-rafiee)
-  - **Date:** 
+  - **Date:**
   - **Number of Sessions:** 1 (Session 1)
 
 ## Video Link:
