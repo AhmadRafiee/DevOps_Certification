@@ -456,7 +456,7 @@ openssl x509 -text -noout -in /etc/kubernetes/pki/apiserver.crt
 
 ```bash
 # install calico CNI:
-kubectl create -f https://docs.projectcalico.org/v3.25/manifests/calico.yaml
+kubectl create -f https://docs.tigera.io/calico/latest/manifests/calico.yaml
 
 # check calico pods on kube-system namespace:
 kubectl -n kube-system get pod | grep calico
