@@ -7,6 +7,8 @@ spec:
     apiVersion: "apps/v1"
     kind: Deployment
     name: php-apache
+  updatePolicy:
+    updateMode: Auto
   resourcePolicy:
     containerPolicies:
       - containerName: '*'
@@ -17,3 +19,4 @@ spec:
           cpu: 1
           memory: 1G
         controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsAndLimits
