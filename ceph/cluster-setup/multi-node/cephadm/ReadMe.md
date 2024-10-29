@@ -293,14 +293,15 @@ radosgw-admin period update --rgw-realm=MeCan_realm --commit
 ceph orch apply rgw MeCan --realm=MeCan_realm --zone=test_zone --zonegroup=default --placement="3 mon1 mon2 mon3"
 
 ceph orch ps --daemon-type rgw
-```
 
-# view the current placement of the MGR daemon
+
+# view the current placement of the all daemon
 ceph orch ps --daemon-type mgr
 ceph orch ps --daemon-type rgw
 ceph orch ps --daemon-type mds
 ceph orch ps --daemon-type mon
 ceph orch ps --daemon-type osd
+```
 
 #### Step9: ceph and grafana dashboard access
 
