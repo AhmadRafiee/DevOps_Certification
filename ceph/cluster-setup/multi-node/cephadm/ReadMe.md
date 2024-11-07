@@ -118,7 +118,7 @@ Ceph Dashboard is now available at:
 
 	     URL: https://mon1:8443/
 	    User: admin
-	Password: ZR1zSzATvA3Wv7jsdfshcsWsdfsfdBe6nZJAS8it
+	Password: ZR1zSzATvA3Wv7jsdddeesdfshcsWsdfsfdBe6nZJAS8it
 
 Enabling client.admin keyring and conf on hosts with "admin" label
 Saving cluster configuration to /var/lib/ceph/4489d864-b135-11ee-b057-fa163eee05b9/config directory
@@ -237,6 +237,9 @@ ceph orch apply mon --placement="3 mon1 mon2 mon3"
 ceph orch ps --daemon-type mon
 ceph -s
 
+# You can explicitly specify the IP address or CIDR network for each monitor and control where it is placed. To disable automated monitor deployment:
+ceph orch apply mon --unmanaged
+
 # To print a list of devices discovered by cephadm, run this command:
 ceph orch device ls --wide
 
@@ -250,6 +253,7 @@ ceph orch apply osd --all-available-devices
 
 # list of nodes
 ceph orch host ls
+ceph orch host ls --detail
 ceph osd tree
 ceph orch device ls --wide
 
@@ -294,7 +298,6 @@ ceph orch apply rgw MeCan --realm=MeCan_realm --zone=test_zone --zonegroup=defau
 
 ceph orch ps --daemon-type rgw
 
-
 # view the current placement of the all daemon
 ceph orch ps --daemon-type mgr
 ceph orch ps --daemon-type rgw
@@ -337,174 +340,12 @@ To create the password file, run the following command:
 sudo htpasswd -c /etc/nginx/conf.d/.htpasswd MeCan
 ```
 
-Set nginx config for ceph panel:
-```bash
-cat > /etc/nginx/conf.d/panel.conf << 'CEO'
-server {
-    listen 443 ssl;
-    server_name panel.ceph.mecan.ir;
+##### To set up Nginx as a reverse proxy for the Ceph dashboard and panels:
 
-    ssl_certificate /etc/letsencrypt/live/panel.ceph.mecan.ir/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/panel.ceph.mecan.ir/privkey.pem;
-
-    # Enable HSTS
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-
-    # Enable other security headers
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options SAMEORIGIN;
-    add_header X-XSS-Protection "1; mode=block";
-
-    # Set nginx ssl protocol support
-    proxy_ssl_protocols TLSv1.2 TLSv1.3;
-    proxy_ssl_ciphers DEFAULT;
-
-    location / {
-        proxy_pass https://192.168.200.21:8443;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location /api {
-        proxy_pass https://192.168.200.21:8443/api;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-
-server {
-    listen 80;
-    server_name panel.ceph.mecan.ir;
-    # Redirect HTTP to HTTPS
-    return 301 https://$host$request_uri;
-}
-CEO
-```
-
-Set nginx config for grafana panel:
-```bash
-cat > /etc/nginx/conf.d/grafana.conf << 'CEO'
-server {
-    listen 443 ssl;
-    server_name grafana.ceph.mecan.ir;
-
-    ssl_certificate /etc/letsencrypt/live/grafana.ceph.mecan.ir/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grafana.ceph.mecan.ir/privkey.pem;
-
-    # Enable HSTS
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-
-    # Enable other security headers
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options SAMEORIGIN;
-    add_header X-XSS-Protection "1; mode=block";
-
-    # Set nginx ssl protocol support
-    proxy_ssl_protocols TLSv1.2 TLSv1.3;
-    proxy_ssl_ciphers DEFAULT;
-
-    location / {
-        set $grafana_back https://192.168.200.21:3000;
-        proxy_pass $grafana_back;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-
-server {
-    listen 80;
-    server_name grafana.ceph.mecan.ir;
-    # Redirect HTTP to HTTPS
-    return 301 https://$host$request_uri;
-}
-CEO
-```
-
-Set nginx config for prometheus panel:
-```bash
-cat > /etc/nginx/conf.d/metrics.conf << 'CEO'
-server {
-    listen 443 ssl;
-    server_name metrics.ceph.mecan.ir;
-
-    ssl_certificate /etc/letsencrypt/live/metrics.ceph.mecan.ir/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/metrics.ceph.mecan.ir/privkey.pem;
-
-    # Enable HSTS
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-
-    # Enable other security headers
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options SAMEORIGIN;
-    add_header X-XSS-Protection "1; mode=block";
-
-    # Set nginx ssl protocol support
-    proxy_ssl_protocols TLSv1.2 TLSv1.3;
-    proxy_ssl_ciphers DEFAULT;
-
-    location / {
-        auth_basic "Restricted Content";
-        auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
-        proxy_pass http://192.168.200.21:9095;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-
-server {
-    listen 80;
-    server_name metrics.ceph.mecan.ir;
-    # Redirect HTTP to HTTPS
-    return 301 https://$host$request_uri;
-}
-CEO
-```
-
-
-Set nginx config for alertmanager panel:
-```bash
-cat > /etc/nginx/conf.d/alerts.conf << 'CEO'
-server {
-    listen 443 ssl;
-    server_name alerts.ceph.mecan.ir;
-
-    ssl_certificate /etc/letsencrypt/live/alerts.ceph.mecan.ir/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/alerts.ceph.mecan.ir/privkey.pem;
-
-    # Enable HSTS
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-
-    # Enable other security headers
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options SAMEORIGIN;
-    add_header X-XSS-Protection "1; mode=block";
-
-    # Set nginx ssl protocol support
-    proxy_ssl_protocols TLSv1.2 TLSv1.3;
-    proxy_ssl_ciphers DEFAULT;
-
-    location / {
-        auth_basic "Restricted Content";
-        auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
-        proxy_pass http://192.168.200.21:9093;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-
-server {
-    listen 80;
-    server_name alerts.ceph.mecan.ir;
-    # Redirect HTTP to HTTPS
-    return 301 https://$host$request_uri;
-}
-CEO
-```
+[Setting up an Nginx configuration to serve a Ceph dashboard ](nginx-config-for-ceph/panel.conf)
+[Setting up an Nginx configuration to serve a Grafana service ](nginx-config-for-ceph/grafana.conf)
+[Setting up an Nginx configuration to serve a Prometheus service ](nginx-config-for-ceph/metrics.conf)
+[Setting up an Nginx configuration to serve a AlertManager service ](nginx-config-for-ceph/alerts.conf)
 
 After configuring all virtual hosts, it is generally safe to remove the default configuration file for Nginx. However, before doing so, it is important to ensure that your Nginx configuration is error-free and valid. You can use the following command to check the Nginx configuration:
 
@@ -520,6 +361,9 @@ systemctl restart nginx
 
 # enable nginx service
 systemctl enable nginx
+
+# check nginx service
+systemctl status nginx
 ```
 
 #### Step9: Test the cluster
@@ -605,3 +449,11 @@ To create a manifest for an external Ceph dashboard using Kubernetes, you need t
   - https://www.redhat.com/sysadmin/ceph-cluster-single-machine
   - https://docs.ceph.com/en/latest/cephadm/services/monitoring/
   - https://www.ibm.com/docs/en/storage-ceph/5?topic=access-setting-admin-user-password-grafana
+
+
+
+
+ceph auth get client.admin
+
+ceph auth add client.k8s mon 'allow r' osd 'allow rw pool=k8s-pool'
+ceph auth get client.k8s

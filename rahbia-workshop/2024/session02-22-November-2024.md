@@ -1,29 +1,24 @@
 
 # Rahbia Workshop
 ### Organized by DockerMe group
-The **Rahbia Workshop**, presented by **Ahmad Rafiee**, will provide an in-depth, hands-on session on deploying and managing Kubernetes clusters using Kubeadm and Kubespray. This workshop is designed to give participants practical experience with the tools and methodologies needed to set up Kubernetes, one of the most widely used platforms for container orchestration.
+The **Rahbia Workshop**, presented by **Ahmad Rafiee**, will provide an in-depth, hands-on session on deploying and managing Kubernetes clusters using Kubespray. This workshop is designed to give participants practical experience with the tools and methodologies needed to set up Kubernetes, one of the most widely used platforms for container orchestration.
 
 **In this session, participants will:**
-  - Learn about Kubernetes concepts and components
-  - Understand Kubernetes design
-  - Master the fundamentals of Kubeadm, the Kubernetes-provided tool for initializing and managing clusters
-  - Explore Kubespray, an automation tool that simplifies the process of deploying production-ready Kubernetes clusters using Ansible and Terraform
+  - Explore Kubespray, an automation tool that simplifies the process of deploying production-ready Kubernetes clusters using Ansible.
   - Gain insight into Kubernetes networking, cluster configuration, and best practices for maintaining a healthy and scalable environment
 Work through common challenges when setting up Kubernetes in real-world scenarios
-The workshop is scheduled for **25 October 2024** and will be a one-session event. It is ideal for both beginners looking to learn the core steps of Kubernetes deployment and advanced users seeking to explore automation techniques for cluster management.
+The workshop is scheduled for **22 November 2024** and will be a one-session event. It is ideal for both beginners looking to learn the core steps of Kubernetes deployment and advanced users seeking to explore automation techniques for cluster management.
 
 By the end of the workshop, attendees will have the knowledge and skills to independently deploy Kubernetes clusters for their own environments, enabling them to support scalable, resilient applications.
 
-
-
 # Workshop Information:
-  - **Subject:** Installing and Configuring a Kubernetes Cluster with Kubeadm and Kubespray
+  - **Subject:** Installing and Configuring a Kubernetes Cluster with Kubespray and production ready
   - **Speaker:** [Ahmad Rafiee](https://www.linkedin.com/in/ahmad-rafiee)
-  - **Date:** 25 October 2024
-  - **Number of Sessions:** 1 (Session 1)
+  - **Date:** 22 November 2024
+  - **Number of Sessions:** 2 (Session 2)
 
 ## Video Link:
-[![YouTube](http://i.ytimg.com/vi/yYu5WDkdqgE/hqdefault.jpg)](https://www.youtube.com/watch?v=yYu5WDkdqgE)
+
 
 ## Documents:
 #### [Set up an external load balancer with HAProxy](../../kubernetes/cluster-setup/multi-node/load-balancer/ReadMe.md)
