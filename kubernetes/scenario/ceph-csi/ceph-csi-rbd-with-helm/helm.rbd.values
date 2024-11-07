@@ -1,0 +1,133 @@
+---
+rbac:
+  create: true
+
+serviceAccounts:
+  nodeplugin:
+    create: true
+    name:
+  provisioner:
+    create: true
+
+csiConfig:
+  - clusterID: "08604626-968a-11ef-bed8-005056abbe66"
+    monitors:
+      - "192.168.200.21:6789"
+      - "192.168.200.22:6789"
+      - "192.168.200.23:6789"
+
+nodeplugin:
+  name: nodeplugin
+  priorityClassName: system-node-critical
+  updateStrategy: RollingUpdate
+
+  httpMetrics:
+    enabled: true
+    containerPort: 8080
+
+    service:
+      enabled: true
+      servicePort: 8080
+      type: ClusterIP
+
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+
+
+  registrar:
+    image:
+      repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+      tag: v2.11.1
+      pullPolicy: IfNotPresent
+
+  plugin:
+    image:
+      repository: quay.io/cephcsi/cephcsi
+      tag: v3.12.2
+      pullPolicy: IfNotPresent
+
+provisioner:
+  name: provisioner
+  replicaCount: 3
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 50%
+  defaultFSType: ext4
+  deployController: true
+  timeout: 60s
+  hardMaxCloneDepth: 8
+  softMaxCloneDepth: 4
+  maxSnapshotsOnImage: 450
+  minSnapshotsOnImage: 250
+  priorityClassName: system-cluster-critical
+  httpMetrics:
+    enabled: true
+    containerPort: 8080
+    service:
+      enabled: true
+      servicePort: 8080
+      type: ClusterIP
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+
+  provisioner:
+    image:
+      repository: registry.k8s.io/sig-storage/csi-provisioner
+      tag: v5.0.1
+      pullPolicy: IfNotPresent
+
+  attacher:
+    name: attacher
+    enabled: true
+    image:
+      repository: registry.k8s.io/sig-storage/csi-attacher
+      tag: v4.6.1
+      pullPolicy: IfNotPresent
+
+  resizer:
+    name: resizer
+    enabled: true
+    image:
+      repository: registry.k8s.io/sig-storage/csi-resizer
+      tag: v1.11.1
+      pullPolicy: IfNotPresent
+
+  snapshotter:
+    image:
+      repository: registry.k8s.io/sig-storage/csi-snapshotter
+      tag: v8.0.1
+      pullPolicy: IfNotPresent
+    args:
+      enableVolumeGroupSnapshots: true
+
+storageClass:
+  create: true
+  name: csi-rbd-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  clusterID: 08604626-968a-11ef-bed8-005056abbe66
+  pool: kubernetes
+  imageFeatures: "layering"
+  provisionerSecret: csi-rbd-secret
+  provisionerSecretNamespace: ""
+  controllerExpandSecret: csi-rbd-secret
+  controllerExpandSecretNamespace: ""
+  nodeStageSecret: csi-rbd-secret
+  nodeStageSecretNamespace: ""
+  fstype: ext4
+  reclaimPolicy: Delete
+  allowVolumeExpansion: true
+
+secret:
+  create: true
+  name: csi-rbd-secret
+  userID: kubernetes
+  userKey: AQC2zCxnF/FoFRAAlMLvC9unRu2tmAp99V/bCQ==
+
+cephconf: |
+  [global]
+    auth_cluster_required = cephx
+    auth_service_required = cephx
+    auth_client_required = cephx
