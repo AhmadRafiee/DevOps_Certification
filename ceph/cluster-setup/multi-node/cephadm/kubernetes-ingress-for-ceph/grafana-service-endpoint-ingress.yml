@@ -17,9 +17,9 @@ metadata:
   namespace: default
 subsets:
   - addresses:
-    - ip: 5.34.206.105
-    - ip: 5.34.206.136
-    - ip: 5.34.204.230
+    - ip: 192.168.200.21
+    - ip: 192.168.200.22
+    - ip: 192.168.200.23
     ports:
     - name: grafana
       port: 3000
@@ -39,7 +39,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: grafana.ceph.cephadm.ir
+  - host: grafana.ceph.mecan.ir
     http:
       paths:
       - backend:
@@ -51,5 +51,5 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - grafana.ceph.cephadm.ir
+    - grafana.ceph.mecan.ir
     secretName: grafana-ceph-tls-secret
