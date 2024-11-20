@@ -11,7 +11,7 @@
 To install the release.asc key, execute the following:
 ```bash
 # download from ceph site
-wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo gpg --dearmor -o /usr/share/keyrings/ceph-archive-keyring.gpg
 
 # download from DockerMe site and use gpg commands
 wget -q -O- 'https://store.dockerme.ir/Software/release.asc' | sudo gpg --dearmor -o /usr/share/keyrings/ceph-archive-keyring.gpg
@@ -343,9 +343,13 @@ sudo htpasswd -c /etc/nginx/conf.d/.htpasswd MeCan
 ##### To set up Nginx as a reverse proxy for the Ceph dashboard and panels:
 
 [Setting up an Nginx configuration to serve a Ceph dashboard ](nginx-config-for-ceph/panel.conf)
+
 [Setting up an Nginx configuration to serve a Grafana service ](nginx-config-for-ceph/grafana.conf)
+
 [Setting up an Nginx configuration to serve a Prometheus service ](nginx-config-for-ceph/metrics.conf)
+
 [Setting up an Nginx configuration to serve a AlertManager service ](nginx-config-for-ceph/alerts.conf)
+
 
 After configuring all virtual hosts, it is generally safe to remove the default configuration file for Nginx. However, before doing so, it is important to ensure that your Nginx configuration is error-free and valid. You can use the following command to check the Nginx configuration:
 

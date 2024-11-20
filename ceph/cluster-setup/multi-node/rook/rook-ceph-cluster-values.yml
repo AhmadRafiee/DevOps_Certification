@@ -21,7 +21,7 @@ toolbox:
 
 monitoring:
   enabled: true
-  createPrometheusRules: false
+  createPrometheusRules: true
 
 cephClusterSpec:
   cephVersion:
@@ -89,10 +89,10 @@ cephClusterSpec:
         memory: "1Gi"
     osd:
       limits:
-        memory: "4Gi"
+        memory: "2Gi"
       requests:
         cpu: "1000m"
-        memory: "4Gi"
+        memory: "2Gi"
     prepareosd:
       requests:
         cpu: "500m"
@@ -141,10 +141,6 @@ cephClusterSpec:
     config:
       storeType: bluestore
       osdsPerDevice: "1"
-    #  crushRoot: "custom-root"
-    #  metadataDevice: "/dev/sde"
-    #  databaseSizeMB: "1024"
-    #  encryptedDevice: "true"
     nodes:
       - name: "worker1"
         devices:

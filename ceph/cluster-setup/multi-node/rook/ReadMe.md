@@ -75,8 +75,24 @@ rook-release/rook-ceph-cluster \
 -f rook-ceph-cluster-values.yml
 ```
 
+### Change rgw service count:
+```bash
+# get rgw informations
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- radosgw-admin realm list
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- radosgw-admin zonegroup list
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- radosgw-admin zone list
 
-**Configure the Ceph Dashboard**
+# check rgw service
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph orch ps --daemon-type rgw
+
+# change rgw service count
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph orch apply rgw ceph-objectstore --realm=ceph-objectstore --zone=ceph-objectstore --zonegroup=ceph-objectstore --placement="3 master1 master2 master3"
+
+# check rgw service
+kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph orch ps --daemon-type rgw
+```
+
+### Configure the Ceph Dashboard
 The following dashboard configuration settings are supported:
 ```bash
 spec:
@@ -96,7 +112,6 @@ After you connect to the dashboard you will need to login for secure access. Roo
 ```bash
 kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
 ```
-
 
 **Visualization of 'Physical Disks' section in the dashboard**
 Information about physical disks is available only in Rook host clusters.
@@ -125,8 +140,6 @@ kubectl apply -f operator.yaml
 
 ## Smoke test
 Here are some tests to check the status and functionality of Rook-Ceph after deployment:
-
-
 
 Ensure that all Rook-Ceph pods in the rook-ceph namespace are running:
 ```bash
@@ -182,4 +195,3 @@ Set a quota for a pool (e.g., 1GB):
 ```bash
 kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph osd pool set test-pool size 3
 ```
-
