@@ -26,14 +26,18 @@ services:
       MYSQL_PASSWORD: sdfascsdvsfdvweliuoiquowecefcwaefef
     networks:
       - wp_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 30s
+      timeout: 60s
+      retries: 3
+      start_period: 0s
 
   wordpress:
     image: wordpress:latest
     container_name: wordpress
     volumes:
       - wp_wp:/var/www/html/
-    depends_on:
-      - db
     restart: always
     environment:
       WORDPRESS_DB_HOST: db:3306
@@ -44,6 +48,9 @@ services:
       - 8000:80
     networks:
       - wp_net
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine
