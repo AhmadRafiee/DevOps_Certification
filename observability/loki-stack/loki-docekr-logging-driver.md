@@ -1,6 +1,4 @@
-
-
-### Adding Loki as a Logging Driver
+# Adding Loki as a Logging Driver
 To ship logs to Loki automatically for every container we add to our setup, we need to add the loki logging driver.
 The easiest way to add the loki logging driver is with a docker plugin.
 

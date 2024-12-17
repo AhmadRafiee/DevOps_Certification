@@ -1,9 +1,9 @@
 version: '3.8'
 
 networks:
-  loki_net:
+  app_net:
     external: false
-    name: loki_net
+    name: app_net
   web_net:
     external: true
     name: web_net
@@ -31,7 +31,7 @@ services:
       - GF_PATHS_DATA=/var/lib/grafana
     networks:
       - web_net
-      - loki_net
+      - app_net
     labels:
       - traefik.enable=true
       - traefik.docker.network=web_net
@@ -48,7 +48,7 @@ services:
 
   loki:
     image: grafana/loki:k171-b5eaae1
-    command: -config.file=/etc/loki/loki.yml 
+    command: -config.file=/etc/loki/loki.yml
     restart: ${RESTART_POLICY}
     container_name: loki
     user: root
@@ -57,7 +57,7 @@ services:
       - ./loki:/etc/loki/
     networks:
       - web_net
-      - loki_net
+      - app_net
     labels:
       - traefik.enable=true
       - traefik.docker.network=web_net
@@ -84,4 +84,4 @@ services:
       - ./promtail:/etc/promtail/
     command: -config.file=/etc/promtail/promtail.yml
     networks:
-      - loki_net
+      - app_net

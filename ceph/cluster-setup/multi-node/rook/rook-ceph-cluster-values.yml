@@ -332,7 +332,6 @@ cephObjectStores:
         cert-manager.io/cluster-issuer: letsencrypt
         certmanager.k8s.io/acme-http01-edit-in-place: "false"
         kubernetes.io/tls-acme: "true"
-        nginx.ingress.kubernetes.io/backend-protocol: HTTPS
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
       host:
         name: objectstore.ceph.mecan.ir
