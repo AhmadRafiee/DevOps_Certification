@@ -1,11 +1,10 @@
 # Prometheus Stack
 
-## Prometheus Stack Design
+### Prometheus Stack Design
 ![Prometheus Stack](photo/Prometheus-Stack.png "Prometheus-Stack")
 
-### A Prometheus & Grafana docker compose stack
-
-Here's a quick start using Compose file to start-up a [Prometheus](http://prometheus.io/) stack containing Prometheus, Grafana and Node scraper to monitor your Docker infrastructure.
+### Compose stack
+Here's a quick start using Compose file to start-up a [Prometheus](`http://prometheus.io/`) stack containing Prometheus, Grafana and Node scraper to monitor your Docker infrastructure.
 
 ### Project structure:
 ```bash
@@ -122,7 +121,7 @@ docker compose pull
 docker compose up -d
 ```
 
-## How to configure Prometheus Alertmanager to send alerts to Telegram
+### How to configure Prometheus Alertmanager to send alerts to Telegram
 **Step One** => Get a telegram bot
 
 Create telegram bot via `@botfather` [link](https://core.telegram.org/bots#6-botfather)
