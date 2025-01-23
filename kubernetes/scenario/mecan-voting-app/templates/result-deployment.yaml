@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voting-app-result
+  labels:
+    app: voting-app
+    component: result
+spec:
+  replicas: {{ .Values.result.replicas }}
+  selector:
+    matchLabels:
+      app: voting-app
+      component: result
+  template:
+    metadata:
+      labels:
+        app: voting-app
+        component: result
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: result
+        image: {{ .Values.result.image }}
+        ports:
+        - containerPort: 80
