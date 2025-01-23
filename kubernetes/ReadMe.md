@@ -73,6 +73,7 @@
 
 ### [Scenario](scenario)
   - [Kubernetes Auto Scaling](scenario/auto-scaling)
+  - [Etcd labs](scenario/etcdlabs)
   - [Etcd backup](scenario/etcd-backup)
   - [Kubeapps Panel](scenario/kubeapps.md)
   - [Kubernetes Dashboard](scenario/kubernetes-dashboard.md)

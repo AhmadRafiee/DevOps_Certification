@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voting-app-worker
+  labels:
+    app: voting-app
+    component: worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app: voting-app
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: voting-app
+        component: worker
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: worker
+        image: {{ .Values.worker.image }}
+

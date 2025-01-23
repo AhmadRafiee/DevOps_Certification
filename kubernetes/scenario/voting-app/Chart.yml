@@ -1,0 +1,13 @@
+apiVersion: v2
+name: mecan-voting-app
+version: 0.1.0
+description: Helm chart for the Sample Microservice app | Voting App
+maintainers:
+  - name: Ahmad Rafiee
+    email: rafiee1001@gmail.com
+keywords:
+  - voting
+  - helm
+  - microservice
+sources:
+  - https://github.com/dockersamples/example-voting-app

@@ -18,5 +18,5 @@ metadata:
 type: Opaque
 
 # User: MeCan
-# Pass: QsfsfyzwefwsdfwefereLVscTM9WykKergfergergzPqsdsffHD
+# Pass:   
 # Command: htpasswd -nbm MeCan QsfsfyzwefwsdfwefereLVscTM9WykKergfergergzPqsdsffHD | base64

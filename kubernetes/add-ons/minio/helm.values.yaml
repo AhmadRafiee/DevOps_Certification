@@ -1,12 +1,12 @@
 mode: standalone
 
 image:
-  repository: registry.mecan.ir/minio/minio
-  tag: RELEASE.2024-05-07T06-41-25Z
+  repository: quay.io/minio/minio
+  tag: RELEASE.2024-12-18T13-15-44Z
   pullPolicy: IfNotPresent
 
-accessKey: "l1DB3pEEeQTwecwewverrwecweccweweVJvp2ZHPl"
-secretKey: "akPEKIvk7BbsdcswefwevwecHGd7V73XgbjgWSB5hvnKwxyZKJzQU"
+rootUser: "l1DB3pEEeQTwecwewverrwecweccweweVJvp2ZHPl"
+rootPassword: "akPEKIvk7BbsdcswefwevwecHGd7V73XgbjgWSB5hvnKwxyZKJzQU"
 mountPath: "/data"
 
 resources:
@@ -28,7 +28,7 @@ service:
   port: 9000
 
 extraArgs:
-  - --console-address :9090
+  - --console-address :9001
 
 environment:
   MINIO_SERVER_URL: https://object.kube.mecan.ir

@@ -65,7 +65,7 @@ kubeControllerManager:
     insecureSkipVerify: true
 
 kubeEtcd:
-  enabled: true
+  enabled: false
   serviceMonitor:
     enabled: true
     scheme: http
@@ -133,6 +133,6 @@ prometheus:
       requests:
         cpu: 500m
         memory: 5Gi
-    secrets:
-      - etcd-client-cert
+    #secrets:
+    #  - etcd-client-cert
 

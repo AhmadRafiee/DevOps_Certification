@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: voting-app-frontend
+  labels:
+    app: voting-app
+    component: frontend
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+    - port: {{ .Values.frontend.service.port }}
+      targetPort: 80
+  selector:
+    app: voting-app
+    component: frontend
