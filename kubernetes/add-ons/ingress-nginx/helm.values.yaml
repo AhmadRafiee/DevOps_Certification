@@ -2,8 +2,6 @@
 controller:
   replicaCount: 3   # ingress nginx controller replica count
   minAvailable: 1   # ingress nginx controller minimum available count
-  service:
-    externalTrafficPolicy: Local
   ingressClassResource:
     name: nginx
     enabled: true
@@ -17,6 +15,7 @@ controller:
       memory: 90Mi
 
   service:
+    externalTrafficPolicy: Local
     nodePorts:
       http: 32080   # Haproxy backend port for http
       https: 32443  # Haproxy backend port for https
