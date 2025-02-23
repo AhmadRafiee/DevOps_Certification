@@ -33,23 +33,15 @@ configuration:
   backupStorageLocation:
   - name: default
     provider: aws
-    bucket: mecan-backup
+    bucket: velero-backups
     credential:
       name: velero-credential
       key: cloud
     config:
       region: minio
+      profile: "default"
       s3ForcePathStyle:  "true"
       s3Url: https://object.kube.mecan.ir/
-
-  volumeSnapshotLocation:
-  - name: default
-    provider: aws
-    credential:
-      name: velero-credential
-      key: cloud
-    config:
-      region: minio
 
 credentials:
   useSecret: true

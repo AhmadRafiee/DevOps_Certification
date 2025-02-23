@@ -236,9 +236,6 @@ helm upgrade --install argo argo/argo-cd \
 ```bash
 # check all resource
 kubectl get all -n argocd
-
-# get admin password for argocd ui
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
 <p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
@@ -294,11 +291,8 @@ helm upgrade --install minio minio/minio \
     --create-namespace
 ```
 
-**Step4:** check and deploy ingress resource
+**Step4:** check ingress resource
 ```bash
-# deploy minio ingress and secret
-kubectl apply -f minio/manifest.yaml
-
 # check ingress and secret
 kubectl get ingress,secret -n minio
 ```
@@ -332,13 +326,7 @@ helm repo list
 helm repo update
 ```
 
-**Step3** Create BackupStorageLocation for velero
-```bash
-kubectl create ns velero
-kubectl apply -f velero/manifest.yml
-```
-
-**Step4:** Deploy velero
+**Step3:** Deploy velero
 ```bash
 helm upgrade --install velero vmware-tanzu/velero \
     --namespace velero \
@@ -346,7 +334,7 @@ helm upgrade --install velero vmware-tanzu/velero \
     --create-namespace
 ```
 
-**Step5:** check all resource on velero ns
+**Step4:** check all resource on velero ns
 ```bash
 kubectl get all -n velero
 ```

@@ -5,12 +5,10 @@ metadata:
     app: result
   name: result
 spec:
-  type: NodePort
   ports:
   - name: "result-service"
     port: 8081
     targetPort: 80
-    nodePort: 31001
   selector:
     app: result
 ---
@@ -38,3 +36,30 @@ spec:
         ports:
         - containerPort: 80
           name: result
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    certmanager.k8s.io/acme-http01-edit-in-place: "false"
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  name: result-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: result.kube.mecan.ir
+    http:
+      paths:
+      - backend:
+          service:
+            name: result
+            port:
+              number: 8081
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - result.kube.mecan.ir
+    secretName: result-tls-secret

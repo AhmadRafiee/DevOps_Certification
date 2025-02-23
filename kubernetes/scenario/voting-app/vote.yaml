@@ -5,12 +5,10 @@ metadata:
     app: vote
   name: vote
 spec:
-  type: NodePort
   ports:
   - name: "vote-service"
     port: 8080
     targetPort: 80
-    nodePort: 31000
   selector:
     app: vote
 ---
@@ -38,3 +36,30 @@ spec:
         ports:
         - containerPort: 80
           name: vote
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    certmanager.k8s.io/acme-http01-edit-in-place: "false"
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  name: vote-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: vote.kube.mecan.ir
+    http:
+      paths:
+      - backend:
+          service:
+            name: vote
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - vote.kube.mecan.ir
+    secretName: vote-tls-secret

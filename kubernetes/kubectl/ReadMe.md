@@ -269,18 +269,52 @@ kubectl tree --help
 ```
 
 Demo:
-![kube tree](../../images/kube-tree.png "kube tree")
+![kube tree](../images/kube-tree.png "kube tree")
+
+#
+#### [kubectl-neat:](https://github.com/itaysk/kubectl-neat)
+
+![kubectl neat](../images/kubectl-neat.png)
+
+**Installation**
+```bash
+kubectl krew install neat
+```
+or just download the binary if you prefer.
+When used as a kubectl plugin the command is kubectl neat, and when used as a standalone executable it's kubectl-neat.
+
+**Usage**
+There are two modes of operation that specify where to get the input document from: a local file or from Kubernetes.
+
+**Local - file or Stdin**
+This is the default mode if you run just kubectl neat. This command accepts an optional flag -f/--file which specifies the file to neat. It can be a path to a local file, or - to read the file from stdin. If omitted, it will default to -. The file must be a yaml or json file and a valid Kubernetes resource.
+
+There's another optional optional flag, -o/--output which specifies the format for the output. If omitted it will default to the same format of the input (auto-detected).
+
+Examples:
+```bash
+kubectl get pod mypod -o yaml | kubectl neat
+kubectl get pod mypod -oyaml | kubectl neat -o json
+kubectl neat -f - <./my-pod.json
+kubectl neat -f ./my-pod.json
+kubectl neat -f ./my-pod.json --output yaml
+```
+**Kubernetes - kubectl get wrapper**
+This mode is invoked by calling the get subcommand, i.e kubectl neat get .... It is a convenience to run kubectl get and then kubectl neat the output in a single command. It accepts any argument that kubectl get accepts and passes those arguments as is to kubectl get. Since it executes kubectl, it need to be able to find it in the path.
+
+Examples:
+```bash
+kubectl neat get -- pod mypod -oyaml
+kubectl neat get -- svc -n default myservice --output json
+```
 
 #### [kubecolor:](https://github.com/hidetatz/kubecolor) Colorize your kubectl output
 
 Demo:
-![kubecolor](../../images/kubecolor.png "kubecolor")
+![kubecolor](../images/kubecolor.png "kubecolor")
 
 #### Others good Tips
 - [kubectl-df-pv:](https://github.com/yashbhutwala/kubectl-df-pv) A kubectl plugin to see df for persistent volumes.
 - [kubectl-images:](https://github.com/chenjiandongx/kubectl-images) Show container images used in the cluster
 - [kurt:](https://github.com/soraro/kurt) KUbernetes Restart Tracker
 - [kubent:](https://github.com/doitintl/kube-no-trouble) Easily check your clusters for use of deprecated APIs
-
-
-

@@ -60,5 +60,5 @@ spec:
       volumes:
       - name: db-data
         persistentVolumeClaim:
-          claimName: db-pvc  # PVC نامی که به آن اشاره می‌کنید
+          claimName: db-pvc
 ---

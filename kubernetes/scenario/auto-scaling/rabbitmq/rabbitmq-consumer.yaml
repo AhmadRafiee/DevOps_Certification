@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-consumer
+  labels:
+    app: rabbitmq-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-consumer
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-consumer
+    spec:
+      containers:
+      - name: rabbitmq-consumer
+        image: ghcr.io/kedacore/sample-go-rabbitmq:latest
+        env:
+        - name: RABBITMQ_HOST
+          value: "rabbitmq.default.svc.cluster.local"
+        - name: RABBITMQ_QUEUE_NAME
+          value: "test-queue"
