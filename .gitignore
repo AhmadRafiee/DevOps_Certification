@@ -4,4 +4,3 @@
 .trunk
 *.pem
 elastic-docker
-servers-config/
