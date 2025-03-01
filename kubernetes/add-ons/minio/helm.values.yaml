@@ -13,7 +13,7 @@ resources:
   requests:
     memory: 1G
     cpu: 500m
-  limit:
+  limits:
     memory: 5G
     cpu: 1000m
 
