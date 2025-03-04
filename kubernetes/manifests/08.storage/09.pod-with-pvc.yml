@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pv-claim
+  name: my-volume
   labels:
-    app: wordpress
+    app: web
 spec:
   accessModes:
     - ReadWriteOnce
@@ -15,38 +15,29 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wordpress-mysql
+  name: web
   labels:
-    app: wordpress
+    app: web
 spec:
   selector:
     matchLabels:
-      app: wordpress
-      tier: mysql
+      app: web
+      tier: web
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: wordpress
-        tier: mysql
+        app: web
+        tier: web
     spec:
       containers:
-      - image: mysql:5.6
-        name: mysql
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-pass
-              key: password
-        ports:
-        - containerPort: 3306
-          name: mysql
+      - image: nginx:alpine
+        name: nginx
         volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
+        - name: web-persistent-storage
+          mountPath: /opt
       volumes:
-      - name: mysql-persistent-storage
+      - name: web-persistent-storage
         persistentVolumeClaim:
-          claimName: mysql-pv-claim
+          claimName: my-volume
