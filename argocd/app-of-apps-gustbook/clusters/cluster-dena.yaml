@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-dena
+  namespace: default
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/AhmadRafiee/DevOps_Certification.git
+    targetRevision: HEAD
+    path: argocd/guestbook
+  destination:
+    server: https://vip.dena.mecan.ir:6443
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
