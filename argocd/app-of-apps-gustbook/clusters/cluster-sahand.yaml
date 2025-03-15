@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/AhmadRafiee/DevOps_Certification.git
     targetRevision: HEAD
-    path: argocd/guestbook
+    path: argocd/app-of-apps-gustbook/guestbook
   destination:
     server: https://vip.sahand.mecan.ir:6443
     namespace: default
