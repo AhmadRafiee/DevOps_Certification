@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/AhmadRafiee/DevOps_Certification.git
     targetRevision: HEAD
-    path: argocd
+    path: argocd/app-of-apps-gustbook
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
