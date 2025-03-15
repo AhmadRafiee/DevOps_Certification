@@ -10,9 +10,16 @@ spec:
     targetRevision: HEAD
     path: argocd/app-of-apps-gustbook/guestbook
   destination:
-    server: https://vip.damavand.mecan.ir:6443
+    server: https://kubernetes.default.svc
     namespace: default
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    apps:
+      - name: guestbook-dena
+        appProject: default
+      - name: guestbook-sahand
+        appProject: default
+      - name: guestbook-damavand
+        appProject: default
