@@ -14,7 +14,7 @@ spec:
       valueFiles:
         - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/velero/helm.values.yaml
   destination:
-    server: "https://kubernetes.default.svc"
+    server: {{ .Values.spec.destination.server }}
     namespace: velero
   syncPolicy:
     automated:

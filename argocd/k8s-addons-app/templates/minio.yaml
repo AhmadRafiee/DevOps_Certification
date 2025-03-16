@@ -6,16 +6,16 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://charts.min.io/
-    targetRevision: "5.4.0"
-    chart: minio
+    repoURL: {{ .Values.spec.minio.repoURL }}
+    targetRevision: {{ .Values.spec.minio.targetRevision }}
+    chart: {{ .Values.spec.minio.chart }}
     helm:
-      releaseName: minio
+      releaseName: {{ .Values.spec.minio.releaseName }}
       valueFiles:
-        - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/minio/helm.values.yaml
+        - {{ .Values.spec.minio.valueFiles }}
   destination:
-    server: "https://kubernetes.default.svc"
-    namespace: minio
+    server: {{ .Values.spec.destination.server }}
+    namespace: {{ .Values.spec.destination.namespace }}
   syncPolicy:
     automated:
       prune: true

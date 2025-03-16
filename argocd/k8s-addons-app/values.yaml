@@ -1,6 +1,10 @@
 spec:
   destination:
     server: https://kubernetes.default.svc
-  source:
-    repoURL: https://github.com/AhmadRafiee/DevOps_Certification
-    targetRevision: HEAD
+  minio:
+    repoURL: https://charts.min.io/
+    targetRevision: "5.4.0"
+    chart: minio
+    releaseName: minio
+    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/minio/helm.values.yaml
+    namespace: minio
