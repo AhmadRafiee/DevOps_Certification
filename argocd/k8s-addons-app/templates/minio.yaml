@@ -11,9 +11,9 @@ spec:
     path: minio
     helm:
       valueFiles:
-        - kubernetes/add-ons/minio/helm.values.yaml
+        - {{ .Values.spec.source.minio_variables_file }}
   destination:
-    server: https://kubernetes.default.svc
+    server: {{ .Values.spec.destination.server }}
     namespace: minio
   syncPolicy:
     automated:

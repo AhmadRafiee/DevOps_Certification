@@ -11,9 +11,9 @@ spec:
     path: velero
     helm:
       valueFiles:
-        - kubernetes/add-ons/velero/helm.values.yaml
+        - {{ .Values.spec.source.velero_variables_file }}
   destination:
-    server: https://kubernetes.default.svc
+    server: {{ .Values.spec.destination.server }}
     namespace: velero
   syncPolicy:
     automated:
