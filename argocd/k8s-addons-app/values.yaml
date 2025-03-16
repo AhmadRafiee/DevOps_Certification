@@ -4,5 +4,3 @@ spec:
   source:
     repoURL: https://github.com/AhmadRafiee/DevOps_Certification
     targetRevision: HEAD
-    minio_variables_file: kubernetes/add-ons/minio/helm.values.yaml
-    velero_variables_file: kubernetes/add-ons/velero/helm.values.yaml

@@ -11,7 +11,7 @@ spec:
     path: velero
     helm:
       valueFiles:
-        - {{ .Values.spec.source.velero_variables_file }}
+        - kubernetes/add-ons/minio/helm.values.yaml
   destination:
     server: {{ .Values.spec.destination.server }}
     namespace: velero
