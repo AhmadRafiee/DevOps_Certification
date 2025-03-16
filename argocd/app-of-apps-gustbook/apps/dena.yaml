@@ -8,9 +8,9 @@ spec:
   source:
     repoURL: https://github.com/AhmadRafiee/DevOps_Certification.git
     targetRevision: HEAD
-    path: argocd/app-of-apps-gustbook/guestbook
+    path: argocd/guestbook
   destination:
-    server: https://vip.dena.mecan.ir:6443
+    server: https://kubernetes.default.svc
     namespace: default
   syncPolicy:
     automated:

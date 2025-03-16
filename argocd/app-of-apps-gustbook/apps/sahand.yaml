@@ -10,7 +10,7 @@ spec:
     targetRevision: HEAD
     path: argocd/guestbook
   destination:
-    server: https://vip.sahand.mecan.ir:6443
+    server: https://kubernetes.default.svc
     namespace: default
   syncPolicy:
     automated:
