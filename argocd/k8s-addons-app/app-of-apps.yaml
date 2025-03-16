@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/AhmadRafiee/DevOps_Certification.git
     targetRevision: HEAD
-    path: argocd/k8s-addons-app/applications
+    path: argocd/k8s-addons-app/app
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
