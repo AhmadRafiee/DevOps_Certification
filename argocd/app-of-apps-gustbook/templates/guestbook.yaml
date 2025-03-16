@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: guestbook
   namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
     namespace: guestbook

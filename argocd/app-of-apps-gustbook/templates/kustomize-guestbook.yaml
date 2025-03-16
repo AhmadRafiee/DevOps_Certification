@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: kustomize-guestbook
   namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
     namespace: kustomize-guestbook
