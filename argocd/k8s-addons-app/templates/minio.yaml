@@ -7,13 +7,14 @@ spec:
   project: default
   source:
     repoURL: https://charts.min.io/
-    targetRevision: main
-    path: minio
+    targetRevision: "5.4.0"
+    chart: minio
     helm:
+      releaseName: minio
       valueFiles:
-        - kubernetes/add-ons/velero/helm.values.yaml
+        - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/minio/helm.values.yaml
   destination:
-    server: {{ .Values.spec.destination.server }}
+    server: "https://kubernetes.default.svc"
     namespace: minio
   syncPolicy:
     automated:

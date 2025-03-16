@@ -7,13 +7,14 @@ spec:
   project: default
   source:
     repoURL: https://vmware-tanzu.github.io/helm-charts/
-    targetRevision: main
-    path: velero
+    targetRevision: "8.3.0"
+    chart: velero
     helm:
+      releaseName: velero
       valueFiles:
-        - kubernetes/add-ons/minio/helm.values.yaml
+        - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/velero/helm.values.yaml
   destination:
-    server: {{ .Values.spec.destination.server }}
+    server: "https://kubernetes.default.svc"
     namespace: velero
   syncPolicy:
     automated:
