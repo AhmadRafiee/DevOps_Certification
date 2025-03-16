@@ -6,17 +6,18 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://vmware-tanzu.github.io/helm-charts/
-    targetRevision: "8.3.0"
-    chart: velero
+    repoURL: {{ .Values.spec.velero.repoURL }}
+    targetRevision: {{ .Values.spec.velero.targetRevision }}
+    chart: {{ .Values.spec.velero.chart }}
     helm:
-      releaseName: velero
+      releaseName: {{ .Values.spec.velero.releaseName }}
       valueFiles:
-        - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/velero/helm.values.yaml
+        - {{ .Values.spec.velero.valueFiles }}
   destination:
     server: {{ .Values.spec.destination.server }}
-    namespace: velero
+    namespace: {{ .Values.spec.velero.namespace }}
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+

@@ -8,3 +8,10 @@ spec:
     releaseName: minio
     valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/minio/helm.values.yaml
     namespace: minio
+  velero:
+    repoURL: https://vmware-tanzu.github.io/helm-charts/
+    targetRevision: "8.3.0"
+    chart: velero
+    releaseName: velero
+    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/velero/helm.values.yaml
+    namespace: velero

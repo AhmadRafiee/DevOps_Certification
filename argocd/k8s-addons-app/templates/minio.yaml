@@ -15,7 +15,7 @@ spec:
         - {{ .Values.spec.minio.valueFiles }}
   destination:
     server: {{ .Values.spec.destination.server }}
-    namespace: {{ .Values.spec.destination.namespace }}
+    namespace: {{ .Values.spec.minio.namespace }}
   syncPolicy:
     automated:
       prune: true
