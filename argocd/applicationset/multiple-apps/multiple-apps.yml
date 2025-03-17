@@ -41,7 +41,8 @@ spec:
         targetRevision: "{{version}}"
         helm:
           valueFiles:
-            - argocd/applicationset/multiple-apps/values/values/{{clusterName}}/{{name}}-values.yaml
+            - "https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/multiple-apps/values/{{clusterName}}/{{chart}}-values.yaml"
+            - values/{{clusterName}}/{{name}}-values.yaml
       destination:
         server: "{{server}}"
         namespace: "{{namespace}}"
