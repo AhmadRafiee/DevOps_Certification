@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.spec.ingress.repoURL }}
+    targetRevision: {{ .Values.spec.ingress.targetRevision }}
+    chart: {{ .Values.spec.ingress.chart }}
+    helm:
+      releaseName: {{ .Values.spec.ingress.releaseName }}
+      valueFiles:
+        - {{ .Values.spec.ingress.valueFiles }}
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: {{ .Values.spec.ingress.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

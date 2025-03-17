@@ -1,17 +1,24 @@
 spec:
   destination:
     server: https://kubernetes.default.svc
+  ingress:
+    repoURL: https://kubernetes.github.io/ingress-nginx/
+    targetRevision: "1.12.0"
+    chart: ingress-nginx
+    releaseName: ingress-nginx
+    valueFiles: add-ons/ingress/helm.values.yaml
+    namespace: ingress
   minio:
     repoURL: https://charts.min.io/
     targetRevision: "5.4.0"
     chart: minio
     releaseName: minio
-    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/minio/helm.values.yaml
+    valueFiles: add-ons/minio/helm.values.yaml
     namespace: minio
   velero:
     repoURL: https://vmware-tanzu.github.io/helm-charts/
     targetRevision: "8.3.0"
     chart: velero
     releaseName: velero
-    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/velero/helm.values.yaml
+    valueFiles: add-ons/velero/helm.values.yaml
     namespace: velero
