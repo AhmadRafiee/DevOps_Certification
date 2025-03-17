@@ -3,7 +3,7 @@ spec:
     server: https://kubernetes.default.svc
   ingress:
     repoURL: https://kubernetes.github.io/ingress-nginx/
-    targetRevision: "1.12.0"
+    targetRevision: "4.12.0"
     chart: ingress-nginx
     releaseName: ingress-nginx
     valueFiles: add-ons/ingress/helm.values.yaml
