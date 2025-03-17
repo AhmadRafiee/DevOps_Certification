@@ -27,6 +27,8 @@ spec:
         server: "{{server}}"
         namespace: minio
       syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
         automated:
           prune: true
           selfHeal: true

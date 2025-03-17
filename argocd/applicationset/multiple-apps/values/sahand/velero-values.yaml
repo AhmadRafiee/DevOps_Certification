@@ -1,0 +1,58 @@
+---
+resources:
+  requests:
+    cpu: 1000m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 1024Mi
+
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.9.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+metrics:
+  enabled: true
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8085"
+    prometheus.io/path: "/metrics"
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus-stack
+    namespace: monitoring
+
+configuration:
+  backupStorageLocation:
+  - name: default
+    provider: aws
+    bucket: velero-backups
+    credential:
+      name: velero-credential
+      key: cloud
+    config:
+      region: minio
+      profile: "default"
+      s3ForcePathStyle:  "true"
+      s3Url: https://object.sahand.mecan.ir/
+
+credentials:
+  useSecret: true
+  name: velero-credential
+  existingSecret:
+  secretContents:
+    cloud: |
+        [default]
+        aws_access_key_id=l1DB3pEEeQTwecwewverrwecweccweweVJvp2ZHPl
+        aws_secret_access_key=akPEKIvk7BbsdcswefwevwecHGd7V73XgbjgWSB5hvnKwxyZKJzQU
+
+backupsEnabled: true
+snapshotsEnabled: false
+deployNodeAgent: true

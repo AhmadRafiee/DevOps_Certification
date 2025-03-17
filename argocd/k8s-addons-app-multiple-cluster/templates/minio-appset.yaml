@@ -28,6 +28,8 @@ spec:
         server: {{ .Values.spec.destination.server }}
         namespace: {{ .Values.spec.minio.namespace }}
       syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
         automated:
           prune: true
           selfHeal: true
