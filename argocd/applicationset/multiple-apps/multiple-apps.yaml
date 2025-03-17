@@ -21,6 +21,12 @@ spec:
                   version: "4.12.0"
                   namespace: ingress-nginx
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+                - name: cert-manager
+                  repoURL: https://charts.jetstack.io
+                  chart: cert-manager
+                  version: "v1.17.1"
+                  namespace: cert-manager
+                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
                 - name: minio
                   repoURL: https://charts.min.io/
                   chart: minio
@@ -54,3 +60,25 @@ spec:
         automated:
           prune: true
           selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: "{{clusterName}}-post-deployment"
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/AhmadRafiee/DevOps_Certification.git"
+    path: "argocd/applicationset/multiple-apps/manifests"
+    targetRevision: main
+  destination:
+    server: "{{server}}"
+    namespace: "{{namespace}}"
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+  syncWave: "2"
