@@ -7,13 +7,13 @@ spec:
   generators:
     - list:
         elements:
-          - name: sahand
+          - cluster: sahand
             server: "https://vip.sahand.mecan.ir:6443"
-          - name: dena
+          - cluster: dena
             server: "https://vip.dena.mecan.ir:6443"
   template:
     metadata:
-      name: "{{.name}}-addons"
+      name: "{{.cluster}}-addons"
     spec:
       project: default
       source:
@@ -22,7 +22,7 @@ spec:
         targetRevision: "{{.version}}"
         helm:
           valueFiles:
-            - "{{.valuesPath}}/{{.name}}/{{.chart}}-values.yaml"
+            - "{{.valuesPath}}/{{.cluster}}/{{.chart}}-values.yaml"
       destination:
         server: "{{.server}}"
         namespace: "{{.namespace}}"
