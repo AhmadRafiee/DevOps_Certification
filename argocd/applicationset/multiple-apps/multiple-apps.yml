@@ -9,9 +9,11 @@ spec:
         elements:
           - name: sahand
             server: "https://vip.sahand.mecan.ir:6443"
+          - name: dena
+            server: "https://vip.dena.mecan.ir:6443"
   template:
     metadata:
-      name: "{{.name}}-addons"
+      name: "{{.clusterName}}-addons"
     spec:
       project: default
       source:
