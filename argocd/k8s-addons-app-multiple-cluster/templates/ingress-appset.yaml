@@ -13,7 +13,7 @@ spec:
             server: "https://vip.dena.mecan.ir:6443"
   template:
     metadata:
-      name: ingress-{{name}}
+      name: ingress-
     spec:
       project: default
       source:
