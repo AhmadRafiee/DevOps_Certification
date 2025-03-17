@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: ingress-{{ .Release.Name }}
+  name: ingress-appset
   namespace: argocd
 spec:
   generators:
@@ -13,7 +13,7 @@ spec:
             server: "https://vip.dena.mecan.ir:6443"
   template:
     metadata:
-      name: ingress-{{ .Release.Name }}-{{ .name }}
+      name: ingress-{{ .name }}
     spec:
       project: default
       source:
@@ -25,7 +25,7 @@ spec:
             - {{ .Values.spec.ingress.valueFiles }}
           releaseName: {{ .Values.spec.ingress.releaseName }}
       destination:
-        server: "{{ .server }}"
+        server: {{ .Values.spec.destination.server }}
         namespace: {{ .Values.spec.ingress.namespace }}
       syncPolicy:
         automated:
