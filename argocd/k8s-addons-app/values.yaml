@@ -1,6 +1,6 @@
 spec:
   destination:
-    server: https://vip.dena.mecan.ir:6443
+    server: https://kubernetes.default.svc
   minio:
     repoURL: https://charts.min.io/
     targetRevision: "5.4.0"
