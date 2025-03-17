@@ -17,15 +17,12 @@ spec:
     spec:
       project: default
       source:
-        - repoURL: "https://github.com/AhmadRafiee/DevOps_Certification.git"
-          targetRevision: main
-          path: argocd/applicationset/ingress/namespace
-        - repoURL: https://kubernetes.github.io/ingress-nginx
-          chart: ingress-nginx
-          targetRevision: "4.12.0"
-          helm:
-            valueFiles:
-              - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/ingress-nginx/helm.values.yaml
+        repoURL: https://kubernetes.github.io/ingress-nginx
+        chart: ingress-nginx
+        targetRevision: "4.12.0"
+        helm:
+          valueFiles:
+            - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/ingress-nginx/helm.values.yaml
       destination:
         server: "{{server}}"
         namespace: ingress
