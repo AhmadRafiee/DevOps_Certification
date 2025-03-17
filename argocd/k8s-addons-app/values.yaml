@@ -20,5 +20,5 @@ spec:
     targetRevision: "2.10.2"
     chart: loki-stack
     releaseName: loki
-    valueFiles: add-ons/loki-stack/helm.values.yaml
+    valueFiles: add-ons/loki/helm.values.yaml
     namespace: loki-stack
