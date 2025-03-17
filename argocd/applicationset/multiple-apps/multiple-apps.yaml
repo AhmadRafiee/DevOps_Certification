@@ -21,18 +21,21 @@ spec:
                   version: "4.12.0"
                   namespace: ingress-nginx
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+
                 - name: cert-manager
                   repoURL: https://charts.jetstack.io
                   chart: cert-manager
                   version: "v1.17.1"
                   namespace: cert-manager
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+
                 - name: minio
                   repoURL: https://charts.min.io/
                   chart: minio
                   version: "5.4.0"
                   namespace: minio
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+
                 - name: velero
                   repoURL: https://vmware-tanzu.github.io/helm-charts
                   chart: velero
@@ -44,21 +47,19 @@ spec:
       name: "{{clusterName}}-{{name}}"
     spec:
       project: default
-      source:
-        - repoURL: "{{repoURL}}"
-          chart: "{{chart}}"
-          targetRevision: "{{version}}"
-          helm:
-            valueFiles:
-              - "https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/multiple-apps/values/{{clusterName}}/{{chart}}-values.yaml"
 
-        - repoURL: "https://github.com/AhmadRafiee/DevOps_Certification.git"
-          path: "argocd/applicationset/multiple-apps/manifests"
-          targetRevision: main
+      source:
+        repoURL: "{{repoURL}}"
+        chart: "{{chart}}"
+        targetRevision: "{{version}}"
+        helm:
+          valueFiles:
+            - "https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/multiple-apps/values/{{clusterName}}/{{chart}}-values.yaml"
 
       destination:
         server: "{{server}}"
         namespace: "{{namespace}}"
+
       syncPolicy:
         syncOptions:
           - CreateNamespace=true
