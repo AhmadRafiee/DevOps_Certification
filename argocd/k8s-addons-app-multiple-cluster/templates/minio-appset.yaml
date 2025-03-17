@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: minio-appset
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: sahand
+            server: "https://vip.sahand.mecan.ir:6443"
+          - name: dena
+            server: "https://vip.dena.mecan.ir:6443"
+  template:
+    metadata:
+      name: minio-{{name}}
+    spec:
+      project: default
+      source:
+        chart: {{ .Values.spec.minio.chart }}
+        repoURL: {{ .Values.spec.minio.repoURL }}
+        targetRevision: {{ .Values.spec.minio.targetRevision }}
+        helm:
+          valueFiles:
+            - {{ .Values.spec.minio.valueFiles }}
+          releaseName: {{ .Values.spec.minio.releaseName }}
+      destination:
+        server: "{{server}}"
+        namespace: {{ .Values.spec.minio.namespace }}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
