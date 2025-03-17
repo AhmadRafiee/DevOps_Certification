@@ -9,8 +9,6 @@ spec:
         elements:
           - cluster: sahand
             server: "https://vip.sahand.mecan.ir:6443"
-          - cluster: dena
-            server: "https://vip.dena.mecan.ir:6443"
   template:
     metadata:
       name: "{{.cluster}}-addons"
