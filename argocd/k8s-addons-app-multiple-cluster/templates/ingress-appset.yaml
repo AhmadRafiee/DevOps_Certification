@@ -25,7 +25,7 @@ spec:
             - {{ .Values.spec.ingress.valueFiles }}
           releaseName: {{ .Values.spec.ingress.releaseName }}
       destination:
-        server: "{{server}}"
+        server: "{{ .server }}"
         namespace: {{ .Values.spec.ingress.namespace }}
       syncPolicy:
         automated:

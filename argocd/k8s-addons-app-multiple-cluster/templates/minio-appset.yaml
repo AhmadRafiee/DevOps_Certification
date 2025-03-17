@@ -25,7 +25,7 @@ spec:
             - {{ .Values.spec.minio.valueFiles }}
           releaseName: {{ .Values.spec.minio.releaseName }}
       destination:
-        server: "{{server}}"
+        server: "{{ .server }}"
         namespace: {{ .Values.spec.minio.namespace }}
       syncPolicy:
         automated:
