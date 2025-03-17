@@ -1,13 +1,6 @@
 spec:
   destination:
-    server: https://kubernetes.default.svc
-  ingress:
-    repoURL: https://kubernetes.github.io/ingress-nginx/
-    targetRevision: "4.12.0"
-    chart: ingress-nginx
-    releaseName: ingress-nginx
-    valueFiles: add-ons/ingress-nginx/helm.values.yaml
-    namespace: ingress
+    server: https://vip.dena.mecan.ir:6443
   minio:
     repoURL: https://charts.min.io/
     targetRevision: "5.4.0"
@@ -22,3 +15,10 @@ spec:
     releaseName: velero
     valueFiles: add-ons/velero/helm.values.yaml
     namespace: velero
+  loki:
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: "2.10.2"
+    chart: loki-stack
+    releaseName: loki
+    valueFiles: add-ons/loki-stack/helm.values.yaml
+    namespace: loki-stack
