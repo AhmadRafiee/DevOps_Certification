@@ -24,13 +24,13 @@ spec:
                 - name: minio
                   repoURL: https://charts.min.io/
                   chart: minio
-                  version: "8.0.0"
+                  version: "5.4.0"
                   namespace: minio
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
                 - name: velero
                   repoURL: https://vmware-tanzu.github.io/helm-charts
                   chart: velero
-                  version: "3.1.0"
+                  version: "8.3.0"
                   namespace: velero
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
   template:
