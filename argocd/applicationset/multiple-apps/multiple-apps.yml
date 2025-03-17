@@ -41,7 +41,7 @@ spec:
         targetRevision: "{{version}}"
         helm:
           valueFiles:
-            - values/{{clusterName}}/{{name}}-values.yaml
+            - argocd/applicationset/multiple-apps/values/values/{{clusterName}}/{{name}}-values.yaml
       destination:
         server: "{{server}}"
         namespace: "{{namespace}}"
