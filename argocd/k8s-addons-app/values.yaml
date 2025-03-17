@@ -6,7 +6,7 @@ spec:
     targetRevision: "4.12.0"
     chart: ingress-nginx
     releaseName: ingress-nginx
-    valueFiles: add-ons/ingress/helm.values.yaml
+    valueFiles: add-ons/ingress-nginx/helm.values.yaml
     namespace: ingress
   minio:
     repoURL: https://charts.min.io/
