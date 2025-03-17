@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: minio-appset
+  name: minio-{{ .Release.Name }}
   namespace: argocd
 spec:
   generators:
@@ -13,7 +13,7 @@ spec:
             server: "https://vip.dena.mecan.ir:6443"
   template:
     metadata:
-      name: minio-{{name}}
+      name: minio-{{ .Release.Name }}-{{ .name }}
     spec:
       project: default
       source:
