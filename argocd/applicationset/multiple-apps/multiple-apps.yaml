@@ -45,12 +45,17 @@ spec:
     spec:
       project: default
       source:
-        repoURL: "{{repoURL}}"
-        chart: "{{chart}}"
-        targetRevision: "{{version}}"
-        helm:
-          valueFiles:
-            - "https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/multiple-apps/values/{{clusterName}}/{{chart}}-values.yaml"
+        - repoURL: "{{repoURL}}"
+          chart: "{{chart}}"
+          targetRevision: "{{version}}"
+          helm:
+            valueFiles:
+              - "https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/multiple-apps/values/{{clusterName}}/{{chart}}-values.yaml"
+
+        - repoURL: "https://github.com/AhmadRafiee/DevOps_Certification.git"
+          path: "argocd/applicationset/multiple-apps/manifests"
+          targetRevision: main
+
       destination:
         server: "{{server}}"
         namespace: "{{namespace}}"
@@ -61,36 +66,3 @@ spec:
           prune: true
           selfHeal: true
       syncWave: "1"
----
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: "{{clusterName}}-post-deployment"
-  namespace: argocd
-spec:
-  generators:
-    - list:
-        elements:
-          - name: sahand
-            server: "https://vip.sahand.mecan.ir:6443"
-          - name: dena
-            server: "https://vip.dena.mecan.ir:6443"
-  template:
-    metadata:
-      name: ingress-{{name}}
-    spec:
-      project: default
-      source:
-        repoURL: "https://github.com/AhmadRafiee/DevOps_Certification.git"
-        path: "argocd/applicationset/multiple-apps/manifests"
-        targetRevision: main
-      destination:
-        server: "{{server}}"
-        namespace: "{{namespace}}"
-      syncPolicy:
-        syncOptions:
-          - CreateNamespace=true
-        automated:
-          prune: true
-          selfHeal: true
-      syncWave: "2"
