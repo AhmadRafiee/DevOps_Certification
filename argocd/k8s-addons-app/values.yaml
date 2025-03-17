@@ -22,3 +22,10 @@ spec:
     releaseName: loki
     valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/loki-stack/helm.values.yaml
     namespace: loki-stack
+  prometheus:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "69.3.1"
+    chart: kube-prometheus-stack
+    releaseName: prometheus-stack
+    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/kube-prometheus-stack/helm.values.yaml
+    namespace: monitoring

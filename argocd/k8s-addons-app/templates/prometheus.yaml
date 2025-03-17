@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.spec.prometheus.repoURL }}
+    targetRevision: {{ .Values.spec.prometheus.targetRevision }}
+    chart: {{ .Values.spec.prometheus.chart }}
+    helm:
+      releaseName: {{ .Values.spec.prometheus.releaseName }}
+      valueFiles:
+        - {{ .Values.spec.prometheus.valueFiles }}
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: {{ .Values.spec.prometheus.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
