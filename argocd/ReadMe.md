@@ -1,7 +1,36 @@
 # Argocd Total Scenario
+![argocd project](../images/argo-project.png)
+
+<!-- TOC -->- [Argocd Total Scenario](#argocd-total-scenario)
+  - [Cluster High Level Design (HLD)](#cluster-high-level-design-hld)
+  - [Install and config Ingress-nginx, Cert-manager and Argocd on `damavand` cluster](#install-and-config-ingress-nginx-cert-manager-and-argocd-on-damavand-cluster)
+      - [Set a Argocd Custom Password: Generate a hashed password](#set-a-argocd-custom-password-generate-a-hashed-password)
+      - [Add the required Helm repositories and update them as needed](#add-the-required-helm-repositories-and-update-them-as-needed)
+      - [deploy Ingress-nginx with helm](#deploy-ingress-nginx-with-helm)
+      - [deploy Cert-manager with helm](#deploy-cert-manager-with-helm)
+      - [deploy Argocd with helm](#deploy-argocd-with-helm)
+  - [Install argocd commands | Add other clusters to argocd central](#install-argocd-commands--add-other-clusters-to-argocd-central)
+      - [Install argocd command-line](#install-argocd-command-line)
+      - [login to main cluster and add other clusters](#login-to-main-cluster-and-add-other-clusters)
+  - [Add a sample application to the all cluster using a Kubernetes manifest with `argocd` commands.](#add-a-sample-application-to-the-all-cluster-using-a-kubernetes-manifest-with-argocd-commands)
+  - [Deploy a sample application to the Damavand cluster using a Helm chart with argocd commands](#deploy-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
+  - [Add a sample application to the damavand cluster using a helm chart with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
+  - [Add a sample application to the damavand cluster using a helm chart with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands-1)
+  - [Add a sample application to the `damavand` cluster using a helm chart with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands-2)
+  - [Here’s how you can create an ApplicationSet in ArgoCD to deploy MinIO, Ingress, and multiple applications using a Helm chart across two specific clusters (Sahand \& Dena).](#heres-how-you-can-create-an-applicationset-in-argocd-to-deploy-minio-ingress-and-multiple-applications-using-a-helm-chart-across-two-specific-clusters-sahand--dena)
+      - [deploy Minio with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-minio-with-applicationset-across-two-specific-clusters-sahand--dena)
+      - [deploy Ingress Nginx with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-ingress-nginx-with-applicationset-across-two-specific-clusters-sahand--dena)
+      - [Deploy multiple apps with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-multiple-apps-with-applicationset-across-two-specific-clusters-sahand--dena)
+  - [Add a voting application to the damavand cluster using a helm chart with `argocd` commands.](#add-a-voting-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
+  - [Useful commands](#useful-commands)
+  - [Good Link](#good-link)
+  - [🔗 Stay connected with DockerMe! 🚀](#-stay-connected-with-dockerme-)
+
 
 ## Cluster High Level Design (HLD)
 ![Argocd HLD](../images/argocd-hld.png)
+
+[🔝 Back to Top](#table-of-contents)
 
 ## Install and config Ingress-nginx, Cert-manager and Argocd on `damavand` cluster
 
@@ -71,6 +100,8 @@ helm upgrade --install argo argo/argo-cd --namespace argocd -f helm-values/argo.
 kubectl get all -n argocd
 ```
 
+[🔝 Back to Top](#table-of-contents)
+
 ## Install argocd commands | Add other clusters to argocd central
 
 #### Install argocd command-line
@@ -96,6 +127,8 @@ argocd cluster add dena
 # get list of clusters
 argocd cluster list
 ```
+
+[🔝 Back to Top](#table-of-contents)
 
 ## Add a sample application to the all cluster using a Kubernetes manifest with `argocd` commands.
 ```bash
@@ -145,6 +178,8 @@ argocd app delete my-app
   - Deploys the application into the `default` namespace.
   - Automatically syncs the application with `--sync-policy` auto
 
+[🔝 Back to Top](#table-of-contents)
+
 ## Deploy a sample application to the Damavand cluster using a Helm chart with argocd commands
 
 ```bash
@@ -173,6 +208,8 @@ argocd app list
   - `--helm-set` → Overrides Helm values (optional).
   - `--sync-policy` automated → Automatically syncs the application.
 
+[🔝 Back to Top](#table-of-contents)
+
 ## Add a sample application to the damavand cluster using a helm chart with `argocd` commands
 
 ```bash
@@ -198,6 +235,8 @@ argocd app list
   - `--dest-server` → The Kubernetes API server address (destination cluster).
   - `--dest-namespace` → The namespace where the app will be deployed.
   - `--sync-policy` automated → Enables automatic synchronization.
+
+[🔝 Back to Top](#table-of-contents)
 
 ## Add a sample application to the damavand cluster using a helm chart with `argocd` commands
 
@@ -235,6 +274,8 @@ argocd app sync app-of-apps-gustbook
 ```
 
 [Good Link](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern) and [Good Repo](https://github.com/argoproj/argocd-example-apps/tree/master/apps)
+
+[🔝 Back to Top](#table-of-contents)
 
 ## Add a sample application to the `damavand` cluster using a helm chart with `argocd` commands
 
@@ -295,6 +336,8 @@ argocd app list
 # sync k8s-addons-app
 argocd app sync k8s-addons-app
 ```
+
+[🔝 Back to Top](#table-of-contents)
 
 ## Here’s how you can create an ApplicationSet in ArgoCD to deploy MinIO, Ingress, and multiple applications using a Helm chart across two specific clusters (Sahand & Dena).
 
@@ -389,6 +432,8 @@ argocd app list
 argocd app sync k8s-addons-appset
 ```
 
+[🔝 Back to Top](#table-of-contents)
+
 ## Add a voting application to the damavand cluster using a helm chart with `argocd` commands.
 ```bash
 # login argocd command to cluster damavand
@@ -406,6 +451,7 @@ argocd app create voting-app \
 argocd app list
 ```
 
+[🔝 Back to Top](#table-of-contents)
 
 ## Useful commands
 
@@ -417,9 +463,24 @@ argocd app delete voting-app
 kubectl -n argocd patch app k8s-addons-app --type merge -p '{"metadata": {"finalizers": null}}'
 ```
 
+[🔝 Back to Top](#table-of-contents)
+
 ## Good Link
   - [applicationset](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/)
   - [multiple_sources](https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/)
   - [Generating Applications with ApplicationSet](https://argo-cd.readthedocs.io/en/stable/user-guide/application-set/)
   - [app of app and appset](https://codefresh.io/blog/how-to-structure-your-argo-cd-repositories-using-application-sets/)
   - [many-appsets-demo](https://github.com/kostis-codefresh/many-appsets-demo)
+  - [ApplicationSet repository](https://github.com/argoproj/applicationset/tree/master)
+  - [argoproj](https://github.com/argoproj/argoproj/tree/main)
+  - [argocd example apps](https://github.com/argoproj/argocd-example-apps)
+
+[🔝 Back to Top](#table-of-contents)
+
+## 🔗 Stay connected with DockerMe! 🚀
+
+**Subscribe to our channels, leave a comment, and drop a like to support our content. Your engagement helps us create more valuable DevOps and cloud content!** 🙌
+
+[![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/) [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmad-rafiee/) [![Telegram](https://img.shields.io/badge/telegram-0A66C2?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/dockerme) [![YouTube](https://img.shields.io/badge/youtube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@dockerme) [![Instagram](https://img.shields.io/badge/instagram-FF0000?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/dockerme)
+
+[🔝 Back to Top](#table-of-contents)
