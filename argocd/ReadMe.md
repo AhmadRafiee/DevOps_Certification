@@ -10,7 +10,7 @@
 htpasswd -nbBC 10 "" 'E6ybATayZ0MjWMGf3S5TRmNiH2b' | tr -d ':\n'
 ```
 
-#### Add helm repos and update these
+#### Add the required Helm repositories and update them as needed
 ```bash
 # add helm repository
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -23,7 +23,7 @@ helm repo update jetstack
 helm repo update argo
 ```
 
-#### deploy Ingress-nginx
+#### deploy Ingress-nginx with helm
 ```bash
 # Change variables file on helm-values/ingress.values.yaml
 
@@ -37,7 +37,7 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 kubectl get all -n ingress-nginx
 ```
 
-#### deploy Cert-manager
+#### deploy Cert-manager with helm
 ```bash
 # Change variables file on helm-values/cert-manager.values.yaml
 
@@ -60,7 +60,7 @@ kubectl apply -f helm-values/clusterIssuer.yaml
 kubectl get clusterIssuer
 ```
 
-#### deploy Argocd
+#### deploy Argocd with helm
 ```bash
 # Change variables file on helm-values/argo.values.yaml
 
@@ -135,7 +135,6 @@ argocd app list
 
 # Delete an app
 argocd app delete my-app
-
 ```
 
 **Explanation of the Flags:**
@@ -146,7 +145,8 @@ argocd app delete my-app
   - Deploys the application into the `default` namespace.
   - Automatically syncs the application with `--sync-policy` auto
 
-## Add a sample application to the damavand cluster using a helm chart with `argocd` commands.
+## Deploy a sample application to the Damavand cluster using a Helm chart with argocd commands
+
 ```bash
 # login argocd command to cluster damavand
 argocd login argocd.kube.mecan.ir
@@ -173,7 +173,8 @@ argocd app list
   - `--helm-set` → Overrides Helm values (optional).
   - `--sync-policy` automated → Automatically syncs the application.
 
-## Add a sample application to the damavand cluster using a helm chart with `argocd` commands.
+## Add a sample application to the damavand cluster using a helm chart with `argocd` commands
+
 ```bash
 # login argocd command to cluster damavand
 argocd login argocd.kube.mecan.ir
@@ -198,8 +199,8 @@ argocd app list
   - `--dest-namespace` → The namespace where the app will be deployed.
   - `--sync-policy` automated → Enables automatic synchronization.
 
+## Add a sample application to the damavand cluster using a helm chart with `argocd` commands
 
-## Add a sample application to the damavand cluster using a helm chart with `argocd` commands.
 ![app-of-apps](../images/app-of-apps.png)
 
 before setup app-of-apps change varibles file:
@@ -235,7 +236,8 @@ argocd app sync app-of-apps-gustbook
 
 [Good Link](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern) and [Good Repo](https://github.com/argoproj/argocd-example-apps/tree/master/apps)
 
-## Add a sample application to the `damavand` cluster using a helm chart with `argocd` commands.
+## Add a sample application to the `damavand` cluster using a helm chart with `argocd` commands
+
 ![k8s-addons-app](../images/k8s-addons-app.png)
 
 before setup app-of-apps change varibles file:
