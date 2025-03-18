@@ -1,7 +1,10 @@
 # Argocd Total Scenario
 ![argocd project](../images/argo-project.png)
 
+## Table of Contents
 <!-- TOC -->- [Argocd Total Scenario](#argocd-total-scenario)
+- [Argocd Total Scenario](#argocd-total-scenario)
+  - [Table of Contents](#table-of-contents)
   - [Cluster High Level Design (HLD)](#cluster-high-level-design-hld)
   - [Install and config Ingress-nginx, Cert-manager and Argocd on `damavand` cluster](#install-and-config-ingress-nginx-cert-manager-and-argocd-on-damavand-cluster)
       - [Set a Argocd Custom Password: Generate a hashed password](#set-a-argocd-custom-password-generate-a-hashed-password)
