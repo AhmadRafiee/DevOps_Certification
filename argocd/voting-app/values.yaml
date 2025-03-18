@@ -15,7 +15,7 @@ spec:
   redis:
     capacity: 5Gi
     replicas: 1
-    image: postgres:15-alpine
+    image: redis:alpine
   result:
     replicas: 1
     image: registry.mecan.ir/devops_certification/kubernetes/voting-app/result:v0.1.0
