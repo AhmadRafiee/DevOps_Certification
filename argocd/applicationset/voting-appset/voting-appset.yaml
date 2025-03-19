@@ -18,7 +18,7 @@ spec:
       project: default
       source:
         repoURL: https://github.com/AhmadRafiee/DevOps_Certification.git
-        path: argocd/applicationset/voting-app
+        path: argocd/applicationset/voting-appset
         targetRevision: main
         helm:
           releaseName: voting-app
