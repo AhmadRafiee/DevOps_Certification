@@ -23,8 +23,11 @@ spec:
         helm:
           releaseName: voting-app
           values: |
-            spec.result.domain: "result.{{name}}.mecan.ir"
-            spec.vote.domain: "vote.{{name}}.mecan.ir"
+            spec:
+              result:
+                domain: "result.{{name}}.mecan.ir"
+              vote:
+                domain: "vote.{{name}}.mecan.ir"
       destination:
         server: "{{server}}"
         namespace: voting-app
