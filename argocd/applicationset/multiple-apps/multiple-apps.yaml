@@ -22,6 +22,7 @@ spec:
                   namespace: ingress-nginx
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
                   annotations:
+                    argocd.argoproj.io/wait-for-healthy: "true"
                     argocd.argoproj.io/sync-wave: "1"
                 - name: cert-manager
                   repoURL: https://charts.jetstack.io
@@ -31,6 +32,7 @@ spec:
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
                   annotations:
                     argocd.argoproj.io/sync-wave: "2"
+                    argocd.argoproj.io/wait-for-healthy: "true"
                     argocd.argoproj.io/dependency-apps: "ingress-nginx"
                 - name: minio
                   repoURL: https://charts.min.io/
@@ -40,6 +42,7 @@ spec:
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
                   annotations:
                     argocd.argoproj.io/sync-wave: "3"
+                    argocd.argoproj.io/wait-for-healthy: "true"
                     argocd.argoproj.io/dependency-apps: "cert-manager"
                 - name: velero
                   repoURL: https://vmware-tanzu.github.io/helm-charts
@@ -50,6 +53,8 @@ spec:
                   annotations:
                     argocd.argoproj.io/sync-wave: "4"
                     argocd.argoproj.io/dependency-apps: "minio"
+                    argocd.argoproj.io/wait-for-healthy: "true"
+
   template:
     metadata:
       name: "{{clusterName}}-{{name}}"
