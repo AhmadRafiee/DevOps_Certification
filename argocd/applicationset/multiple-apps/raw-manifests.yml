@@ -29,7 +29,6 @@ spec:
 
       destination:
         server: "{{server}}"
-        namespace: "{{namespace}}"
 
       syncPolicy:
         syncOptions:

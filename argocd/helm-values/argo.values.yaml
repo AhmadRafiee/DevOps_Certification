@@ -27,11 +27,11 @@ controller:
   replicas: 1
   resources:
     limits:
+      cpu: 1500m
+      memory: 2048Mi
+    requests:
       cpu: 500m
       memory: 512Mi
-    requests:
-      cpu: 250m
-      memory: 256Mi
   metrics:
     enabled: true
     service:
