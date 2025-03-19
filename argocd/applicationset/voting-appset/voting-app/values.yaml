@@ -1,0 +1,32 @@
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: voting-app
+  general:
+    storageClassName: local-path
+    ClusterIssuer: letsencrypt
+    ingressClassName: nginx
+  psql:
+    capacity: 5Gi
+    replicas: 1
+    image: postgres:15-alpine
+    username: postgres
+    password: postgres
+  redis:
+    capacity: 5Gi
+    replicas: 1
+    image: redis:alpine
+  result:
+    replicas: 1
+    image: registry.mecan.ir/devops_certification/kubernetes/voting-app/result:v0.1.0
+    domain: result.kube.mecan.ir
+  vote:
+    replicas: 1
+    image: registry.mecan.ir/devops_certification/kubernetes/voting-app/vote:v0.1.0
+    domain: vote.kube.mecan.ir
+  worker:
+    replicas: 3
+    image: registry.mecan.ir/devops_certification/kubernetes/voting-app/worker:v0.1.0
+  registry:
+    username: a3ViZQ==
+    password: QW5JcXlpajFEWWw3cmU2WHRJaHY5R3JLYVBnMURYQXRNTTh1TkF1dQ==

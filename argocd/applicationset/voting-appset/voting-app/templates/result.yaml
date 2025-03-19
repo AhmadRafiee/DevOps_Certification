@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: result
+  name: result
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  ports:
+  - name: "result-service"
+    port: 80
+    targetPort: 80
+  selector:
+    app: result
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: result
+  name: result
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  replicas: {{ .Values.spec.result.replicas }}
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      imagePullSecrets:
+      - name: registry-login
+      containers:
+      - image: {{ .Values.spec.result.image }}
+        name: result
+        ports:
+        - containerPort: 80
+          name: result
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.spec.general.ClusterIssuer }}
+    certmanager.k8s.io/acme-http01-edit-in-place: "false"
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  name: result-ingress
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  ingressClassName: {{ .Values.spec.general.ingressClassName }}
+  rules:
+  - host: {{ .Values.spec.result.domain }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: result
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - {{ .Values.spec.result.domain }}
+    secretName: result-tls-secret

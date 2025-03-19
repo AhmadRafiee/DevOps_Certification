@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: db
+  name: db
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+  - name: "db-service"
+    port: 5432
+    targetPort: 5432
+  selector:
+    app: db
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+  labels:
+    app: db
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.spec.psql.capacity }}
+  storageClassName: {{ .Values.spec.general.storageClassName }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: db
+  name: db
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  replicas: {{ .Values.spec.psql.replicas }}
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - image: {{ .Values.spec.psql.image }}
+        name: postgres
+        env:
+        - name: POSTGRES_USER
+          value: {{ .Values.spec.psql.username }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.spec.psql.password }}
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: db-data
+      volumes:
+      - name: db-data
+        persistentVolumeClaim:
+          claimName: db-pvc
+---
