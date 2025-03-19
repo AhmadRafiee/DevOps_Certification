@@ -477,6 +477,9 @@ kubectl -n argocd patch app k8s-addons-app --type merge -p '{"metadata": {"final
   - [ApplicationSet repository](https://github.com/argoproj/applicationset/tree/master)
   - [argoproj](https://github.com/argoproj/argoproj/tree/main)
   - [argocd example apps](https://github.com/argoproj/argocd-example-apps)
+  - [Getting Started](https://argo-cd.readthedocs.io/en/stable/getting_started/#getting-started)
+  - [installation](https://argo-cd.readthedocs.io/en/stable/operator-manual/installation/​)
+  - [declarative-setup](https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/​)
 
 [🔝 Back to Top](#table-of-contents)
 

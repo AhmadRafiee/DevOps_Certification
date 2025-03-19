@@ -3,6 +3,10 @@ kind: ApplicationSet
 metadata:
   name: minio-appset
   namespace: argocd
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded: "email"
+    notifications.argoproj.io/subscribe.on-sync-failed: "email"
+    notifications.argoproj.io/subscribe.on-health-degraded: "email"
 spec:
   generators:
     - list:
