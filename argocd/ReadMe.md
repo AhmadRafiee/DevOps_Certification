@@ -400,13 +400,20 @@ argocd app sync ingress-appset
 
 **file and directory structure**
 ```bash
-├── multiple-apps.yaml
+argocd/applicationset/multiple-apps
+├── main-apps.yaml
+├── manifests
+│   └── clusterIssuer.yaml
+├── others-apps.yaml
+├── raw-manifests.yml
 └── values
     ├── dena
+    │   ├── cert-manager-values.yaml
     │   ├── ingress-nginx-values.yaml
     │   ├── minio-values.yaml
     │   └── velero-values.yaml
     └── sahand
+        ├── cert-manager-values.yaml
         ├── ingress-nginx-values.yaml
         ├── minio-values.yaml
         └── velero-values.yaml
