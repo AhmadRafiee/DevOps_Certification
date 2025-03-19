@@ -44,7 +44,12 @@ spec:
     metadata:
       name: "{{clusterName}}-{{name}}"
       annotations:
-        argocd.argoproj.io/sync-wave: "{{ if eq .name 'ingress-nginx' }}0{{ elseif eq .name 'cert-manager' }}1{{ elseif eq .name 'minio' }}2{{ else }}3{{ end }}"
+        argocd.argoproj.io/sync-wave: |
+          {{- if eq .name "ingress-nginx" }}0
+          {{- else if eq .name "cert-manager" }}1
+          {{- else if eq .name "minio" }}2
+          {{- else }}3
+          {{- end }}
         argocd.argoproj.io/wait-for-healthy: "true"
     spec:
       project: default
