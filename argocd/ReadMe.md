@@ -24,7 +24,7 @@
       - [deploy Minio with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-minio-with-applicationset-across-two-specific-clusters-sahand--dena)
       - [deploy Ingress Nginx with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-ingress-nginx-with-applicationset-across-two-specific-clusters-sahand--dena)
       - [Deploy multiple apps with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-multiple-apps-with-applicationset-across-two-specific-clusters-sahand--dena)
-      - [Deploy voting-app with ApplicationSet across two specific clusters (Sahand \& Dena \& damavand).](#deploy-voting-app-with-applicationset-across-two-specific-clusters-sahand--dena--damavand)
+      - [Deploy voting-app with ApplicationSet across two specific clusters (Sahand \& Dena \& damavand)](#deploy-voting-app-with-applicationset-across-two-specific-clusters-sahand--dena--damavand)
   - [Add a voting application to the damavand cluster using a helm chart with `argocd` commands.](#add-a-voting-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
   - [Add the Git Repository to ArgoCD](#add-the-git-repository-to-argocd)
   - [Useful commands](#useful-commands)
@@ -439,8 +439,8 @@ argocd app sync k8s-addons-appset
 
 [🔝 Back to Top](#table-of-contents)
 
-#### Deploy voting-app with ApplicationSet across two specific clusters (Sahand & Dena & damavand).
-
+#### Deploy voting-app with ApplicationSet across two specific clusters (Sahand & Dena & damavand)
+![voting app multiple cluster](../images/voting-app-multiple-cluster.png)
 ```bash
 # multiple-app applicationset path
 cat argocd/applicationset/voting-appset/voting-appset.yaml
