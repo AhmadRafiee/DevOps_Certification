@@ -5,7 +5,7 @@ metadata:
   name: letsencrypt
 spec:
   acme:
-    email: Ahmad@MeCan.ir     # letsencrypt notification email
+    email: Ahmad@MeCan.ir
     preferredChain: ""
     privateKeySecretRef:
       name: acme-issuer-account-key
@@ -13,4 +13,4 @@ spec:
     solvers:
       - http01:
           ingress:
-            class: nginx      # Ingress class
+            class: nginx

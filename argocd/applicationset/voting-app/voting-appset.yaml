@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: voting-appset
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: sahand
+            server: "https://vip.sahand.mecan.ir:6443"
+          - name: dena
+            server: "https://vip.dena.mecan.ir:6443"
+  template:
+    metadata:
+      name: "{{cluster}}-voting-app"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/AhmadRafiee/DevOps_Certification.git
+        path: argocd/voting-app
+        targetRevision: main
+        helm:
+          releaseName: voting-app
+          values: |
+            spec.result.domain: result.{{clusterName}}.mecan.ir
+            spec.vote.domain: vote.{{clusterName}}.mecan.ir
+      destination:
+        server: "{{server}}"
+        namespace: voting-app
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

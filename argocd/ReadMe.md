@@ -24,6 +24,7 @@
       - [deploy Minio with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-minio-with-applicationset-across-two-specific-clusters-sahand--dena)
       - [deploy Ingress Nginx with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-ingress-nginx-with-applicationset-across-two-specific-clusters-sahand--dena)
       - [Deploy multiple apps with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-multiple-apps-with-applicationset-across-two-specific-clusters-sahand--dena)
+      - [Deploy voting-app with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-voting-app-with-applicationset-across-two-specific-clusters-sahand--dena)
   - [Add a voting application to the damavand cluster using a helm chart with `argocd` commands.](#add-a-voting-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
   - [Add the Git Repository to ArgoCD](#add-the-git-repository-to-argocd)
   - [Useful commands](#useful-commands)
@@ -427,6 +428,33 @@ argocd app create k8s-addons-appset \
 --dest-server https://kubernetes.default.svc \
 --repo https://github.com/AhmadRafiee/DevOps_Certification.git \
 --path argocd/applicationset/multiple-apps \
+--sync-policy auto
+
+# Check argocd app list
+argocd app list
+
+# sync k8s-addons-appset
+argocd app sync k8s-addons-appset
+```
+
+[🔝 Back to Top](#table-of-contents)
+
+#### Deploy voting-app with ApplicationSet across two specific clusters (Sahand & Dena).
+
+```bash
+# multiple-app applicationset path
+cat argocd/applicationset/voting-app/voting-appset.yaml
+
+# login argocd command to cluster damavand
+argocd login argocd.kube.mecan.ir
+
+# create app of apps from DevOps Certification repo
+
+argocd app create voting-appset \
+--dest-namespace argocd \
+--dest-server https://kubernetes.default.svc \
+--repo https://github.com/AhmadRafiee/DevOps_Certification.git \
+--path argocd/applicationset/voting-app \
 --sync-policy auto
 
 # Check argocd app list
