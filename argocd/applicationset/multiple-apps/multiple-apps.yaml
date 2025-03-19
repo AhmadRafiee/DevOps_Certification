@@ -3,8 +3,6 @@ kind: ApplicationSet
 metadata:
   name: k8s-addons-others
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
 spec:
   generators:
     - matrix:
@@ -17,18 +15,41 @@ spec:
                   server: "https://vip.dena.mecan.ir:6443"
           - list:
               elements:
+                - name: ingress-nginx
+                  repoURL: https://kubernetes.github.io/ingress-nginx
+                  chart: ingress-nginx
+                  version: "4.12.0"
+                  namespace: ingress-nginx
+                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+                  annotations:
+                    argocd.argoproj.io/sync-wave: "1"
+                - name: cert-manager
+                  repoURL: https://charts.jetstack.io
+                  chart: cert-manager
+                  version: "v1.17.1"
+                  namespace: cert-manager
+                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+                  annotations:
+                    argocd.argoproj.io/sync-wave: "2"
+                    argocd.argoproj.io/dependency-apps: "ingress-nginx"
                 - name: minio
                   repoURL: https://charts.min.io/
                   chart: minio
                   version: "5.4.0"
                   namespace: minio
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+                  annotations:
+                    argocd.argoproj.io/sync-wave: "3"
+                    argocd.argoproj.io/dependency-apps: "cert-manager"
                 - name: velero
                   repoURL: https://vmware-tanzu.github.io/helm-charts
                   chart: velero
                   version: "8.3.0"
                   namespace: velero
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+                  annotations:
+                    argocd.argoproj.io/sync-wave: "4"
+                    argocd.argoproj.io/dependency-apps: "minio"
   template:
     metadata:
       name: "{{clusterName}}-{{name}}"
