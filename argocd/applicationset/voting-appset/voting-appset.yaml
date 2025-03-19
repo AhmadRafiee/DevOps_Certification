@@ -11,6 +11,8 @@ spec:
             server: "https://vip.sahand.mecan.ir:6443"
           - name: dena
             server: "https://vip.dena.mecan.ir:6443"
+          - name: kube
+            server: "https://kubernetes.default.svc"
   template:
     metadata:
       name: "{{name}}-voting-app"
