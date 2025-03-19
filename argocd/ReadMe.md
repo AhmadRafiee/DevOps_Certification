@@ -25,6 +25,7 @@
       - [deploy Ingress Nginx with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-ingress-nginx-with-applicationset-across-two-specific-clusters-sahand--dena)
       - [Deploy multiple apps with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-multiple-apps-with-applicationset-across-two-specific-clusters-sahand--dena)
   - [Add a voting application to the damavand cluster using a helm chart with `argocd` commands.](#add-a-voting-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
+  - [Add the Git Repository to ArgoCD](#add-the-git-repository-to-argocd)
   - [Useful commands](#useful-commands)
   - [Good Link](#good-link)
   - [🔗 Stay connected with DockerMe! 🚀](#-stay-connected-with-dockerme-)
@@ -453,6 +454,50 @@ argocd app create voting-app \
 # chcek argocd apps
 argocd app list
 ```
+
+[🔝 Back to Top](#table-of-contents)
+
+## Add the Git Repository to ArgoCD
+
+**Log into ArgoCD:** Ensure you have access to your ArgoCD instance.
+
+```bash
+# login to argocd with command
+argocd login argocd.kube.mecan.ir
+```
+
+**Add the Git Repository to ArgoCD:**
+
+To connect a Git repository to ArgoCD, you'll use the argocd repo add command. You need to provide the following information:
+  - Repository URL (e.g., HTTPS or SSH URL)
+  - Authentication details (e.g., token, username/password, or SSH private key)
+
+**Example:** Add Repository via HTTPS
+If you're using HTTPS for your Git repository, you can add it as follows:
+```bash
+argocd repo add https://github.com/yourusername/your-repository.git --username your-username --password your-password
+```
+
+**Example:** Add Repository via SSH
+If you're using SSH for your Git repository, you can add it as follows:
+```bash
+argocd repo add git@github.com:yourusername/your-repository.git --ssh-private-key-path /path/to/your/private-key
+```
+
+**Example:** Add a Private Git Repository Using a Personal Access Token (PAT)
+If your Git repository requires a Personal Access Token (PAT) instead of a password, you can use the following:
+
+```bash
+argocd repo add https://github.com/yourusername/your-repository.git --username your-username --password your-personal-access-token
+```
+
+**Check If the Git Repository Is Added**
+You can verify that the repository has been added successfully by running:
+
+```bash
+argocd repo list
+```
+This will list all the repositories connected to ArgoCD.
 
 [🔝 Back to Top](#table-of-contents)
 

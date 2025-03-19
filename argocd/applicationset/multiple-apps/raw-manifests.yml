@@ -18,9 +18,7 @@ spec:
     metadata:
       name: "{{clusterName}}-raw-manifest"
       annotations:
-        argocd.argoproj.io/sync-wave: "5"
-        argocd.argoproj.io/dependency-apps: "velero"
-        argocd.argoproj.io/wait-for-healthy: "true"
+        argocd.argoproj.io/sync-wave: "3"
     spec:
       project: default
 

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: k8s-addons
+  name: k8s-addons-main
   namespace: argocd
 spec:
   generators:
@@ -27,30 +27,12 @@ spec:
                   version: "v1.17.1"
                   namespace: cert-manager
                   valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
-                - name: minio
-                  repoURL: https://charts.min.io/
-                  chart: minio
-                  version: "5.4.0"
-                  namespace: minio
-                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
-                - name: velero
-                  repoURL: https://vmware-tanzu.github.io/helm-charts
-                  chart: velero
-                  version: "8.3.0"
-                  namespace: velero
-                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
 
   template:
     metadata:
       name: "{{clusterName}}-{{name}}"
       annotations:
-        argocd.argoproj.io/sync-wave: |
-          {{- if eq .name "ingress-nginx" }}0
-          {{- else if eq .name "cert-manager" }}1
-          {{- else if eq .name "minio" }}2
-          {{- else }}3
-          {{- end }}
-        argocd.argoproj.io/wait-for-healthy: "true"
+        argocd.argoproj.io/sync-wave: "1"
     spec:
       project: default
       source:
