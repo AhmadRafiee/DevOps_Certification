@@ -1,0 +1,72 @@
+mode: standalone
+
+image:
+  repository: quay.io/minio/minio
+  tag: RELEASE.2025-01-20T14-49-07Z
+  pullPolicy: IfNotPresent
+
+rootUser: "l1DB3pEEeQTwecwewverrwecweccweweVJvp2ZHPl"
+rootPassword: "akPEKIvk7BbsdcswefwevwecHGd7V73XgbjgWSB5hvnKwxyZKJzQU"
+mountPath: "/data"
+
+resources:
+  requests:
+    memory: 1G
+    cpu: 500m
+  limits:
+    memory: 5G
+    cpu: 1000m
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 50Gi
+
+service:
+  name: minio
+  type: ClusterIP
+  port: 9000
+
+consoleService:
+  name: minio-console
+  type: ClusterIP
+  port: 9001
+
+extraArgs:
+  - --console-address :9001
+
+environment:
+  MINIO_SERVER_URL: https://object.dena.mecan.ir
+  MINIO_BROWSER_REDIRECT_URL: https://minio.dena.mecan.ir
+
+consoleIngress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      certmanager.k8s.io/acme-http01-edit-in-place: "false"
+      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  path: /
+  hosts:
+    - minio.dena.mecan.ir
+  tls:
+    - secretName: minio-console-example-tls
+      hosts:
+        - minio.dena.mecan.ir
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      certmanager.k8s.io/acme-http01-edit-in-place: "false"
+      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  path: /
+  hosts:
+    - object.dena.mecan.ir
+  tls:
+    - secretName: minio-example-tls
+      hosts:
+        - object.dena.mecan.ir

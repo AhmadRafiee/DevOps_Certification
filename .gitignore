@@ -4,3 +4,6 @@
 .trunk
 *.pem
 elastic-docker
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
