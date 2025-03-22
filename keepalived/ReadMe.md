@@ -16,6 +16,7 @@
     - [VRRP authentication:](#vrrp-authentication)
     - [Basic Keepalived Load Balancing Configuration](#basic-keepalived-load-balancing-configuration)
     - [keepalived logging](#keepalived-logging)
+  - [🔗 Stay connected with DockerMe! 🚀](#-stay-connected-with-dockerme-)
 
 ## Install Keepalived and Haproxy on all nodes
 
@@ -1046,5 +1047,13 @@ To view logs between specific dates and times, use:
 ```bash
 sudo journalctl -u keepalived --since "2025-03-20 08:00:00" --until "2025-03-20 18:00:00"
 ```
+
+[🔝 Back to Top](#table-of-contents)
+
+## 🔗 Stay connected with DockerMe! 🚀
+
+**Subscribe to our channels, leave a comment, and drop a like to support our content. Your engagement helps us create more valuable DevOps and cloud content!** 🙌
+
+[![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/) [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmad-rafiee/) [![Telegram](https://img.shields.io/badge/telegram-0A66C2?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/dockerme) [![YouTube](https://img.shields.io/badge/youtube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@dockerme) [![Instagram](https://img.shields.io/badge/instagram-FF0000?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/dockerme)
 
 [🔝 Back to Top](#table-of-contents)
