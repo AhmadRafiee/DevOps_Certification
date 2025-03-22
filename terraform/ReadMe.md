@@ -1018,12 +1018,19 @@ Again, Terraform will prompt you to confirm that you want to delete these resour
 
 ## Good link
 
+
 [terraform registry](https://registry.terraform.io/)
+
 [minio provider](https://registry.terraform.io/providers/aminueza/minio/3.3.0)
+
 [minio github repository](https://github.dev/aminueza/terraform-provider-minio/)
+
 [minio provider doc](https://www.linkedin.com/pulse/mastering-minio-using-terraform-manage-iam-users-s3-buckets-souza/)
+
 [cloudflare provider](https://registry.terraform.io/providers/cloudflare/cloudflare/5.2.0)
+
 [cloudflare provider github repository](https://github.com/cloudflare/terraform-provider-cloudflare)
+
 [cloudflare provider](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest)
 
 [🔝 Back to Top](#table-of-contents)
