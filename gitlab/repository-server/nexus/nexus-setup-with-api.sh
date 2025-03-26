@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# User & Pass docker hub
+USER_DOCKER_HUb=""
+PASS_DOCKER_HUb=""
+
 # Variable section
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="<NEXUS_ADMIN_PASSWORD>"
@@ -102,7 +106,7 @@ curl -k -X 'PUT' \
 
 # activate realms
 curl -k -X 'PUT' \
-  ''${NEXUS_URL}'/service/rest/v1/security/realms/active' \
+  ''${NEXUS_URL}'service/rest/v1/security/realms/active' \
   -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
@@ -211,17 +215,18 @@ curl -X 'POST' \
   }
 }'
 
-# create docker proxy repository
+# create docker proxy repository: 
+# 1
 curl -k -X 'POST' \
   ''${NEXUS_URL}'/service/rest/v1/repositories/docker/proxy' \
   -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "name": "hub",
+  "name": "docker-images",
   "online": true,
   "storage": {
-    "blobStoreName": "'${BLOB_STORE_NAME}'",
+    "blobStoreName": "'${DOCKER_BLOB_STORE_NAME}'",
     "strictContentTypeValidation": true
   },
   "cleanup": {
@@ -240,19 +245,203 @@ curl -k -X 'POST' \
   },
   "httpClient": {
     "blocked": false,
+    "autoBlock": false,
+    "authentication": {
+    "type": "username",
+    "username": "'${USER_DOCKER_HUb}'",
+    "password": "'${PASS_DOCKER_HUb}'",
+    "ntlmHost": "string",
+    "ntlmDomain": "string"
+    }
+  },
+  "routingRule": "string",
+  "docker": {
+    "v1Enabled": true,
+    "forceBasicAuth": false,
+    "httpPort": 8082
+  },
+  "dockerProxy": {
+    "indexType": "REGISTRY"
+  }
+}'
+
+# 2
+curl -k -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/docker/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "ghcr-iamges",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${DOCKER_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://ghcr.io",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
     "autoBlock": true
   },
   "routingRule": "string",
   "docker": {
     "v1Enabled": true,
     "forceBasicAuth": false,
-    "httpPort": 8090
+    "httpPort": 8086
   },
   "dockerProxy": {
-    "indexType": "HUB"
+    "indexType": "REGISTRY"
   }
 }'
 
+# 3
+curl -k -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/docker/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "quay-images",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${DOCKER_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://quay.io",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "docker": {
+    "v1Enabled": true,
+    "forceBasicAuth": false,
+    "httpPort": 8084
+  },
+  "dockerProxy": {
+    "indexType": "REGISTRY"
+  }
+}'
+
+# 4
+curl -k -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/docker/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "k8s-images",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${DOCKER_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://registry.k8s.io/",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "docker": {
+    "v1Enabled": true,
+    "forceBasicAuth": false,
+    "httpPort": 8085
+  },
+  "dockerProxy": {
+    "indexType": "REGISTRY"
+  }
+}'
+
+# 5
+curl -k -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/docker/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "hub-images",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${DOCKER_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://index.docker.io/",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": false,
+    "authentication": {
+    "type": "username",
+    "username": "'${USER_DOCKER_HUb}'",
+    "password": "'${PASS_DOCKER_HUb}'",
+    "ntlmHost": "string",
+    "ntlmDomain": "string"
+    }
+  },
+  "routingRule": "string",
+  "docker": {
+    "v1Enabled": true,
+    "forceBasicAuth": false,
+    "httpPort": 8087
+  },
+  "dockerProxy": {
+    "indexType": "REGISTRY"
+  }
+}'
+
+# APT repository
+# 1
 curl -X 'POST' \
   ''${NEXUS_URL}'/service/rest/v1/repositories/apt/proxy' \
   -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
@@ -262,7 +451,7 @@ curl -X 'POST' \
   "name": "debian",
   "online": true,
   "storage": {
-    "blobStoreName": "apt",
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
     "strictContentTypeValidation": true
   },
   "cleanup": {
@@ -281,22 +470,7 @@ curl -X 'POST' \
   },
   "httpClient": {
     "blocked": false,
-    "autoBlock": true,
-    "connection": {
-      "retries": 0,
-      "userAgentSuffix": "string",
-      "timeout": 60,
-      "enableCircularRedirects": false,
-      "enableCookies": false,
-      "useTrustStore": false
-    },
-    "authentication": {
-      "type": "username",
-      "username": "string",
-      "password": "string",
-      "ntlmHost": "string",
-      "ntlmDomain": "string"
-    }
+    "autoBlock": true
   },
   "routingRule": "string",
   "replication": {
@@ -309,6 +483,7 @@ curl -X 'POST' \
   }
 }'
 
+# 2
 curl -X 'POST' \
   ''${NEXUS_URL}'/service/rest/v1/repositories/apt/proxy' \
   -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
@@ -318,7 +493,7 @@ curl -X 'POST' \
   "name": "debian-security",
   "online": true,
   "storage": {
-    "blobStoreName": "apt",
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
     "strictContentTypeValidation": true
   },
   "cleanup": {
@@ -337,22 +512,7 @@ curl -X 'POST' \
   },
   "httpClient": {
     "blocked": false,
-    "autoBlock": true,
-    "connection": {
-      "retries": 0,
-      "userAgentSuffix": "string",
-      "timeout": 60,
-      "enableCircularRedirects": false,
-      "enableCookies": false,
-      "useTrustStore": false
-    },
-    "authentication": {
-      "type": "username",
-      "username": "string",
-      "password": "string",
-      "ntlmHost": "string",
-      "ntlmDomain": "string"
-    }
+    "autoBlock": true
   },
   "routingRule": "string",
   "replication": {
@@ -362,6 +522,365 @@ curl -X 'POST' \
   "apt": {
     "distribution": "bookworm-security",
     "flat": false
+  }
+}'
+
+# 3
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/apt/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "ubuntu",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "http://us.archive.ubuntu.com/ubuntu/",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "apt": {
+    "distribution": "jammy,jammy-updates",
+    "flat": false
+  }
+}'
+
+# 4
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/apt/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "ubuntu-security",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "http://security.ubuntu.com/ubuntu",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "apt": {
+    "distribution": "jammy-security",
+    "flat": false
+  }
+}'
+
+# 5
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/apt/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "k8s-package",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "http://pkgs.k8s.io/core:/stable:/v1.32/deb/",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "apt": {
+    "distribution": "/",
+    "flat": false
+  }
+}'
+
+# 6
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/apt/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "docker-package",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "http://download.docker.com/linux/debian",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "apt": {
+    "distribution": "bookworm",
+    "flat": false
+  }
+}'
+
+# Raws proxies
+# 1
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/raw/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "raw-docker",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://registry-1.docker.io/",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "raw": {
+    "contentDisposition": "ATTACHMENT"
+  }
+}'
+
+# 2
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/raw/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "raw-github",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://github.com/",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "raw": {
+    "contentDisposition": "ATTACHMENT"
+  }
+}'
+
+# 3
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/raw/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "raw-helm",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://get.helm.sh",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "raw": {
+    "contentDisposition": "ATTACHMENT"
+  }
+}'
+
+# 4
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/raw/proxy' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "raw-k8s",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "cleanup": {
+    "policyNames": [
+      "string"
+    ]
+  },
+  "proxy": {
+    "remoteUrl": "https://dl.k8s.io/",
+    "contentMaxAge": 1440,
+    "metadataMaxAge": 1440
+  },
+  "negativeCache": {
+    "enabled": true,
+    "timeToLive": 1440
+  },
+  "httpClient": {
+    "blocked": false,
+    "autoBlock": true
+  },
+  "routingRule": "string",
+  "replication": {
+    "preemptivePullEnabled": false,
+    "assetPathRegex": "string"
+  },
+  "raw": {
+    "contentDisposition": "ATTACHMENT"
+  }
+}'
+
+# Group raws
+curl -X 'POST' \
+  ''${NEXUS_URL}'/service/rest/v1/repositories/raw/group' \
+  -u "${ADMIN_USERNAME}:${ADMIN_PASSWORD}" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "raw-group",
+  "online": true,
+  "storage": {
+    "blobStoreName": "'${APT_BLOB_STORE_NAME}'",
+    "strictContentTypeValidation": true
+  },
+  "group": {
+    "memberNames": [
+      "raw-docker",
+      "raw-helm",
+      "raw-k8s",
+      "raw-github"
+    ]
+  },
+  "raw": {
+    "contentDisposition": "ATTACHMENT"
   }
 }'
 
