@@ -28,11 +28,17 @@ services:
       GITLAB_OMNIBUS_CONFIG: |
         # Gitlab external url
         external_url 'https://${GIT_DOMAIN}'
+        gitlab_kas_external_url "wss://${GIT_DOMAIN}/-/kubernetes-agent/"
 
         # Change the initial default admin password
         gitlab_rails['initial_root_password'] = "${GITLAB_ROOT_PASSWORD}"
         gitlab_rails['display_initial_root_password'] = "false"
         gitlab_rails['store_initial_root_password'] = "false"
+
+        # Config ssh
+        gitlab_sshd['enable'] = true
+        gitlab_sshd['listen_address'] = '0.0.0.0:2222'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
 
         # Nginx Configuration
         nginx['client_max_body_size'] = '10240m'
@@ -151,12 +157,27 @@ services:
       - traefik.http.routers.gitlab-registry-secure.tls.options=default
       - traefik.http.routers.gitlab-registry-secure.tls.certresolver=mycert
       - traefik.http.services.gitlab-registry.loadbalancer.server.port=5100
+      # GitLab KAS WebSocket Config
+      - traefik.http.routers.gitlab-kas.entrypoints=https
+      - traefik.http.routers.gitlab-kas.rule=Host(`${GIT_DOMAIN}`) && PathPrefix(`/-/kubernetes-agent/`)
+      - traefik.http.routers.gitlab-kas.tls=true
+      - traefik.http.routers.gitlab-kas.tls.certresolver=mycert
+      - traefik.http.routers.gitlab-kas.service=gitlab-kas
+      - traefik.http.services.gitlab-kas.loadbalancer.server.port=80
+      - traefik.http.routers.gitlab-kas.middlewares=websocket-headers
+      - traefik.http.middlewares.websocket-headers.headers.customrequestheaders.Upgrade=websocket
+      - traefik.http.middlewares.websocket-headers.headers.customrequestheaders.Connection=Upgrade
+      - traefik.http.middlewares.websocket-headers.headers.customrequestheaders.Sec-WebSocket-Protocol=ws-tunnel
+      # SSH over TCP Configuration
+      - traefik.tcp.routers.gitlab-ssh.rule=HostSNI(`*`)
+      - traefik.tcp.routers.gitlab-ssh.entrypoints=ssh
+      - traefik.tcp.routers.gitlab-ssh.service=gitlab-ssh
+      - traefik.tcp.services.gitlab-ssh.loadbalancer.server.port=2222
     volumes:
       - gitlab_backup:/var/opt/gitlab/backups
       - gitlab_data:/var/opt/gitlab
       - gitlab_logs:/var/log/gitlab
       - gitlab_config:/etc/gitlab
-    ports:
-      - "22:22"
+
     networks:
       - web_net
