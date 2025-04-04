@@ -221,7 +221,7 @@ curl -k -X 'POST' \
   "name": "hub",
   "online": true,
   "storage": {
-    "blobStoreName": "'${BLOB_STORE_NAME}'",
+    "blobStoreName": "'${DOCKER_BLOB_STORE_NAME}'",
     "strictContentTypeValidation": true
   },
   "cleanup": {
