@@ -6,20 +6,25 @@ Ahoy world!  I'm a Helm repository for example charts.
 
 Add this repository to Helm.
 
-```
-helm repo add example https://github.com/AhmadRafiee/DevOps_Certification/tree/main/kubernetes/helm/hello-world
+```bash
+helm repo add example https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/main/kubernetes/helm/hello-world
 ```
 
 Update helm repository
 
-```
+```bash
 helm repo update example
 ```
 
 Show helm values
 
-```
+```bash
 helm show values example/hello-world
+```
+
+Store all values on file
+```bash
+helm show values example/hello-world > example-values.yml
 ```
 
 change these values and install hello world
@@ -31,7 +36,7 @@ Before Running the Command:
 
 Install an example.
 
-```
+```bash
 helm install hello example/hello-world --values example-values.yml --namespace salam --create-namespace
 ```
 
@@ -42,3 +47,5 @@ helm install hello example/hello-world --values example-values.yml --namespace s
   - **--values example-values.yml:** Specifies a custom values file for configuration.
   - **--namespace salam:** Installs the chart in the salam namespace.
   - **--create-namespace:** Creates the namespace if it doesn’t exist.
+
+[Reference](https://github.com/helm/examples/tree/main)
