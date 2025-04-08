@@ -4,11 +4,8 @@ entries:
   - apiVersion: v2
     appVersion: "1.0"
     description: A Helm chart for the example voting app
-    digest: c75270ae9c3af49cdcb69594805be1d36a23070add247c453c8cb17c0b325d33
     name: voting-app
-    urls:
-    - voting-app-0.1.5.tgz
-    version: 0.1.5
+    version: 0.1.6
     home: https://github.com/AhmadRafiee/DevOps_Certification
     sources:
       - https://github.com/AhmadRafiee/DevOps_Certification
