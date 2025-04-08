@@ -7,8 +7,8 @@ entries:
     digest: 39f3e66fabae76e874ef4e8d9cc938d7ff17726df4a3b843482b06798566eb06
     name: voting-app
     urls:
-    - voting-app-0.1.3.tgz
-    version: 0.1.3
+    - voting-app-0.1.4.tgz
+    version: 0.1.4
     home: https://github.com/AhmadRafiee/DevOps_Certification
     sources:
       - https://github.com/AhmadRafiee/DevOps_Certification
