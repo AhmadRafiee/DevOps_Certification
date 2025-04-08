@@ -25,18 +25,18 @@ spec:
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: db-credentials
-              key: user
+              name: postgres-secret
+              key: postgres-user
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: db-credentials
-              key: password
+              name: postgres-secret
+              key: postgres-password
         - name: POSTGRES_DB
           valueFrom:
             secretKeyRef:
-              name: db-credentials
-              key: dbname
+              name: postgres-secret
+              key: postgres-database
         ports:
         - containerPort: {{ .Values.database.service.port }}
         volumeMounts:
