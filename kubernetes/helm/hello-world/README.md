@@ -1,30 +1,30 @@
 # Helm Example Repository
 
-Voting application helm repository
+Ahoy world!  I'm a Helm repository for example charts.
 
 ## Get started
 
 Add this repository to Helm.
 
 ```bash
-helm repo add vote https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/main/kubernetes/helm/voting-app
+helm repo add example https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/main/kubernetes/helm/hello-world
 ```
 
 Update helm repository
 
 ```bash
-helm repo update vote
+helm repo update example
 ```
 
 Show helm values
 
 ```bash
-helm show values vote/voting-app
+helm show values example/hello-world
 ```
 
 Store all values on file
 ```bash
-helm show values vote/voting-app > voting-app-values.yml
+helm show values example/hello-world > example-values.yml
 ```
 
 change these values and install hello world
@@ -37,15 +37,15 @@ Before Running the Command:
 Install an example.
 
 ```bash
-helm install vote vote/voting-app --values voting-app-values.yml --namespace voting-app --create-namespace
+helm install vote example/hello-world --values example-values.yml --namespace salam --create-namespace
 ```
 
 **Explanation:**
   - **helm install:** The command to install a Helm chart.
   - **hello**: The name you are giving to this release.
   - **example/hello-world:** The chart you are installing.
-  - **--values voting-app-values.yml:** Specifies a custom values file for configuration.
-  - **--namespace voting-app:** Installs the chart in the voting-app namespace.
+  - **--values example-values.yml:** Specifies a custom values file for configuration.
+  - **--namespace salam:** Installs the chart in the salam namespace.
   - **--create-namespace:** Creates the namespace if it doesn’t exist.
 
-[Reference](https://github.com/dockersamples/example-voting-app)
+[Reference](https://github.com/helm/examples)
