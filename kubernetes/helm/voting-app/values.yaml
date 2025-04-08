@@ -39,11 +39,6 @@ database:
 
 ingress:
   enabled: true
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
-    certmanager.k8s.io/acme-http01-edit-in-place: "false"
-    kubernetes.io/tls-acme: "true"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   tls:
     - secretName: result-cert
       hosts:
