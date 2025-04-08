@@ -32,7 +32,7 @@ database:
   storageSize: "5Gi"
   service:
     port: 5432
-  user: postgres
+  username: postgres
   password: postgres
   database: votes
 
