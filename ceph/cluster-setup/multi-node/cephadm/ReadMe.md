@@ -27,7 +27,13 @@ https://download.ceph.com/debian-{version}
 ```
 
 Add ceph repository on debian 12
+
 ```bash
+# add ceph repo [19.2.1]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-19.2.1 bookworm main
+ROS
+
 # add ceph repo [18.2.1]
 cat << ROS > /etc/apt/sources.list.d/ceph.list
 deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-18.2.1 bookworm main
@@ -38,6 +44,10 @@ cat << ROS > /etc/apt/sources.list.d/ceph.list
 deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-17.2.7 bullseye main
 ROS
 
+# OR add MeCan repo [19.2.1]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://repo.mecan.ir/repository/debian-ceph-19.2.1 bookworm main
+ROS
 
 # OR add MeCan repo [18.2.1]
 cat << ROS > /etc/apt/sources.list.d/ceph.list
@@ -54,7 +64,8 @@ cat /etc/apt/sources.list.d/ceph.list
 ```
 
 Update repository and install requirement packages
-```
+
+```bash
 apt update
 apt-cache policy cephadm
 apt install -y cephadm ceph-common ceph-base
@@ -64,8 +75,9 @@ ceph --version
 ```
 
 #### Step4: Pull all docker image
-Pull from MeCan registry:
-```
+Pull from MeCan registry for version 18:
+
+```bash
 docker pull registry.mecan.ir/devops_certification/ceph/v18/cephadm/ceph:v18
 docker pull registry.mecan.ir/devops_certification/ceph/v18/cephadm/ceph-grafana:9.4.7
 docker pull registry.mecan.ir/devops_certification/ceph/v18/cephadm/prometheus:v2.43.0
@@ -76,7 +88,8 @@ docker pull registry.mecan.ir/devops_certification/ceph/v18/cephadm/promtail:2.4
 ```
 
 Tag all image to orginal image tag
-```
+
+```bash
 docker tag registry.mecan.ir/devops_certification/ceph/v18/cephadm/ceph:v18  quay.io/ceph/ceph:v18
 docker tag registry.mecan.ir/devops_certification/ceph/v18/cephadm/ceph-grafana:9.4.7  quay.io/ceph/ceph-grafana:9.4.7
 docker tag registry.mecan.ir/devops_certification/ceph/v18/cephadm/prometheus:v2.43.0  quay.io/prometheus/prometheus:v2.43.0
@@ -87,7 +100,8 @@ docker tag registry.mecan.ir/devops_certification/ceph/v18/cephadm/promtail:2.4.
 ```
 
 Pull from public registry
-```
+
+```bash
 docker pull quay.io/ceph/ceph:v18
 docker pull quay.io/ceph/ceph-grafana:9.4.7
 docker pull quay.io/prometheus/prometheus:v2.43.0
@@ -106,10 +120,8 @@ cephadm bootstrap --mon-ip 192.168.200.21 \
 --initial-dashboard-user admin \
 --initial-dashboard-password ZR1zSzATvA3Wv7jsdddeesdfshcsWsdfsfdBe6nZJAS8it \
 --dashboard-password-noupdate \
---skip-pull \
 --skip-firewalld \
---with-centralized-logging \
---cleanup-on-failure
+--with-centralized-logging
 ```
 
 after a few minute export this output:
@@ -143,6 +155,21 @@ Bootstrap complete.
 ```
 
 #### Step6: Create ssh-key and create ssh config
+
+add ssh port 22 for cephadm on all ceph nodes
+
+```bash
+cat /etc/ssh/sshd_config | grep Port
+sudo sed -i '/^Port/ a Port 22' /etc/ssh/sshd_config
+cat /etc/ssh/sshd_config | grep Port
+
+# Test your changes: After modifying the SSH config file, remember to test the configuration with:
+sudo sshd -t
+
+# If there are no errors, you can restart the SSH service to apply the changes:
+sudo systemctl restart sshd
+sudo systemctl status sshd
+```
 
 Create ssh-key for cephadm with this command:
 
@@ -237,9 +264,6 @@ ceph orch apply mon --placement="3 mon1 mon2 mon3"
 ceph orch ps --daemon-type mon
 ceph -s
 
-# You can explicitly specify the IP address or CIDR network for each monitor and control where it is placed. To disable automated monitor deployment:
-ceph orch apply mon --unmanaged
-
 # To print a list of devices discovered by cephadm, run this command:
 ceph orch device ls --wide
 
@@ -263,14 +287,6 @@ ceph orch ps --daemon-type rgw
 ceph orch ps --daemon-type mds
 ceph orch ps --daemon-type mon
 ceph orch ps --daemon-type osd
-
-# add a label to a specific node
-ceph orch host label add mon1 --label role=controller
-ceph orch host label add mon2 --label role=controller
-ceph orch host label add mon3 --label role=controller
-
-# remove a label on a specific node
-ceph orch host label <node_name> --remove <label_key>
 
 # MGR services
 ceph orch apply mgr --placement="3 mon1 mon2 mon3"

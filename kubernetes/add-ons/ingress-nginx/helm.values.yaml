@@ -1,6 +1,6 @@
 ---
 controller:
-  replicaCount: 3   # ingress nginx controller replica count
+  replicaCount: 1   # ingress nginx controller replica count
   minAvailable: 1   # ingress nginx controller minimum available count
   service:
     externalTrafficPolicy: Local

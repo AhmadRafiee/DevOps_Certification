@@ -1,16 +1,16 @@
-# Install single-node Openstack cluster
-To install a single-node OpenStack environment based on Debian using Kolla-Ansible with ceph backend, you can follow these steps:
+# Install multi-node Openstack cluster
+To install a multi-node OpenStack environment based on Debian using Kolla-Ansible with ceph backend, you can follow these steps:
 
-![openstack-ceph-aio](../../../images/openstack-ceph-aio.png)
+![openstack-ceph-aio](../../../images/openstack-ceph-multi.png)
 
 ### Table of Content
-- [Install single-node Openstack cluster](#install-single-node-openstack-cluster)
+- [Install multi-node Openstack cluster](#install-multi-node-openstack-cluster)
     - [Table of Content](#table-of-content)
     - [Create and preparing openstack and ceph node](#create-and-preparing-openstack-and-ceph-node)
       - [Node Specifications:](#node-specifications)
       - [Preparing steps:](#preparing-steps)
-    - [Setup ceph all in one and config for openstack pool and keyring](#setup-ceph-all-in-one-and-config-for-openstack-pool-and-keyring)
-      - [Install ceph all in one](#install-ceph-all-in-one)
+    - [Setup ceph multi node and config for openstack pool and keyring](#setup-ceph-multi-node-and-config-for-openstack-pool-and-keyring)
+      - [Install ceph multi node](#install-ceph-multi-node)
       - [Configure ceph for openstack backend](#configure-ceph-for-openstack-backend)
     - [Set up the kolla environment](#set-up-the-kolla-environment)
       - [Install dependencies on only ansible host](#install-dependencies-on-only-ansible-host)
@@ -22,16 +22,20 @@ To install a single-node OpenStack environment based on Debian using Kolla-Ansib
     - [Run kolla-ansible project and create openstack service](#run-kolla-ansible-project-and-create-openstack-service)
       - [install openstack client](#install-openstack-client)
       - [Integration ceph-rgw with openstack keystone](#integration-ceph-rgw-with-openstack-keystone)
+- [set rgw configuration and redeploy it](#set-rgw-configuration-and-redeploy-it)
+- [set rgw configuration and redeploy it](#set-rgw-configuration-and-redeploy-it-1)
+- [redeploy rgw service](#redeploy-rgw-service)
   - [🔗 Stay connected with DockerMe! 🚀](#-stay-connected-with-dockerme-)
 
 ### Create and preparing openstack and ceph node
 
 #### Node Specifications:
 Create a Ceph Node with the Following Specifications:
-  - **CPU:** 4 Cores
-  - **RAM:** 8 GB
+  - **CPU:** 8 Cores
+  - **RAM:** 16 GB
   - **Disk Size:** 50 GB
-  - **OSD Configuration:** Add 3 additional disks for the OSD (Object Storage Daemon) service.
+  - **OSD Disk:** Add 3 additional disks for the OSD (Object Storage Daemon) service on OSD nodes.
+  - **OSD Network:** Add 1 additional network interface for ceph private network on OSD nodes.
 
 Create a OpenStack Node with the Following Specifications:
   - **CPU:** 8 Cores
@@ -39,6 +43,10 @@ Create a OpenStack Node with the Following Specifications:
   - **Disk Size:** 100 GB
   - **External Network:** Add 1 additional Network for external configuration.
 
+Create a Ansible Host with the Following Specifications:
+  - **CPU:** 8 Cores
+  - **RAM:** 16 GB
+  - **Disk Size:** 50 GB
 
 #### Preparing steps:
 After Creating the Node, Execute the Following Commands to Prepare for the Installation and Configuration of Services:
@@ -51,17 +59,22 @@ apt upgrade -y
 # install docker daemon
 curl -sSL https://get.docker.com/ | sh
 sudo usermod -aG docker $USER
-```
 
-Log out and log back in for the group changes to take effect.
+# Log out and log back in for the group changes to take effect.
+
+# iptables access
+iptables -A INPUT -s 192.168.200.0/24 -j ACCEPT
+
+# persist this rule on iptables config
+```
 
 [🔝 Back to Top](#table-of-content)
 
-### Setup ceph all in one and config for openstack pool and keyring
+### Setup ceph multi node and config for openstack pool and keyring
 
-#### Install ceph all in one
+#### Install ceph multi node
 
-for install and config all in one ceph with cephadm follow [this](../../../ceph/cluster-setup/single-node/cephadm/ReadMe.md) link
+for install and config multi node ceph with cephadm follow [this](../../../ceph/cluster-setup/multi-node/cephadm/ReadMe.md) link
 
 #### Configure ceph for openstack backend
 
@@ -98,7 +111,7 @@ ceph auth get-or-create client.glance mon 'allow r' osd 'allow class-read object
 ls /etc/ceph/
 ```
 
-copy `ceph.conf` and all service keyring to `aio-cloud` host
+copy `ceph.conf` and all service keyring to `ansible-host` host
 
 [🔝 Back to Top](#table-of-content)
 
@@ -190,6 +203,70 @@ scp -r aio-ceph:/etc/ceph /etc/
 
 **Note** Remove the tab from the ceph.conf file to avoid parsing configuration issues. This commonly occurs in ceph.conf or a related INI-style config file used by OpenStack.
 
+Create ssh-key for ansible-host node with this command:
+
+```bash
+# generate ssh key
+ssh-keygen -t ed25519
+
+# check public ssh key
+cat .ssh/id_ed25519.pub
+```
+
+Create ssh config file:
+
+```bash
+cat << CTO > ~/.ssh/config
+StrictHostKeyChecking no
+Host crt1
+    hostname 192.168.200.31
+    port 8090
+    user root
+Host crt2
+    hostname 192.168.200.32
+    port 8090
+    user root
+Host crt3
+    hostname 192.168.200.33
+    port 8090
+    user root
+Host cmp1
+    hostname 192.168.200.34
+    port 8090
+    user root
+Host cmp2
+    hostname 192.168.200.35
+    port 8090
+    user root
+Host cmp3
+    hostname 192.168.200.36
+    port 8090
+    user root
+Host net1
+    hostname 192.168.200.37
+    port 8090
+    user root
+Host net2
+    hostname 192.168.200.38
+    port 8090
+    user root
+CTO
+```
+
+Add ssh-key to all hosts:
+
+```bash
+# add cephadm ssh keys to all hosts
+ssh-copy-id crt1
+ssh-copy-id crt2
+ssh-copy-id crt3
+ssh-copy-id cmp1
+ssh-copy-id cmp2
+ssh-copy-id cmp3
+ssh-copy-id net1
+ssh-copy-id net2
+```
+
 ```bash
 # kolla integrade with ceph run these commands
 ### https://docs.openstack.org/kolla-ansible/latest/reference/storage/external-ceph-guide.html
@@ -216,6 +293,36 @@ cp /etc/ceph/ceph.client.cinder.keyring /etc/kolla/config/nova/
 
 # check all configuration files
 tree /etc/kolla/config
+
+# create directory doesn't exist
+ssh crt1 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+ssh crt2 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+ssh crt3 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+ssh cmp1 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+ssh cmp2 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+ssh cmp3 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+ssh net1 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+ssh net2 '[ -d /etc/kolla/config ] || mkdir -p /etc/kolla/config ; ls /etc/kolla/'
+
+# copy kolla config file and directory
+scp -r /etc/kolla/config crt1:/etc/kolla/
+scp -r /etc/kolla/config crt2:/etc/kolla/
+scp -r /etc/kolla/config crt3:/etc/kolla/
+scp -r /etc/kolla/config cmp1:/etc/kolla/
+scp -r /etc/kolla/config cmp2:/etc/kolla/
+scp -r /etc/kolla/config cmp3:/etc/kolla/
+scp -r /etc/kolla/config net1:/etc/kolla/
+scp -r /etc/kolla/config net2:/etc/kolla/
+
+# check file and directory copy
+ssh crt1 'ls /etc/kolla/config'
+ssh crt2 'ls /etc/kolla/config'
+ssh crt3 'ls /etc/kolla/config'
+ssh cmp1 'ls /etc/kolla/config'
+ssh cmp2 'ls /etc/kolla/config'
+ssh cmp3 'ls /etc/kolla/config'
+ssh net1 'ls /etc/kolla/config'
+ssh net2 'ls /etc/kolla/config'
 ```
 
 ### Run kolla-ansible project and create openstack service
@@ -254,33 +361,34 @@ find `ceph_rgw` user on `/etc/kolla/passwords.yml` and replace on these variable
 
 ```bash
 # set rgw configuration and redeploy it
-CLIENT=$(ceph auth ls | grep client.rgw | grep client)
-RGW_PASSWORD=O3wsgmc76Kq6fsa9sJl0D20JqQ0MrL9g6ZCJTmeJ
-KEYSTONE_URL=http://int.aio.mecan.ir:5000
+KEYSTONE_URL='http://int.cloud.rahbia.ir:5000'
+KEYSTONE_USER=ceph_rgw
+KEYSTONE_PASS=awEqV8ED2k4Mh3a4fMh7T8LcizA6MjAfTpoM4eZ1
 
-# set keystone config for rgw service
-ceph config set "$CLIENT" rgw_keystone_api_version 3
-ceph config set "$CLIENT" rgw_keystone_url "${KEYSTONE_URL}"
-ceph config set "$CLIENT" rgw_keystone_accepted_admin_roles "admin, ResellerAdmin"
-ceph config set "$CLIENT" rgw_keystone_accepted_roles "_member_, member, admin, ResellerAdmin"
-ceph config set "$CLIENT" rgw_keystone_implicit_tenants true
-ceph config set "$CLIENT" rgw_keystone_admin_user ceph_rgw
-ceph config set "$CLIENT" rgw_keystone_admin_password ${RGW_PASSWORD}
-ceph config set "$CLIENT" rgw_keystone_admin_project service
-ceph config set "$CLIENT" rgw_keystone_admin_domain default
-ceph config set "$CLIENT" rgw_keystone_verify_ssl true
-ceph config set "$CLIENT" rgw_content_length_compat true
-ceph config set "$CLIENT" rgw_enable_apis "s3, swift, swift_auth, admin"
-ceph config set "$CLIENT" rgw_s3_auth_use_keystone true
-ceph config set "$CLIENT" rgw_enforce_swift_acls true
-ceph config set "$CLIENT" rgw_swift_account_in_url true
-ceph config set "$CLIENT" rgw_swift_versioning_enabled true
-ceph config set "$CLIENT" rgw_verify_ssl true
+# set rgw configuration and redeploy it
+for RGW_SERVICE in $(ceph auth ls | grep client.rgw | grep client) ; do
+    ceph config set "$RGW_SERVICE" rgw_keystone_api_version 3
+    ceph config set "$RGW_SERVICE" rgw_keystone_url ${KEYSTONE_URL}
+    ceph config set "$RGW_SERVICE" rgw_keystone_accepted_admin_roles "admin, ResellerAdmin"
+    ceph config set "$RGW_SERVICE" rgw_keystone_accepted_roles "_member_, member, admin, ResellerAdmin"
+    ceph config set "$RGW_SERVICE" rgw_keystone_implicit_tenants true
+    ceph config set "$RGW_SERVICE" rgw_keystone_admin_user ${KEYSTONE_USER}
+    ceph config set "$RGW_SERVICE" rgw_keystone_admin_password ${KEYSTONE_PASS}
+    ceph config set "$RGW_SERVICE" rgw_keystone_admin_project service
+    ceph config set "$RGW_SERVICE" rgw_keystone_admin_domain default
+    ceph config set "$RGW_SERVICE" rgw_keystone_verify_ssl true
+    ceph config set "$RGW_SERVICE" rgw_content_length_compat true
+    ceph config set "$RGW_SERVICE" rgw_enable_apis "s3, swift, swift_auth, admin"
+    ceph config set "$RGW_SERVICE" rgw_s3_auth_use_keystone true
+    ceph config set "$RGW_SERVICE" rgw_enforce_swift_acls true
+    ceph config set "$RGW_SERVICE" rgw_swift_account_in_url true
+    ceph config set "$RGW_SERVICE" rgw_swift_versioning_enabled true
+    ceph config set "$RGW_SERVICE" rgw_verify_ssl true
+done;
 
 # redeploy rgw service
 ceph orch redeploy $(ceph auth ls | grep client.rgw | cut -d "." -f 2-3)
 
-```
 
 [🔝 Back to Top](#table-of-content)
 
