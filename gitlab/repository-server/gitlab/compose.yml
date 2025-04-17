@@ -40,9 +40,6 @@ services:
         nginx['listen_port'] = 80
         nginx['listen_https'] = false
         nginx['proxy_cache'] = 'gitlab'
-        nginx['http2_enabled'] = true
-        nginx['listen_port'] = 80
-        nginx['listen_https'] = false
         nginx['http2_enabled'] = false
         nginx['proxy_set_headers'] = {
           "Host" => "$$http_host",
