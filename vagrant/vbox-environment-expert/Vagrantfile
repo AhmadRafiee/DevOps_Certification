@@ -4,9 +4,9 @@ IMAGE_Debian_12     = "bento/debian-12"
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure(2) do |config|
-  config.vm.provision "shell", path: "bootstrap.sh"
+  #config.vm.provision "shell", path: "bootstrap.sh"
 
-  NodeType1 = 2
+  NodeType1 = 1
   (1..NodeType1).each do |type1_id|
     config.vm.define "type1#{type1_id}" do |type1_vm|
       type1_vm.vm.box = IMAGE_Debian_12
@@ -17,7 +17,7 @@ Vagrant.configure(2) do |config|
         v.memory = 1024
         v.cpus = 1
       end
-      type1_vm.vm.provision "shell", path: "bootstrap_t1.sh"
+      # type1_vm.vm.provision "shell", path: "bootstrap_t1.sh"
     end
   end
 
@@ -33,7 +33,7 @@ Vagrant.configure(2) do |config|
         v.memory = 1024
         v.cpus = 1
       end
-      type2_vm.vm.provision "shell", path: "bootstrap_t2.sh"
+      # type2_vm.vm.provision "shell", path: "bootstrap_t2.sh"
     end
   end
 end
