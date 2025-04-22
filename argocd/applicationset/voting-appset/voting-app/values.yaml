@@ -18,7 +18,8 @@ spec:
     image: redis:alpine
   result:
     replicas: 1
-    image: registry.mecan.ir/devops_certification/kubernetes/voting-app/result:v0.1.0
+    image: registry.mecan.ir/devops_certification/kubernetes/voting-app/result
+    tag: v0.1.0
     domain: result.kube.mecan.ir
   vote:
     replicas: 1

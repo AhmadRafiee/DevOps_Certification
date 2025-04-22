@@ -5,6 +5,9 @@ metadata:
     app: result
   name: result
   namespace: {{ .Values.spec.destination.namespace }}
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: result
+    argocd-image-updater.argoproj.io/result.tag: {{ .Values.spec.result.image }}:v0.1.x
 spec:
   ports:
   - name: "result-service"
@@ -33,7 +36,7 @@ spec:
       imagePullSecrets:
       - name: registry-login
       containers:
-      - image: {{ .Values.spec.result.image }}
+      - image: {{ .Values.spec.result.image }}:{{ .Values.spec.result.tag }}
         name: result
         ports:
         - containerPort: 80
