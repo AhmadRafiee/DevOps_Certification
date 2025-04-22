@@ -3,6 +3,8 @@ kind: ApplicationSet
 metadata:
   name: voting-appset
   namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: registry.mecan.ir/devops_certification/kubernetes/voting-app/result:v0.x
 spec:
   generators:
     - list:
