@@ -8,9 +8,9 @@ terraform {
 }
 
 provider "minio" {
-  minio_server   = "API_URL_DOMAIN"
+  minio_server   = "MINIO_API_DOMAIN"
   minio_region   = "us-east-1"
-  minio_user     = "ACCESS_KEY"
-  minio_password = "SECRET_KEY"
+  minio_user     = "MINIO_ACCESS_KEY"
+  minio_password = "MINIO_SECRET_KEY"
   minio_ssl      = true
 }

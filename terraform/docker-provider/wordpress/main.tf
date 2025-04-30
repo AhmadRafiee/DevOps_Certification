@@ -27,9 +27,6 @@ resource "docker_container" "mysql" {
   networks_advanced {
     name = docker_network.network.name
   }
-  ports {
-    internal = 3306
-  }
   volumes {
     volume_name = docker_volume.db_volume.name
     container_path = var.db_mount_path
@@ -40,6 +37,7 @@ resource "docker_container" "wordpress" {
   image = var.wp_image
   name  = var.wp_container_name
   hostname = var.wp_hostname
+  depends_on = [docker_container.mysql]
 
   env = [
     "WORDPRESS_DB_HOST=var.db_container_name:3306",

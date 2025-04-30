@@ -18,6 +18,8 @@
   - [Openstack scenario: Create key-pair with terraform](#openstack-scenario-create-key-pair-with-terraform)
   - [Openstack scenario: upload image with terraform](#openstack-scenario-upload-image-with-terraform)
   - [Openstack scenario: create instance with terraform](#openstack-scenario-create-instance-with-terraform)
+  - [Terraform Project: Kubernetes Backup Automation with Velero \& MinIO](#terraform-project-kubernetes-backup-automation-with-velero--minio)
+  - [Steps to Create a Graph with Terraform](#steps-to-create-a-graph-with-terraform)
   - [Good link](#good-link)
   - [🔗 Stay connected with DockerMe! 🚀](#-stay-connected-with-dockerme-)
 
@@ -1014,6 +1016,122 @@ terraform destroy
 ```
 
 Again, Terraform will prompt you to confirm that you want to delete these resources. Type yes to proceed.
+
+[🔝 Back to Top](#table-of-contents)
+
+## Terraform Project: Kubernetes Backup Automation with Velero & MinIO
+
+This Terraform project automates the following tasks:
+
+- **DNS Record Management in Cloudflare**:
+  Automatically creates a DNS record in your Cloudflare zone.
+
+- **Kubernetes Namespace Creation**:
+  Creates a dedicated namespace for the backup-related components.
+
+- **MinIO Deployment via Helm**:
+  Deploys MinIO on the Kubernetes cluster using a Helm chart and a custom `values.yaml` configuration.
+
+- **Velero Preparation (MinIO Backend)**:
+  Provisions required resources in MinIO for Velero, including:
+  - S3 bucket creation
+  - IAM user and access credentials
+  - Associated access policy for Velero
+
+- **Velero Deployment via Helm**:
+  Installs Velero using Helm with a customized `values.yaml` configuration, pointing to the MinIO backend.
+
+- **Ingress Resource Backup with Velero**:
+  Configures Velero to back up Kubernetes Ingress resources.
+
+- **Scheduled Backups with Velero**:
+  Creates a scheduled backup job to periodically back up Ingress resources.
+
+**Project Structure**
+
+```bash
+├── backup.tf
+├── cloudflare.tf
+├── minio-config.tf
+├── minio-setup.tf
+├── output.tf
+├── providers.tf
+├── values
+│   ├── minio-values.yaml
+│   └── velero-values.yaml
+├── variables.tf
+└── velero.tf
+```
+
+**Initialize Terraform**
+Before creating resources, you need to initialize Terraform, which will install the necessary provider plugins.
+
+```bash
+cd total-project
+terraform init
+```
+
+**Plan the Deployment**
+You can run the plan command to see the actions Terraform will take without actually applying them:
+
+```bash
+terraform plan
+```
+
+**Apply the Configuration**
+To create the container, run:
+
+```bash
+terraform apply
+```
+
+Terraform will prompt you to confirm the action. Type yes to proceed.
+
+**Cleanup**
+When you're done and want to remove the resources created by Terraform, you can run:
+
+```bash
+terraform destroy
+```
+
+Again, Terraform will prompt you to confirm that you want to delete these resources. Type yes to proceed.
+
+[🔝 Back to Top](#table-of-contents)
+
+## Steps to Create a Graph with Terraform
+
+**Run Terraform:**
+Now, you can run the following commands to initialize Terraform:
+
+```bash
+terraform init
+terraform plan
+```
+
+**Generate the Graph:**
+To generate the graph, use the following command:
+
+```bash
+terraform graph > graph.dot
+```
+
+This command creates a file named graph.dot that contains the graph of resources and their dependencies.
+
+**Visualize the Graph:**
+To view the graph visually, you can use tools like Graphviz. First, install Graphviz:
+
+```bash
+sudo apt-get install graphviz
+```
+
+Then, you can convert the graph to an image:
+
+```bash
+dot -Tpng graph.dot -o graph.png
+```
+
+**View the Graph:**
+Now you can open the graph.png file to see the graph of your Terraform resources and their dependencies.
 
 [🔝 Back to Top](#table-of-contents)
 

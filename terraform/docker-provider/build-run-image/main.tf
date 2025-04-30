@@ -7,7 +7,10 @@ resource "docker_image" "my_image" {
   name         = var.image_name
   build {
     context    = "${path.module}"
-    dockerfile = "Dockerfile"
+    dockerfile = "${path.module}/Dockerfile"
+  }
+    triggers = {
+    dockerfile_hash = filemd5("${path.module}/Dockerfile")
   }
 }
 

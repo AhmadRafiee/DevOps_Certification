@@ -2,19 +2,19 @@
 variable "cloudflare_api_token" {
   description = "Cloudflare API Token"
   type        = string
-  default     = "Cloudflare_API_Token"  # Change this to your desired subdomain
+  default     = "CLOUDFLARE_API_TOKEN"
 }
 
 variable "zone_id" {
   description = "The DNS zone id"
   type        = string
-  default     = "ZONE_ID"
+  default     = "CLOUDFLARE_ZONE_ID"
 }
 
 variable "a_record_name" {
   description = "The name for the A record"
   type        = string
-  default     = "app"  # Change this to your desired subdomain
+  default     = "app"
 }
 
 variable "a_record_value" {
@@ -26,23 +26,23 @@ variable "a_record_value" {
 variable "cname_record_name" {
   description = "The name for the CNAME record"
   type        = string
-  default     = "www"  # Change this to your desired subdomain
+  default     = "www"
 }
 
 variable "cname_record_value" {
   description = "The value for the CNAME record"
   type        = string
-  default     = "dockerme.ir"  # Change this to your desired subdomain
+  default     = "dockerme.ir"
 }
 
 variable "txt_record_name" {
   description = "The name for the TXT record"
   type        = string
-  default     = "verification"  # Change this to your desired subdomain
+  default     = "verification"
 }
 
 variable "txt_record_value" {
   description = "The data for the TXT record"
   type        = string
-  default     = "this is test"  # Change this to your actual value
+  default     = "this is test"
 }
