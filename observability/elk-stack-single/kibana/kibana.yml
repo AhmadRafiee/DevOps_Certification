@@ -11,3 +11,6 @@ xpack.monitoring.ui.container.elasticsearch.enabled: true
 ## X-Pack security credentials
 elasticsearch.username: ${ELASTICSEARCH_USERNAME}
 elasticsearch.password: ${ELASTICSEARCH_PASSWORD}
+xpack.encryptedSavedObjects.encryptionKey: 'something_at_least_32_characters_long'
+xpack.reporting.encryptionKey: 'something_at_least_32_characters_long'
+xpack.security.encryptionKey: 'something_at_least_32_characters_long'
