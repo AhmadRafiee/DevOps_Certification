@@ -148,16 +148,15 @@ vrrp_instance SCENARIO-A {
    interface ens192
    virtual_router_id 51
    priority 150
-   nopreempt
    advert_int 1
 
-   unicast_src_ip 192.168.200.74    # Master node IP
+   unicast_src_ip 192.168.200.74    # Source Node IP
    unicast_peer {
-       192.168.200.75               # Backup node IP
+       192.168.200.75               # Peer Node IP
    }
 
    virtual_ipaddress {
-      192.168.200.171/32
+      192.168.200.71/32
    }
 
    track_script {
@@ -201,16 +200,15 @@ vrrp_instance SCENARIO-A {
     interface ens192
     virtual_router_id 51
     priority 140
-    nopreempt
     advert_int 1
 
-    unicast_src_ip 192.168.200.75    # Master node IP
+    unicast_src_ip 192.168.200.75    # Source Node IP
     unicast_peer {
-        192.168.200.74               # Backup node IP
+        192.168.200.74               # Peer Node IP
     }
 
     virtual_ipaddress {
-       192.168.200.171/32
+       192.168.200.71/32
     }
 
     track_script {
@@ -268,7 +266,7 @@ vrrp_instance SCENARIO-B1 {
    }
 
    virtual_ipaddress {
-      192.168.200.171/32
+      192.168.200.71/32
    }
 
    track_script {
@@ -289,7 +287,7 @@ vrrp_instance SCENARIO-B2 {
    }
 
    virtual_ipaddress {
-      192.168.200.172/32
+      192.168.200.72/32
    }
 
    track_script {
@@ -341,7 +339,7 @@ vrrp_instance SCENARIO-B1 {
    }
 
    virtual_ipaddress {
-      192.168.200.171/32
+      192.168.200.71/32
    }
 
    track_script {
@@ -362,7 +360,7 @@ vrrp_instance SCENARIO-B2 {
    }
 
    virtual_ipaddress {
-      192.168.200.172/32
+      192.168.200.72/32
    }
 
    track_script {
@@ -421,7 +419,7 @@ vrrp_instance SCENARIO-C1 {
    }
 
    virtual_ipaddress {
-      192.168.200.171/32
+      192.168.200.71/32
    }
 
    track_script {
@@ -443,7 +441,7 @@ vrrp_instance SCENARIO-C2 {
    }
 
    virtual_ipaddress {
-      192.168.200.172/32
+      192.168.200.72/32
    }
 
    track_script {
@@ -465,7 +463,7 @@ vrrp_instance SCENARIO-C3 {
    }
 
    virtual_ipaddress {
-      192.168.200.173/32
+      192.168.200.73/32
    }
 
    track_script {
@@ -519,7 +517,7 @@ vrrp_instance SCENARIO-C1 {
    }
 
    virtual_ipaddress {
-      192.168.200.171/32
+      192.168.200.71/32
    }
 
    track_script {
@@ -541,7 +539,7 @@ vrrp_instance SCENARIO-C2 {
    }
 
    virtual_ipaddress {
-      192.168.200.172/32
+      192.168.200.72/32
    }
 
    track_script {
@@ -563,7 +561,7 @@ vrrp_instance SCENARIO-C3 {
    }
 
    virtual_ipaddress {
-      192.168.200.173/32
+      192.168.200.73/32
    }
 
    track_script {
@@ -617,7 +615,7 @@ vrrp_instance SCENARIO-C1 {
    }
 
    virtual_ipaddress {
-      192.168.200.171/32
+      192.168.200.71/32
    }
 
    track_script {
@@ -639,7 +637,7 @@ vrrp_instance SCENARIO-C2 {
    }
 
    virtual_ipaddress {
-      192.168.200.172/32
+      192.168.200.72/32
    }
 
    track_script {
@@ -661,7 +659,7 @@ vrrp_instance SCENARIO-C3 {
    }
 
    virtual_ipaddress {
-      192.168.200.173/32
+      192.168.200.73/32
    }
 
    track_script {

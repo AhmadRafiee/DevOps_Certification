@@ -1,0 +1,32 @@
+name: minio
+
+volumes:
+  minio_data:
+    name: minio_data
+
+networks:
+  app_net:
+    name: app_net
+    external: true
+
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: KWaMp7NwuTpWPWeJ
+      MINIO_ROOT_PASSWORD: GRTgwNiDi8HA1m5mz4sdewKWaMp7NwuTpWPWeJ
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
