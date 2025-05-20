@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 0  # KEDA will scale this
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: python:3.9
+          command:
+            - sh
+            - -c
+            - |
+              pip install pika && \
+              python -c "
+              import pika
+              import time
+              connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+              channel = connection.channel()
+              channel.queue_declare(queue='test-queue')
+              def callback(ch, method, properties, body):
+                  print(' [x] Received', body)
+                  time.sleep(0.5)
+                  ch.basic_ack(delivery_tag=method.delivery_tag)
+              channel.basic_consume(queue='test-queue', on_message_callback=callback)
+              channel.start_consuming()"

@@ -73,6 +73,11 @@
 
 ### [Scenario](scenario)
   - [Kubernetes Auto Scaling](scenario/auto-scaling)
+    - [Kubernetes Auto Scaling - HPA and VPA](scenario/auto-scaling/php-app)
+    - [Kubernetes Auto Scaling - KEDA](scenario/auto-scaling/keda/keda.md)
+      - [Kubernetes Auto Scaling - KEDA: Redis](scenario/auto-scaling/keda/redis-scaleobject.yml)
+      - [Kubernetes Auto Scaling - KEDA: RabbitMq](scenario/auto-scaling/keda/rabbitmq-scenario)
+      - [Kubernetes Auto Scaling - KEDA: Http](scenario/auto-scaling/keda/http-scenario)
   - [Etcd labs](scenario/etcdlabs)
   - [Etcd backup](scenario/etcd-backup)
   - [Kubeapps Panel](scenario/kubeapps.md)
