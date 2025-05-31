@@ -17,9 +17,9 @@
       - [login to main cluster and add other clusters](#login-to-main-cluster-and-add-other-clusters)
   - [Add a sample application to the all cluster using a Kubernetes manifest with `argocd` commands.](#add-a-sample-application-to-the-all-cluster-using-a-kubernetes-manifest-with-argocd-commands)
   - [Deploy a sample application to the Damavand cluster using a Helm chart with argocd commands](#deploy-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
-  - [Add a sample application to the damavand cluster using a helm chart with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
-  - [Add a sample application to the damavand cluster using a helm chart with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands-1)
-  - [Add a sample application to the `damavand` cluster using a helm chart with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands-2)
+  - [Add a sample application to the damavand cluster using a kustomize with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-kustomize-with-argocd-commands)
+  - [Add a sample application of application to the damavand cluster using helm chart with `argocd` commands.](#add-a-sample-application-of-application-to-the-damavand-cluster-using-helm-chart-with-argocd-commands)
+  - [Add a sample application to the `damavand` cluster using a helm chart with `argocd` commands](#add-a-sample-application-to-the-damavand-cluster-using-a-helm-chart-with-argocd-commands)
   - [Here’s how you can create an ApplicationSet in ArgoCD to deploy MinIO, Ingress, and multiple applications using a Helm chart across two specific clusters (Sahand \& Dena).](#heres-how-you-can-create-an-applicationset-in-argocd-to-deploy-minio-ingress-and-multiple-applications-using-a-helm-chart-across-two-specific-clusters-sahand--dena)
       - [deploy Minio with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-minio-with-applicationset-across-two-specific-clusters-sahand--dena)
       - [deploy Ingress Nginx with ApplicationSet across two specific clusters (Sahand \& Dena).](#deploy-ingress-nginx-with-applicationset-across-two-specific-clusters-sahand--dena)
@@ -150,6 +150,9 @@ argocd app create guestbook-damavand \
 # Sync an app
 argocd app sync guestbook-damavand
 
+# chcek argocd apps
+argocd app list
+
 # add sample app with commands on dena cluster
 argocd app create guestbook-dena \
 --repo https://github.com/AhmadRafiee/DevOps_Certification.git \
@@ -215,7 +218,7 @@ argocd app list
 
 [🔝 Back to Top](#table-of-contents)
 
-## Add a sample application to the damavand cluster using a helm chart with `argocd` commands
+## Add a sample application to the damavand cluster using a kustomize with `argocd` commands
 
 ```bash
 # login argocd command to cluster damavand
@@ -243,9 +246,15 @@ argocd app list
 
 [🔝 Back to Top](#table-of-contents)
 
-## Add a sample application to the damavand cluster using a helm chart with `argocd` commands
+## Add a sample application of application to the damavand cluster using helm chart with `argocd` commands.
+There's no one particular pattern to solve this problem, e.g. you could write a script to create your apps, or you could even manually create them. However, users of Argo CD tend to use the app of apps pattern.
+
 
 ![app-of-apps](../images/app-of-apps.png)
+
+A typical layout of your Git repository for this might be:
+
+![typical layout](../images/app-of-app-layout.png)
 
 before setup app-of-apps change varibles file:
 ```bash
@@ -273,9 +282,15 @@ argocd app create app-of-apps-gustbook \
 
 # Check argocd app list
 argocd app list
+```
 
+The parent app will appear as in-sync but the child apps will be out of sync:
+
+![app-of-app-application](../images/app-of-apps-applications.png )
+
+```bash
 # sync app-of-apps-gustbook
-argocd app sync app-of-apps-gustbook
+argocd app sync -l argocd.argoproj.io/instance=app-of-apps-gustbook
 ```
 
 [Good Link](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern) and [Good Repo](https://github.com/argoproj/argocd-example-apps/tree/master/apps)
@@ -285,6 +300,11 @@ argocd app sync app-of-apps-gustbook
 ## Add a sample application to the `damavand` cluster using a helm chart with `argocd` commands
 
 ![k8s-addons-app](../images/k8s-addons-app.png)
+
+
+A typical layout of your Git repository for this might be:
+
+![typical layout](../images/k8s-addons-layout.png)
 
 before setup app-of-apps change varibles file:
 ```bash
@@ -338,9 +358,15 @@ argocd app create k8s-addons-app \
 # Check argocd app list
 argocd app list
 
-# sync k8s-addons-app
+# sync k8s-addons-app apllication
 argocd app sync k8s-addons-app
+
+# and for sync all applications
+argocd app sync -l argocd.argoproj.io/instance=k8s-addons-app
 ```
+
+![k8s-add-ons-applications](../images/k8s-addons-applications.png)
+
 
 [🔝 Back to Top](#table-of-contents)
 
@@ -355,19 +381,12 @@ cat argocd/applicationset/minio/minio-appset.yaml
 # login argocd command to cluster damavand
 argocd login argocd.kube.mecan.ir
 
-# create app of apps from DevOps Certification repo
-argocd app create minio-appset \
---dest-namespace argocd \
---dest-server https://kubernetes.default.svc \
---repo https://github.com/AhmadRafiee/DevOps_Certification.git \
---path argocd/applicationset/minio \
---sync-policy auto
+# create application set
+kubectl apply -f https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/minio/minio-appset.yaml
 
-# Check argocd app list
+# Check argocd app and appset list
+argocd appset list
 argocd app list
-
-# sync minio-appset
-argocd app sync minio-appset
 ```
 
 #### deploy Ingress Nginx with ApplicationSet across two specific clusters (Sahand & Dena).
@@ -379,19 +398,12 @@ cat argocd/applicationset/ingress/ingress-appset.yaml
 # login argocd command to cluster damavand
 argocd login argocd.kube.mecan.ir
 
-# create app of apps from DevOps Certification repo
-argocd app create ingress-appset \
---dest-namespace argocd \
---dest-server https://kubernetes.default.svc \
---repo https://github.com/AhmadRafiee/DevOps_Certification.git \
---path argocd/applicationset/ingress \
---sync-policy auto
+# create application set
+kubectl apply -f https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/ingress/ingress-appset.yaml
 
-# Check argocd app list
+# Check argocd app and appset list
+argocd appset list
 argocd app list
-
-# sync ingress-appset
-argocd app sync ingress-appset
 ```
 
 #### Deploy multiple apps with ApplicationSet across two specific clusters (Sahand & Dena).
@@ -428,8 +440,7 @@ cat argocd/applicationset/multiple-apps/multiple-apps.yaml
 # login argocd command to cluster damavand
 argocd login argocd.kube.mecan.ir
 
-# create app of apps from DevOps Certification repo
-
+# create applicationset from DevOps Certification repo for applicationset
 argocd app create k8s-addons-appset \
 --dest-namespace argocd \
 --dest-server https://kubernetes.default.svc \
@@ -437,11 +448,9 @@ argocd app create k8s-addons-appset \
 --path argocd/applicationset/multiple-apps \
 --sync-policy auto
 
-# Check argocd app list
+# Check argocd app and appset list
+argocd appset list
 argocd app list
-
-# sync k8s-addons-appset
-argocd app sync k8s-addons-appset
 ```
 
 [🔝 Back to Top](#table-of-contents)
@@ -464,11 +473,10 @@ argocd app create voting-appset \
 --path argocd/applicationset/voting-appset \
 --sync-policy auto
 
-# Check argocd app list
+# Check argocd app and appset list
+argocd appset list
 argocd app list
 
-# sync k8s-addons-appset
-argocd app sync voting-appset
 ```
 
 [🔝 Back to Top](#table-of-contents)

@@ -2,11 +2,41 @@
 
 ![ceph orchestration](../../../images/ceph-orchestrators.png)
 
-#### Step1: preparing and hardening OS with ansible
 
-#### Step2: Install and config docker service with ansible
+- [Create a Ceph cluster on a Multi node with `cephadm`](#create-a-ceph-cluster-on-a-multi-node-with-cephadm)
+      - [Step1: preparing and hardening OS with ansible](#step1-preparing-and-hardening-os-with-ansible)
+      - [Step2: Install and config docker service with ansible](#step2-install-and-config-docker-service-with-ansible)
+      - [Step3: Add ceph repository and install requirement tools](#step3-add-ceph-repository-and-install-requirement-tools)
+      - [Step4: Pull all docker image](#step4-pull-all-docker-image)
+      - [Step5: bootstraping cluster with cephadm commands on mon1](#step5-bootstraping-cluster-with-cephadm-commands-on-mon1)
+      - [Step6: Create ssh-key and create ssh config](#step6-create-ssh-key-and-create-ssh-config)
+      - [Step7: Configuration grafana and set admin password](#step7-configuration-grafana-and-set-admin-password)
+      - [Step8: Add others node](#step8-add-others-node)
+      - [Step9: ceph and grafana dashboard access](#step9-ceph-and-grafana-dashboard-access)
+        - [To set up Nginx as a reverse proxy for the Ceph dashboard and panels:](#to-set-up-nginx-as-a-reverse-proxy-for-the-ceph-dashboard-and-panels)
+      - [Step9: Test the cluster](#step9-test-the-cluster)
+        - [To expose an external Ceph dashboard using an NGINX Ingress controller on Kubernetes.](#to-expose-an-external-ceph-dashboard-using-an-nginx-ingress-controller-on-kubernetes)
 
-#### Step3: Add ceph repository and install requirement tools
+
+## Step1: preparing and hardening OS with ansible
+
+To access the Ceph dashboard, you can configure iptables rules to allow access to ports 8443 and 3000. Alternatively, you can set up a reverse proxy using a tool like Nginx to provide access to the dashboards using custom names or URLs.
+
+Sample iptables rules
+
+```bash
+# Allow incoming traffic on network 192.168.200.0/24 on all nodes
+iptables -A INPUT -s 192.168.200.0/24 -j ACCEPT
+
+# Allow incoming traffic on network 192.168.250.0/24 on osd nodes
+iptables -A INPUT -s 192.168.250.0/24 -j ACCEPT
+```
+
+![ceph-multinode-hld](../../../images/ceph-multinode-hld.png)
+
+## Step2: Install and config docker service with ansible
+
+## Step3: Add ceph repository and install requirement tools
 
 To install the release.asc key, execute the following:
 ```bash
@@ -74,7 +104,7 @@ apt install -y cephadm ceph-common ceph-base
 ceph --version
 ```
 
-#### Step4: Pull all docker image
+## Step4: Pull all docker image
 Pull from MeCan registry for version 18:
 
 ```bash
@@ -111,7 +141,7 @@ docker pull grafana/loki:2.4.0
 docker pull grafana/promtail:2.4.0
 ```
 
-#### Step5: bootstraping cluster with cephadm commands on mon1
+## Step5: bootstraping cluster with cephadm commands on mon1
 
 ```bash
 # Bootstraping cluster with this command
@@ -121,6 +151,7 @@ cephadm bootstrap --mon-ip 192.168.200.21 \
 --initial-dashboard-password ZR1zSzATvA3Wv7jsdddeesdfshcsWsdfsfdBe6nZJAS8it \
 --dashboard-password-noupdate \
 --skip-firewalld \
+--cluster-network 192.168.250.0/24 \
 --with-centralized-logging
 ```
 
@@ -154,7 +185,7 @@ For more information see:
 Bootstrap complete.
 ```
 
-#### Step6: Create ssh-key and create ssh config
+## Step6: Create ssh-key and create ssh config
 
 add ssh port 22 for cephadm on all ceph nodes
 
@@ -230,7 +261,7 @@ ssh-copy-id -f -i /etc/ceph/ceph.pub osd3
 
 ![ceph network](../../../images/ceph-network.png)
 
-#### Step7: Configuration grafana and set admin password
+## Step7: Configuration grafana and set admin password
 
 grafana config file path on your host:
 
@@ -253,7 +284,7 @@ ceph orch apply -i grafana.yml
 ceph orch redeploy grafana
 ```
 
-#### Step8: Add others node
+## Step8: Add others node
 ```bash
 # add mon servers
 ceph orch host add mon2 192.168.200.22
@@ -322,7 +353,7 @@ ceph orch ps --daemon-type mon
 ceph orch ps --daemon-type osd
 ```
 
-#### Step9: ceph and grafana dashboard access
+## Step9: ceph and grafana dashboard access
 
 To access the Ceph dashboard, you can configure iptables rules to allow access to ports 8443 and 3000. Alternatively, you can set up a reverse proxy using a tool like Nginx to provide access to the dashboards using custom names or URLs.
 
@@ -356,7 +387,7 @@ To create the password file, run the following command:
 sudo htpasswd -c /etc/nginx/conf.d/.htpasswd MeCan
 ```
 
-##### To set up Nginx as a reverse proxy for the Ceph dashboard and panels:
+### To set up Nginx as a reverse proxy for the Ceph dashboard and panels:
 
 [Setting up an Nginx configuration to serve a Ceph dashboard ](nginx-config-for-ceph/panel.conf)
 
@@ -386,7 +417,7 @@ systemctl enable nginx
 systemctl status nginx
 ```
 
-#### Step9: Test the cluster
+## Step9: Test the cluster
 The block storage provided by Ceph is named RBD, which stands for RADOS block device.
 
 To create disks, you need a pool enabled to work with RBD. The commands below create a pool called rbd and then activate this pool for RBD:
@@ -453,7 +484,7 @@ The container for a daemon can be stopped, recreated, and restarted with the red
     ceph orch daemon redeploy <name> [--image <image>]
 
 
-##### To expose an external Ceph dashboard using an NGINX Ingress controller on Kubernetes.
+### To expose an external Ceph dashboard using an NGINX Ingress controller on Kubernetes.
 To create a manifest for an external Ceph dashboard using Kubernetes, you need to set up an Ingress, Service, and Endpoint that expose the Ceph dashboard externally. This assumes that the Ceph dashboard is running outside of the Kubernetes cluster, and you want to access it through Kubernetes' Ingress and Service resources.
 
 [ceph panel manifest](kubernetes-ingress-for-ceph/panel-service-endpoint-ingress.yml)
@@ -469,11 +500,3 @@ To create a manifest for an external Ceph dashboard using Kubernetes, you need t
   - https://www.redhat.com/sysadmin/ceph-cluster-single-machine
   - https://docs.ceph.com/en/latest/cephadm/services/monitoring/
   - https://www.ibm.com/docs/en/storage-ceph/5?topic=access-setting-admin-user-password-grafana
-
-
-
-
-ceph auth get client.admin
-
-ceph auth add client.k8s mon 'allow r' osd 'allow rw pool=k8s-pool'
-ceph auth get client.k8s

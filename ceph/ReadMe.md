@@ -8,6 +8,8 @@
   - [ceph rbd client](scenario/rbd-client.md)
   - [ceph rgw client](scenario/rgw-client.md)
   - [ceph mds client](scenario/mds-client.md)
+  - [ceph upgrade](scenario/upgrade.md)
+  - [ceph rebalancing control](scenario/rebalancing.md)
 
 ## [Cluster Setup](cluster-setup)
   - [ceph integration](cluster-setup/integration)
