@@ -2,20 +2,19 @@
 
 ![ceph orchestration](../../../images/ceph-orchestrators.png)
 
-
 - [Create a Ceph cluster on a Multi node with `cephadm`](#create-a-ceph-cluster-on-a-multi-node-with-cephadm)
-      - [Step1: preparing and hardening OS with ansible](#step1-preparing-and-hardening-os-with-ansible)
-      - [Step2: Install and config docker service with ansible](#step2-install-and-config-docker-service-with-ansible)
-      - [Step3: Add ceph repository and install requirement tools](#step3-add-ceph-repository-and-install-requirement-tools)
-      - [Step4: Pull all docker image](#step4-pull-all-docker-image)
-      - [Step5: bootstraping cluster with cephadm commands on mon1](#step5-bootstraping-cluster-with-cephadm-commands-on-mon1)
-      - [Step6: Create ssh-key and create ssh config](#step6-create-ssh-key-and-create-ssh-config)
-      - [Step7: Configuration grafana and set admin password](#step7-configuration-grafana-and-set-admin-password)
-      - [Step8: Add others node](#step8-add-others-node)
-      - [Step9: ceph and grafana dashboard access](#step9-ceph-and-grafana-dashboard-access)
-        - [To set up Nginx as a reverse proxy for the Ceph dashboard and panels:](#to-set-up-nginx-as-a-reverse-proxy-for-the-ceph-dashboard-and-panels)
-      - [Step9: Test the cluster](#step9-test-the-cluster)
-        - [To expose an external Ceph dashboard using an NGINX Ingress controller on Kubernetes.](#to-expose-an-external-ceph-dashboard-using-an-nginx-ingress-controller-on-kubernetes)
+  - [Step1: preparing and hardening OS with ansible](#step1-preparing-and-hardening-os-with-ansible)
+  - [Step2: Install and config docker service with ansible](#step2-install-and-config-docker-service-with-ansible)
+  - [Step3: Add ceph repository and install requirement tools](#step3-add-ceph-repository-and-install-requirement-tools)
+  - [Step4: Pull all docker image](#step4-pull-all-docker-image)
+  - [Step5: bootstraping cluster with cephadm commands on mon1](#step5-bootstraping-cluster-with-cephadm-commands-on-mon1)
+  - [Step6: Create ssh-key and create ssh config](#step6-create-ssh-key-and-create-ssh-config)
+  - [Step7: Configuration grafana and set admin password](#step7-configuration-grafana-and-set-admin-password)
+  - [Step8: Add others node](#step8-add-others-node)
+  - [Step9: ceph and grafana dashboard access](#step9-ceph-and-grafana-dashboard-access)
+    - [To set up Nginx as a reverse proxy for the Ceph dashboard and panels:](#to-set-up-nginx-as-a-reverse-proxy-for-the-ceph-dashboard-and-panels)
+  - [Step9: Test the cluster](#step9-test-the-cluster)
+    - [To expose an external Ceph dashboard using an NGINX Ingress controller on Kubernetes.](#to-expose-an-external-ceph-dashboard-using-an-nginx-ingress-controller-on-kubernetes)
 
 
 ## Step1: preparing and hardening OS with ansible
