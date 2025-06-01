@@ -1,0 +1,83 @@
+networks:
+  web_net:
+    name: web_net
+    external: true
+  app_net:
+    name: app_net
+    external: true
+
+volumes:
+  nexus_data:
+    name: nexus_data
+    external: false
+  traefik_data:
+    name: traefik_data
+    external: false
+
+services:
+  traefik:
+    image: traefik:${traefik_image_tag}
+    container_name: traefik
+    hostname: traefik
+    restart: ${restart_policy}
+    command:
+      - "--log.level=INFO"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.network=web_net"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web-secure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${acme_email}"
+      - "--certificatesresolvers.myresolver.acme.storage=/certs/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "traefik_data:/certs"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - web_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.web-auth.basicauth.users=${web_auth_user}:${web_auth_pass}"
+      - "traefik.http.routers.http-khodesh.rule=Host(`${traefik_domain}`)"
+      - "traefik.http.routers.http-khodesh.entrypoints=web"
+      - "traefik.http.routers.khodesh.rule=Host(`${traefik_domain}`)"
+      - "traefik.http.routers.khodesh.entrypoints=web-secure"
+      - "traefik.http.routers.khodesh.middlewares=web-auth@docker"
+      - "traefik.http.routers.khodesh.tls=true"
+      - "traefik.http.routers.khodesh.tls.certresolver=myresolver"
+      - "traefik.http.services.khodesh.loadBalancer.server.port=8080"
+  nexus:
+    image: sonatype/nexus3:${nexus_image_tag}
+    container_name: nexus
+    hostname: nexus
+    restart: ${restart_policy}
+    volumes:
+      - nexus_data:/nexus-data
+    environment:
+      NEXUS_SECURITY_INITIAL_PASSWORD: ${nexus_admin_pass}
+    networks:
+      - web_net
+      - app_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/service/rest/v1/status"]
+      interval: 30s
+      retries: 3
+      timeout: 10s
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.http-repo.rule=Host(`${nexus_main_domain}`)"
+      - "traefik.http.routers.http-repo.entrypoints=web"
+      - "traefik.http.routers.repo.rule=Host(`${nexus_main_domain}`)"
+      - "traefik.http.routers.repo.entrypoints=web-secure"
+      - "traefik.http.routers.repo.tls=true"
+      - "traefik.http.routers.repo.tls.certresolver=myresolver"
+      - "traefik.http.routers.repo.service=repo"
+      - "traefik.http.services.repo.loadBalancer.server.port=8081"
