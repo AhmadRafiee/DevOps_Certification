@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: guestbook
   namespace: argocd
+  label:
+    argocd.argoproj.io/instance: app-of-apps-gustbook
 spec:
   destination:
     namespace: guestbook

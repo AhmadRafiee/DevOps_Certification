@@ -4,6 +4,8 @@ metadata:
   name: guestbook
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+  label:
+    argocd.argoproj.io/instance: app-of-apps-gustbook
 ---
 apiVersion: v1
 kind: Namespace
@@ -11,6 +13,8 @@ metadata:
   name: kustomize-guestbook
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+  label:
+    argocd.argoproj.io/instance: app-of-apps-gustbook
 ---
 apiVersion: v1
 kind: Namespace
@@ -18,3 +22,5 @@ metadata:
   name: helm-guestbook
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+  label:
+    argocd.argoproj.io/instance: app-of-apps-gustbook
