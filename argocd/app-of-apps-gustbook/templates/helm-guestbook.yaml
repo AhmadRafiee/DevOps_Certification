@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: helm-guestbook
   namespace: argocd
-  label:
-    argocd.argoproj.io/instance: app-of-apps-gustbook
 spec:
   destination:
     namespace: helm-guestbook
