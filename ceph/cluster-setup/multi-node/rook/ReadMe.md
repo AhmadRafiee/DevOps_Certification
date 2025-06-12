@@ -40,9 +40,12 @@ before apply rook-ceph helm chart change values on `rook-operator-values.yml` fi
 helm repo add rook-release https://charts.rook.io/release
 
 # add node label
-kubectl label nodes disktype=ssd master1
-kubectl label nodes disktype=ssd master2
-kubectl label nodes disktype=ssd master3
+kubectl label nodes master1 disktype=ssd
+kubectl label nodes master2 disktype=ssd
+kubectl label nodes master3 disktype=ssd
+
+# get all node labels
+kubectl get nodes --show-labels
 
 # install ceph operator chart
 helm upgrade --install --create-namespace \

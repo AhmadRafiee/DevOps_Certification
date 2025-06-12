@@ -57,7 +57,8 @@ cephClusterSpec:
       compression:
         enabled: false
       requireMsgr2: false
-
+      provider: host
+      
   crashCollector:
     disable: false
 

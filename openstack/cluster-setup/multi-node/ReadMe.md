@@ -15,6 +15,7 @@ To install a multi-node OpenStack environment based on Debian using Kolla-Ansibl
     - [Set up the kolla environment](#set-up-the-kolla-environment)
       - [Install dependencies on only ansible host](#install-dependencies-on-only-ansible-host)
       - [Install Kolla-ansible](#install-kolla-ansible)
+      - [Change `multinode` playbook nodes](#change-multinode-playbook-nodes)
       - [Install Ansible Galaxy requirements](#install-ansible-galaxy-requirements)
       - [Generate Kolla passwords](#generate-kolla-passwords)
     - [Configure the Deployment:](#configure-the-deployment)
@@ -152,8 +153,36 @@ sudo chown $USER:$USER /etc/kolla
 cp -r /opt/venv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 
 # Copy all-in-one inventory file to the current directory.
-cp /opt/venv/share/kolla-ansible/ansible/inventory/all-in-one .
 cp /opt/venv/share/kolla-ansible/ansible/inventory/multinode .
+```
+
+#### Change `multinode` playbook nodes
+
+```bash
+[control]
+crt1
+crt2
+crt3
+
+[network]
+net1
+net2
+
+[compute]
+cmp1
+cmp2
+cmp3
+
+[monitoring]
+net1
+
+[storage]
+crt1
+crt2
+crt3
+
+[deployment]
+localhost       ansible_connection=local
 ```
 
 #### Install Ansible Galaxy requirements
@@ -280,6 +309,7 @@ mkdir -p /etc/kolla/config/nova
 ls /etc/ceph/
 
 # cp ceph.conf to these directory
+# before copy ceph configuration, remove tab on ceph.conf
 cp /etc/ceph/ceph.conf /etc/kolla/config/glance/
 cp /etc/ceph/ceph.conf /etc/kolla/config/cinder/
 cp /etc/ceph/ceph.conf /etc/kolla/config/nova/
@@ -329,22 +359,22 @@ ssh net2 'ls /etc/kolla/config'
 
 ```bash
 # bootstraping server with this command
-kolla-ansible bootstrap-servers -i all-in-one
+kolla-ansible bootstrap-servers -i multinode
 
 # create all certificates with this commands
-kolla-ansible certificates -i all-in-one
+kolla-ansible certificates -i multinode
 
 # run prechecks task
-kolla-ansible prechecks -i all-in-one
+kolla-ansible prechecks -i multinode
 
 # pull all images
-kolla-ansible pull -i all-in-one
+kolla-ansible pull -i multinode
 
 # deploy kolla ansible project
-kolla-ansible deploy -i all-in-one
+kolla-ansible deploy -i multinode
 
 # run all post deploy tasks
-kolla-ansible post-deploy -i all-in-one
+kolla-ansible post-deploy -i multinode
 ```
 
 #### install openstack client
