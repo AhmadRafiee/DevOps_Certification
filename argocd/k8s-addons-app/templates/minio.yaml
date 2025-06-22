@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minio
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.spec.minio.repoURL }}
+    targetRevision: {{ .Values.spec.minio.targetRevision }}
+    chart: {{ .Values.spec.minio.chart }}
+    helm:
+      releaseName: {{ .Values.spec.minio.releaseName }}
+      valueFiles:
+        - {{ .Values.spec.minio.valueFiles }}
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: {{ .Values.spec.minio.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

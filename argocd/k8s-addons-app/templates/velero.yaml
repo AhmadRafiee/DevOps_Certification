@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.spec.velero.repoURL }}
+    targetRevision: {{ .Values.spec.velero.targetRevision }}
+    chart: {{ .Values.spec.velero.chart }}
+    helm:
+      releaseName: {{ .Values.spec.velero.releaseName }}
+      valueFiles:
+        - {{ .Values.spec.velero.valueFiles }}
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: {{ .Values.spec.velero.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ingress-appset
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: sahand
+            server: "https://vip.sahand.mecan.ir:6443"
+          - name: dena
+            server: "https://vip.dena.mecan.ir:6443"
+  template:
+    metadata:
+      name: ingress-{{name}}
+    spec:
+      project: default
+      source:
+        repoURL: https://kubernetes.github.io/ingress-nginx
+        chart: ingress-nginx
+        targetRevision: "4.12.0"
+        helm:
+          valueFiles:
+            - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/ingress-nginx/helm.values.yaml
+      destination:
+        server: "{{server}}"
+        namespace: ingress
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

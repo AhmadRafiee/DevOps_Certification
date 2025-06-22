@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-rabbitmq-queue
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: create-queue
+        image: python:3.9
+        command:
+            - sh
+            - -c
+            - |
+              pip install pika && python - <<EOF
+              import pika
+
+              connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+              channel = connection.channel()
+              channel.queue_declare(queue='test-queue', durable=False)
+              print('✅ Queue created successfully.')
+
+              for i in range(250):
+                  body = f"Message {i}"
+                  channel.basic_publish(exchange='', routing_key='test-queue', body=body)
+                  print(f" [x] Sent '{body}'")
+
+              connection.close()
+              print('✅ Sent messages successfully.')
+              EOF

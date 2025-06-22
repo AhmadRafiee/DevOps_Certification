@@ -29,6 +29,11 @@ https://download.ceph.com/debian-{version}
 
 Add ceph repository on debian 12
 ```bash
+# add ceph repo [19.2.1]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-19.2.1 bookworm main
+ROS
+
 # add ceph repo [18.2.1]
 cat << ROS > /etc/apt/sources.list.d/ceph.list
 deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-18.2.1 bookworm main
@@ -44,6 +49,10 @@ cat << ROS > /etc/apt/sources.list.d/ceph.list
 deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://download.ceph.com/debian-17.2.1 bookworm main
 ROS
 
+# OR add MeCan repo [19.2.1]
+cat << ROS > /etc/apt/sources.list.d/ceph.list
+deb  [arch=amd64 signed-by=/usr/share/keyrings/ceph-archive-keyring.gpg] https://repo.mecan.ir/repository/debian-ceph-19.2.1 bookworm main
+ROS
 
 # OR add MeCan repo [18.2.1]
 cat << ROS > /etc/apt/sources.list.d/ceph.list
@@ -67,15 +76,18 @@ cat /etc/apt/sources.list.d/ceph.list
 Update repository and install requirement packages
 ```
 apt update
+apt-cache policy cephadm ceph-common ceph-base
 apt install -y cephadm ceph-common ceph-base
 
-# check cephadm version
+# check ceph version
 ceph --version
 ```
 
 #### Step4: Pull all docker image
 Pull from MeCan registry:
-```
+
+```bash
+# for ceph version 18
 docker pull registry.mecan.ir/cephadm/ceph:v18
 docker pull registry.mecan.ir/cephadm/ceph-grafana:9.4.7
 docker pull registry.mecan.ir/cephadm/prometheus:v2.43.0
@@ -117,13 +129,30 @@ ssh-keygen
 ls ~/.ssh/
 ```
 
-Create ssh config file:
+add ssh port 22 for cephadm
+
+```bash
+cat /etc/ssh/sshd_config | grep Port
+sudo sed -i '/^Port/ a Port 22' /etc/ssh/sshd_config
+cat /etc/ssh/sshd_config | grep Port
+
+# Test your changes: After modifying the SSH config file, remember to test the configuration with:
+sudo sshd -t
+
+# If there are no errors, you can restart the SSH service to apply the changes:
+sudo systemctl restart sshd
+sudo systemctl status sshd
+
 ```
+
+Create ssh config file:
+
+```bash
 cat << CTO > ~/.ssh/config
 StrictHostKeyChecking no
 Host ceph-aio
-  Hostname 192.168.100.171
-  Port 8090
+  Hostname 192.168.200.50
+  Port 22
   User root
 CTO
 ```
@@ -138,26 +167,19 @@ Check ssh to ceph-aio:
 ssh ceph-aio
 ```
 
-
 ![ceph network](../../../images/ceph-network.png)
 
 #### Step6: Bootstraping cluster with cephadm commands
 
-
 ```bash
-cephadm bootstrap --cluster-network 192.168.100.0/24 \
-                  --mon-ip 192.168.100.171 \
+cephadm bootstrap --cluster-network 192.168.200.0/24 \
+                  --mon-ip 192.168.200.50 \
                   --dashboard-password-noupdate \
                   --initial-dashboard-user admin \
                   --initial-dashboard-password sdwefeoiuijkmwqdcerwaeedwexqwxkqwjnwefe \
                   --allow-fqdn-hostname \
                   --single-host-defaults \
-                  --cleanup-on-failure \
-                  --skip-pull \
                   --skip-firewalld \
-                  --ssh-config /root/.ssh/config \
-                  --ssh-private-key ~/.ssh/id_rsa \
-                  --ssh-public-key ~/.ssh/id_rsa.pub \
                   --with-centralized-logging
 ```
 
@@ -214,6 +236,73 @@ ceph orch apply -i grafana.yml
 ceph orch redeploy grafana
 ```
 
+#### Step8: Config ceph service
+
+usage this command for config all ceph service
+
+```bash
+# To print ceph service
+ceph orch ls
+
+# To print a list of devices discovered by cephadm, run this command:
+ceph orch device ls --wide
+
+# check osd daemon
+ceph orch ps --daemon-type osd
+
+# add all devices on osd nodes
+ceph orch apply osd --all-available-devices
+
+# check ceph osd daemon
+ceph orch ps --daemon-type osd
+ceph osd tree
+
+# check ceph cluster state
+ceph -s
+
+# view the current placement of the mds daemon
+ceph orch ps --daemon-type mds
+
+# MDS service create
+ceph fs volume create MeCan_Volumes
+
+# get file system
+ceph fs ls
+
+# get file system status
+ceph fs status
+
+# view the current placement of the mds daemon
+ceph orch ps --daemon-type mds
+
+# get ceph cluster state
+ceph -s
+
+# Create a realm
+radosgw-admin realm create --rgw-realm=MeCan_realm --default
+
+# Create a zone group
+radosgw-admin zonegroup create --rgw-zonegroup=default  --master --default
+
+# Create a zone
+radosgw-admin zone create --rgw-zonegroup=default --rgw-zone=test_zone --master --default
+
+# Commit the changes
+radosgw-admin period update --rgw-realm=MeCan_realm --commit
+
+# Apply the changes by using the ceph orch apply command.
+ceph orch apply rgw MeCan --realm=MeCan_realm --zone=test_zone --zonegroup=default
+
+# get rgw daemon list
+ceph orch ps --daemon-type rgw
+
+# view the current placement of the all daemon
+ceph orch ps --daemon-type mgr
+ceph orch ps --daemon-type rgw
+ceph orch ps --daemon-type mds
+ceph orch ps --daemon-type mon
+ceph orch ps --daemon-type osd
+```
 
 #### Step8: ceph and grafana dashboard access
 

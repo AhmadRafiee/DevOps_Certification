@@ -1,0 +1,18 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-scaledobject
+spec:
+  scaleTargetRef:
+    name: worker
+  pollingInterval: 2            # Check every 2 seconds
+  cooldownPeriod: 5             # Wait 5s before scaling down
+  minReplicaCount: 0            # Min Replication
+  maxReplicaCount: 5            # Max Replication
+  triggers:
+    - type: redis
+      metadata:
+        address: redis:6379
+        listName: votes
+        listLength: "1"        # Scale up when there are at least 1 items in the list
+        

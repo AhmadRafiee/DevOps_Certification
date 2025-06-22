@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: k8s-addons-other
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - clusterName: sahand
+                  server: "https://vip.sahand.mecan.ir:6443"
+                - clusterName: dena
+                  server: "https://vip.dena.mecan.ir:6443"
+          - list:
+              elements:
+                - name: minio
+                  repoURL: https://charts.min.io/
+                  chart: minio
+                  version: "5.4.0"
+                  namespace: minio
+                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+                - name: velero
+                  repoURL: https://vmware-tanzu.github.io/helm-charts
+                  chart: velero
+                  version: "8.3.0"
+                  namespace: velero
+                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+
+  template:
+    metadata:
+      name: "{{clusterName}}-{{name}}"
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+    spec:
+      project: default
+      source:
+        repoURL: "{{repoURL}}"
+        chart: "{{chart}}"
+        targetRevision: "{{version}}"
+        helm:
+          valueFiles:
+            - "https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/multiple-apps/values/{{clusterName}}/{{chart}}-values.yaml"
+      destination:
+        server: "{{server}}"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

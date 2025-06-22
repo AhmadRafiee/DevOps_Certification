@@ -1,0 +1,141 @@
+nodes:
+  - address: "192.168.200.11"
+    port: 8090
+    role:
+      - "etcd"
+      - "controlplane"
+      - "worker"
+    user: root
+    hostname_override: "master1"
+    docker_socket: /var/run/docker.sock
+
+  - address: "192.168.200.12"
+    port: 8090
+    role:
+      - "etcd"
+      - "controlplane"
+      - "worker"
+    user: root
+    hostname_override: "master2"
+    docker_socket: /var/run/docker.sock
+
+  - address: "192.168.200.13"
+    port: 8090
+    role:
+      - "etcd"
+      - "controlplane"
+      - "worker"
+    user: root
+    hostname_override: "master3"
+    docker_socket: /var/run/docker.sock
+
+  - address: "192.168.200.14"
+    port: 8090
+    role:
+      - "worker"
+    user: root
+    hostname_override: "worker1"
+    docker_socket: /var/run/docker.sock
+
+  - address: "192.168.200.15"
+    port: 8090
+    role:
+      - "worker"
+    user: root
+    hostname_override: "worker2"
+    docker_socket: /var/run/docker.sock
+
+  - address: "192.168.200.16"
+    port: 8090
+    role:
+      - "worker"
+    user: root
+    hostname_override: "worker3"
+    docker_socket: /var/run/docker.sock
+
+# If set to true, RKE will not fail when unsupported Docker version
+ignore_docker_version: true
+
+# The Kubernetes version used. The default versions of Kubernetes are tied to specific versions of the system images.
+kubernetes_version: "v1.31.5-rancher1-1"
+
+# Set the name of the Kubernetes cluster
+cluster_name: "MeCan"
+
+# List of registry credentials
+private_registries:
+  - url: registry.mecan.ir
+    user: MeCan
+    password:
+    is_default: true
+
+services:
+  etcd:
+    snapshot: true
+    backup_config:
+      interval_hours: 4
+      retention: 10
+
+  kube-api:
+    audit_log:
+      enabled: true
+      configuration:
+        max_age: 6
+        max_backup: 6
+        max_size: 110
+        path: /var/log/kube-audit/audit-log.json
+        format: json
+        policy:
+          apiVersion: audit.k8s.io/v1 # This is required.
+          kind: Policy
+          omitStages:
+            - "RequestReceived"
+          rules:
+            - level: RequestResponse
+              resources:
+              - group: ""
+                resources: ["pods"]
+    service_cluster_ip_range: 10.43.0.0/16
+    service_node_port_range: 30000-32767
+    always_pull_images: true
+
+  kube-controller:
+    cluster_cidr: 10.42.0.0/16
+
+  kubelet:
+    cluster_domain: cluster.local
+    extra_args:
+      max-pods: 250
+      feature-gates: RotateKubeletServerCertificate=true
+
+network:
+  plugin: calico
+
+authentication:
+  strategy: x509
+  sans:
+    - "192.168.200.10"
+    - "192.168.200.11"
+    - "192.168.200.12"
+    - "192.168.200.13"
+    - "master.kube.mecan.ir"
+    - "vip.kube.mecan.ir"
+    - "master1.kube.mecan.ir"
+    - "master2.kube.mecan.ir"
+    - "master3.kube.mecan.ir"
+    - "master"
+    - "master1"
+    - "master2"
+    - "master3"
+
+authorization:
+  mode: rbac
+
+# Specify monitoring provider (metrics-server)
+monitoring:
+  provider: metrics-server
+  # Available as of v1.1.0
+  update_strategy:
+    strategy: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 8

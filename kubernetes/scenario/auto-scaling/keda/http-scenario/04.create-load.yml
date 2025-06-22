@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: load-generator
+spec:
+  containers:
+  - name: curl-loop
+    image: curlimages/curl:latest
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          curl -H "Host: my-app.local" http://keda.svc.keda-add-ons-http-interceptor-proxy:8080/
+          sleep 0.5
+        done
+  restartPolicy: Never

@@ -1,0 +1,53 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: voting-app-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    certmanager.k8s.io/acme-http01-edit-in-place: "false"
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    {{- range .Values.ingress.vote.hosts }}
+    - host: {{ .host }}
+      http:
+        paths:
+        {{- range .paths }}
+        - path: {{ .path }}
+          pathType: {{ .pathType }}
+          backend:
+            service:
+              name: voting-app-frontend
+              port:
+                number: 80
+        {{- end }}
+    {{- end }}
+    {{- range .Values.ingress.result.hosts }}
+    - host: {{ .host }}
+      http:
+        paths:
+        {{- range .paths }}
+        - path: {{ .path }}
+          pathType: {{ .pathType }}
+          backend:
+            service:
+              name: voting-app-result
+              port:
+                number: 80
+        {{- end }}
+    {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - secretName: {{ .secretName }}
+      hosts:
+        {{- range .hosts }}
+        - {{ . }}
+        {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}

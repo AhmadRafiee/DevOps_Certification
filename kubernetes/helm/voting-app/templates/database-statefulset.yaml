@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: voting-app-db
+  labels:
+    app: voting-app
+    component: database
+spec:
+  replicas: {{ .Values.database.replicas }}
+  selector:
+    matchLabels:
+      app: voting-app
+      component: database
+  serviceName: "voting-app-db"
+  template:
+    metadata:
+      labels:
+        app: voting-app
+        component: database
+    spec:
+      containers:
+      - name: postgres
+        image: {{ .Values.database.image }}
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-database
+        ports:
+        - containerPort: {{ .Values.database.service.port }}
+        volumeMounts:
+        - name: db-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: db-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.database.storageSize }}
+      storageClassName: {{ .Values.database.storageClass }}

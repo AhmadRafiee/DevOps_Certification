@@ -1,0 +1,70 @@
+frontend:
+  image: "registry.mecan.ir/devops_certification/kubernetes/voting-app/vote:v0.1.0"
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 80
+  imagePullSecrets:
+    - name: regcred
+worker:
+  image: "registry.mecan.ir/devops_certification/kubernetes/voting-app/worker:v0.1.0"
+  replicas: 1
+  imagePullSecrets:
+    - name: regcred
+result:
+  image: "registry.mecan.ir/devops_certification/kubernetes/voting-app/result:v0.1.0"
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 80
+  imagePullSecrets:
+    - name: regcred
+redis:
+  image: "redis:alpine"
+  replicas: 1
+  storageClass: "local-path"
+  storageSize: "3Gi"
+database:
+  enabled: true
+  image: "postgres:9.4"
+  replicas: 1
+  storageClass: "local-path"
+  storageSize: "5Gi"
+  service:
+    port: 5432
+  username: postgres
+  password: postgres
+  database: votes
+
+ingress:
+  enabled: true
+  tls:
+    - secretName: result-cert
+      hosts:
+        - "result.kube.mecan.ir"
+    - secretName: vote-cert
+      hosts:
+        - "vote.kube.mecan.ir"
+  vote:
+    hosts:
+      - host: "vote.kube.mecan.ir"
+        paths:
+          - path: "/"
+            pathType: ImplementationSpecific
+  result:
+    hosts:
+      - host: "result.kube.mecan.ir"
+        paths:
+          - path: "/"
+            pathType: ImplementationSpecific
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 85
+  targetMemoryUtilizationPercentage: 75
+
+imagePullSecrets:
+  username: "your-username-plaintext"
+  password: "your-password-plaintext"

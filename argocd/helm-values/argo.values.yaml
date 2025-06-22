@@ -1,0 +1,66 @@
+nameOverride: argocd
+namespaceOverride: "argocd"
+
+crds:
+  install: true
+  keep: true
+
+global:
+  domain: argocd.kube.mecan.ir
+  image:
+    repository: quay.io/argoproj/argocd
+    tag: ""
+    imagePullPolicy: IfNotPresent
+
+configs:
+  secret:
+    # -- Bcrypt hashed admin password
+    ## Argo expects the password in the secret to be bcrypt hashed. You can create this hash with
+    ## `htpasswd -nbBC 10 USERNAME PASSWORD`
+    ## htpasswd -nbBC 10 admin 1i1ziuyBNM5r4CjaVSHiSLaFPGsVcd81eMfSd8KR
+    argocdServerAdminPassword: "$2y$10$p.Khe721069ttqJCxpIN/.ovHgTbWxTAXIAInygCHjfQPE93uzxki"
+  params:
+    server.insecure: true
+
+controller:
+  name: application-controller
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1500m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  metrics:
+    enabled: true
+    service:
+      type: ClusterIP
+      servicePort: 8082
+      portName: http-metrics
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      namespace: monitoring
+
+server:
+  name: server
+  replicas: 1
+
+  ingress:
+    enabled: true
+    controller: generic
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      certmanager.k8s.io/acme-http01-edit-in-place: "false"
+      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    ingressClassName: "nginx"
+    hostname: "argocd.kube.mecan.ir"
+    path: /
+    pathType: Prefix
+    tls:
+      - secretName: argocd-general-tls
+        hosts:
+          - argocd.kube.mecan.ir
+

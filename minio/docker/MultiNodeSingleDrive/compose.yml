@@ -1,0 +1,88 @@
+name: minio
+
+volumes:
+  minio1_data:
+    name: minio1_data
+  minio2_data:
+    name: minio2_data
+  minio3_data:
+    name: minio3_data
+  minio4_data:
+    name: minio4_data
+
+networks:
+  app_net:
+    name: app_net
+    external: true
+
+services:
+  minio1:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio1
+    volumes:
+      - minio1_data:/data
+    environment:
+      MINIO_ROOT_USER: KWaMp7NwuTpWPWeJ
+      MINIO_ROOT_PASSWORD: GRTgwNiDi8HA1m5mz4sdewKWaMp7NwuTpWPWeJ
+    command: server http://minio{1...4}/data --console-address ":9001"
+    networks:
+      - app_net
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio2:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio2
+    volumes:
+      - minio2_data:/data
+    environment:
+      MINIO_ROOT_USER: KWaMp7NwuTpWPWeJ
+      MINIO_ROOT_PASSWORD: GRTgwNiDi8HA1m5mz4sdewKWaMp7NwuTpWPWeJ
+    command: server http://minio{1...4}/data --console-address ":9001"
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio3:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio3
+    volumes:
+      - minio3_data:/data
+    environment:
+      MINIO_ROOT_USER: KWaMp7NwuTpWPWeJ
+      MINIO_ROOT_PASSWORD: GRTgwNiDi8HA1m5mz4sdewKWaMp7NwuTpWPWeJ
+    command: server http://minio{1...4}/data --console-address ":9001"
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio4:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio4
+    volumes:
+      - minio4_data:/data
+    environment:
+      MINIO_ROOT_USER: KWaMp7NwuTpWPWeJ
+      MINIO_ROOT_PASSWORD: GRTgwNiDi8HA1m5mz4sdewKWaMp7NwuTpWPWeJ
+    command: server http://minio{1...4}/data --console-address ":9001"
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3

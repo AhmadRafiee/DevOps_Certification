@@ -1,0 +1,27 @@
+time="2025-03-02T00:11:14+03:30" level=info msg="Generating images list for version [v1.31.5-rancher1-1]:"
+rancher/mirrored-coreos-etcd:v3.5.15
+rancher/rke-tools:v0.1.109
+rancher/mirrored-k8s-dns-kube-dns:1.23.0
+rancher/mirrored-k8s-dns-dnsmasq-nanny:1.23.0
+rancher/mirrored-k8s-dns-sidecar:1.23.0
+rancher/mirrored-cluster-proportional-autoscaler:v1.8.9
+rancher/mirrored-coredns-coredns:1.11.3
+rancher/mirrored-k8s-dns-node-cache:1.23.0
+rancher/hyperkube:v1.31.5-rancher1
+rancher/mirrored-flannel-flannel:v0.25.1
+rancher/flannel-cni:v1.4.1-rancher1
+rancher/mirrored-calico-node:v3.29.0
+rancher/calico-cni:v3.29.0-rancher1
+rancher/mirrored-calico-kube-controllers:v3.29.0
+rancher/mirrored-calico-ctl:v3.29.0
+rancher/mirrored-calico-pod2daemon-flexvol:v3.29.0
+rancher/mirrored-pause:3.7
+rancher/nginx-ingress-controller:nginx-1.12.0-rancher1
+rancher/mirrored-nginx-ingress-controller-defaultbackend:1.5-rancher2
+rancher/mirrored-ingress-nginx-kube-webhook-certgen:v1.4.1
+rancher/mirrored-metrics-server:v0.7.1
+noiro/cnideploy:6.1.1.2.81c2369
+noiro/aci-containers-host:6.1.1.2.81c2369
+noiro/opflex:6.1.1.2.81c2369
+noiro/openvswitch:6.1.1.2.81c2369
+noiro/aci-containers-controller:6.1.1.2.81c2369

@@ -1,7 +1,0 @@
-# Create gitlab instance backup with bash script:
-1. install mc commands
-2. mc set aliase
-3. create gitlab backup
-4. create gitlab config backup
-5. move gitlab config backup to object storage
-6. send gitlab backup metrics to pushgw

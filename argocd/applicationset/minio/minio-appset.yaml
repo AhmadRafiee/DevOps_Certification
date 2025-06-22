@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: minio-appset
+  namespace: argocd
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded: "email"
+    notifications.argoproj.io/subscribe.on-sync-failed: "email"
+    notifications.argoproj.io/subscribe.on-health-degraded: "email"
+spec:
+  generators:
+    - list:
+        elements:
+          - name: sahand
+            server: "https://vip.sahand.mecan.ir:6443"
+          - name: dena
+            server: "https://vip.dena.mecan.ir:6443"
+  template:
+    metadata:
+      name: minio-{{name}}
+    spec:
+      project: default
+      source:
+        chart: minio
+        repoURL: https://charts.min.io/
+        targetRevision: "5.4.0"
+        helm:
+          valueFiles:
+            - https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/minio/helm.values.yaml
+      destination:
+        server: "{{server}}"
+        namespace: minio
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

@@ -1,0 +1,38 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: k8s-addons-raw
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  generators:
+    - list:
+        elements:
+          - clusterName: sahand
+            server: "https://vip.sahand.mecan.ir:6443"
+          - clusterName: dena
+            server: "https://vip.dena.mecan.ir:6443"
+  template:
+    metadata:
+      name: "{{clusterName}}-raw-manifest"
+      annotations:
+        argocd.argoproj.io/sync-wave: "3"
+    spec:
+      project: default
+
+      source:
+        repoURL: "https://github.com/AhmadRafiee/DevOps_Certification.git"
+        path: "argocd/applicationset/multiple-apps/manifests"
+        targetRevision: main
+
+      destination:
+        server: "{{server}}"
+
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

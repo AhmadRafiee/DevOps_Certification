@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.spec.loki.repoURL }}
+    targetRevision: {{ .Values.spec.loki.targetRevision }}
+    chart: {{ .Values.spec.loki.chart }}
+    helm:
+      releaseName: {{ .Values.spec.loki.releaseName }}
+      valueFiles:
+        - {{ .Values.spec.loki.valueFiles }}
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: {{ .Values.spec.loki.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

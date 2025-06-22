@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: voting-app-result
+  labels:
+    app: voting-app
+    component: result
+spec:
+  type: {{ .Values.result.service.type }}
+  ports:
+    - port: {{ .Values.result.service.port }}
+      targetPort: 80
+  selector:
+    app: voting-app
+    component: result

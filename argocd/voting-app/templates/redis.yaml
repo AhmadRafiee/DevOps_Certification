@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis
+  name: redis
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+  - name: "redis-service"
+    port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  labels:
+    app: redis
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.spec.redis.capacity }}
+  storageClassName: {{ .Values.spec.general.storageClassName }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis
+  name: redis
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  replicas: {{ .Values.spec.redis.replicas }}
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - image: {{ .Values.spec.redis.image }}
+        name: redis
+        ports:
+        - containerPort: 6379
+          name: redis
+        volumeMounts:
+        - mountPath: /data
+          name: redis-data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc

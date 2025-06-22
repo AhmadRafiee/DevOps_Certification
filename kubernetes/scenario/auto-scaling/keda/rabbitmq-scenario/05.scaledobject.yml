@@ -1,0 +1,18 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: rabbitmq-worker-scaler
+spec:
+  scaleTargetRef:
+    name: worker
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+    - type: rabbitmq
+      metadata:
+        queueName: test-queue
+        mode: QueueLength 
+        value: "5"
+        host: "amqp://guest:guest@rabbitmq:5672/"
+      authenticationRef:
+        name: rabbitmq-trigger-auth

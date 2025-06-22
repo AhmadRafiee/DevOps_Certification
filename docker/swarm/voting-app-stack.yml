@@ -1,0 +1,169 @@
+networks:
+  front_net:
+    name: front_net
+    external: true
+  back_net:
+    name: back_net
+    external: true
+
+volumes:
+  db_data:
+    name: db_data
+
+services:
+  vote:
+    image: registry.mecan.ir/devops_certification/kubernetes/voting-app/vote:v0.1.0
+    ports:
+      - "8080:80"
+    networks:
+      - back_net
+      - front_net
+    deploy:
+      mode: replicated
+      replicas: 3
+      placement:
+        constraints: [node.labels.disktype == ssd ]
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      rollback_config:
+        parallelism: 3
+        delay: 2s
+        order: start-first
+  result:
+    image: registry.mecan.ir/voting-app/result:v1.2.0
+    entrypoint: nodemon --inspect=0.0.0.0 server.js
+    ports:
+      - "8070:80"
+    networks:
+      - back_net
+      - front_net
+    deploy:
+      mode: replicated
+      replicas: 3
+      placement:
+        constraints: [node.labels.disktype == ssd ]
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      rollback_config:
+        parallelism: 3
+        delay: 2s
+        order: start-first
+  worker:
+    image: registry.mecan.ir/voting-app/worker:v1.2.0
+    networks:
+      - front_net
+    deploy:
+      mode: replicated
+      replicas: 5
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      rollback_config:
+        parallelism: 3
+        delay: 2s
+        order: start-first
+  redis:
+    image: redis:alpine
+    networks:
+      - front_net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.labels.disktype == ssd ]
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      rollback_config:
+        parallelism: 3
+        delay: 2s
+        order: start-first
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - "db_data:/var/lib/postgresql/data"
+    networks:
+      - front_net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.labels.disktype == ssd ]
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      rollback_config:
+        parallelism: 3
+        delay: 2s
+        order: start-first
+

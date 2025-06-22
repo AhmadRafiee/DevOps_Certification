@@ -1,0 +1,39 @@
+replicaCount: 2
+
+image:
+  repository: quay.io/flexcaas/ks-guestbook-demo
+  tag: 0.1
+  pullPolicy: IfNotPresent
+
+containerPort: 80
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  path: /
+  hosts:
+    - test.kube.mecan.ir
+  tls:
+    - secretName: chart-example-tls
+      hosts:
+        - test.kube.mecan.ir
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

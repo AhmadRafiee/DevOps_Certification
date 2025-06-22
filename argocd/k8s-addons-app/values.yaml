@@ -1,0 +1,31 @@
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  minio:
+    repoURL: https://charts.min.io/
+    targetRevision: "5.4.0"
+    chart: minio
+    releaseName: minio
+    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/minio/helm.values.yaml
+    namespace: minio
+  velero:
+    repoURL: https://vmware-tanzu.github.io/helm-charts/
+    targetRevision: "8.3.0"
+    chart: velero
+    releaseName: velero
+    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/velero/helm.values.yaml
+    namespace: velero
+  loki:
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: "2.10.2"
+    chart: loki-stack
+    releaseName: loki
+    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/loki-stack/helm.values.yaml
+    namespace: loki-stack
+  prometheus:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "69.3.1"
+    chart: kube-prometheus-stack
+    releaseName: prometheus-stack
+    valueFiles: https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/kubernetes/add-ons/kube-prometheus-stack/helm.values.yaml
+    namespace: monitoring

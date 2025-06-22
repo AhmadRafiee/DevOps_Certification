@@ -1,0 +1,20 @@
+name: etcdlabs
+
+networks:
+  web_net:
+    name: web_net
+    external: true
+
+services:
+  etcdlabs:
+    image: registry.mecan.ir/devops_certification/kubernetes/etcdlabs:latest
+    container_name: etcdlabs
+    hostname: etcdlabs
+    restart: always
+    command: >
+      /bin/sh -c "pushd /gopath/src/github.com/coreos/etcdlabs
+      && ./scripts/run/etcdlabs.sh"
+    ports:
+      - "4200:4200"
+    networks:
+      - web_net

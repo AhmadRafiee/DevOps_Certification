@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: k8s-addons-main
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - clusterName: sahand
+                  server: "https://vip.sahand.mecan.ir:6443"
+                - clusterName: dena
+                  server: "https://vip.dena.mecan.ir:6443"
+          - list:
+              elements:
+                - name: ingress-nginx
+                  repoURL: https://kubernetes.github.io/ingress-nginx
+                  chart: ingress-nginx
+                  version: "4.12.0"
+                  namespace: ingress-nginx
+                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+                - name: cert-manager
+                  repoURL: https://charts.jetstack.io
+                  chart: cert-manager
+                  version: "v1.17.1"
+                  namespace: cert-manager
+                  valuesRepo: https://github.com/AhmadRafiee/DevOps_Certification.git
+
+  template:
+    metadata:
+      name: "{{clusterName}}-{{name}}"
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: default
+      source:
+        repoURL: "{{repoURL}}"
+        chart: "{{chart}}"
+        targetRevision: "{{version}}"
+        helm:
+          valueFiles:
+            - "https://raw.githubusercontent.com/AhmadRafiee/DevOps_Certification/refs/heads/main/argocd/applicationset/multiple-apps/values/{{clusterName}}/{{chart}}-values.yaml"
+      destination:
+        server: "{{server}}"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true

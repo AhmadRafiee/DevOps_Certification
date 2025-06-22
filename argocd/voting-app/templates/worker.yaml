@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: worker
+  name: worker
+  namespace: {{ .Values.spec.destination.namespace }}
+spec:
+  replicas: {{ .Values.spec.worker.replicas }}
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      imagePullSecrets:
+      - name: registry-login
+      containers:
+      - image: {{ .Values.spec.worker.image }}
+        name: worker
