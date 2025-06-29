@@ -1,0 +1,31 @@
+global:
+  resolve_timeout: 1m
+  smtp_smarthost: '<YOUR SMTP SERVER ADDRESS>'
+  smtp_from: '<YOUR MAILBOX ADDRESS>'
+  smtp_auth_username: '<YOUR MAILBOX ADDRESS>'
+  smtp_auth_password: '<YOUR MAILBOX PASSWORD>'
+  smtp_auth_identity: '<YOUR MAILBOX ADDRESS>'
+
+route:
+  receiver: 'Production_Environment'
+  group_wait: 30s
+  group_interval: 30s
+  repeat_interval: 30s
+  group_by: ['instance', 'severity']
+
+receivers:
+- name: 'Production_Environment'
+  telegram_configs:
+  - bot_token: '<YOUR TELEGRAM BOT TOKEN>
+    api_url: "https://api.telegram.org"
+    chat_id: <YOUR TELEGRAM CHAT ID>
+    parse_mode: ""
+    send_resolved: true
+    disable_notifications: false
+    http_config:
+      proxy_url: '<YOUR HTTP PROXY FOR SENT TELEGRAM MESSAGE>'
+      follow_redirects: true
+      enable_http2: true
+  email_configs:
+    - send_resolved: true
+      to: '<YOUR RECIVER MAINBOX>'

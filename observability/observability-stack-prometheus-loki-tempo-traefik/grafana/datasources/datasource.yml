@@ -1,0 +1,47 @@
+apiVersion: 1
+
+datasources:
+- name: Prometheus
+  type: prometheus
+  uid: prometheus
+  access: proxy
+  orgId: 1
+  url: http://prometheus:9090
+  basicAuth: false
+  isDefault: true
+  version: 1
+  editable: true
+  jsonData:
+    httpMethod: GET
+
+- name: Loki
+  type: loki
+  access: proxy
+  url: http://loki:3100
+  orgId: 2
+  editable: true
+  isDefault: false
+  jsonData:
+    timeInterval: 15s
+    httpHeaderName1: Connection
+    httpHeaderName2: Upgrade
+  secureJsonData:
+    httpHeaderValue1: Upgrade
+    httpHeaderValue2: websocket
+
+- name: Tempo
+  type: tempo
+  access: proxy
+  orgId: 3
+  url: http://tempo:3200
+  basicAuth: false
+  isDefault: false
+  version: 1
+  editable: true
+  uid: tempo
+  jsonData:
+    httpMethod: GET
+    serviceMap:
+      datasourceUid: Prometheus
+    streamingEnabled:
+      search: true

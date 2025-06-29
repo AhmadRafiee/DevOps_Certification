@@ -1,0 +1,152 @@
+# -----------------------------------------------------------------------------
+# Loki Monolithic Configuration - ALL LOCAL FILESYSTEM, NO S3, NO MEMBERLIST
+# Suitable for very small-scale local development and testing.
+# NOT FOR PRODUCTION USE.
+# -----------------------------------------------------------------------------
+
+auth_enabled: false # Set to true for multi-tenancy, but typically false for single-user local setups
+
+# -----------------------------------------------------------------------------
+# Server Configuration
+# Defines how Loki listens for HTTP and GRPC requests.
+# -----------------------------------------------------------------------------
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+  http_server_read_timeout: 30s
+  http_server_write_timeout: 30s
+  grpc_server_max_recv_msg_size: 67108864 # 64MB - Max gRPC message size
+  grpc_server_max_send_msg_size: 67108864 # 64MB
+
+# -----------------------------------------------------------------------------
+# Common Configuration
+# Global settings for Loki.
+# -----------------------------------------------------------------------------
+common:
+  path_prefix: /loki/data # Base path for ALL Loki data (index, chunks, WAL, rules, etc.)
+  replication_factor: 1   # Always 1 for a single, monolithic, local-storage instance.
+  ring:
+    instance_addr: 127.0.0.1 # The IP address Loki will bind to.
+    kvstore:
+      store: inmemory        # Use in-memory KV store for a truly single instance.
+    # instance_lifecycle fields are direct children of 'ringin_ready_duration: 0s
+    heartbeat_period: 5s
+
+# -----------------------------------------------------------------------------
+# Storage Configuration - ALL LOCAL FILESYSTEM
+# No S3, GCS, Azure, or tsdb_shipper configured.
+# -----------------------------------------------------------------------------
+storage_config:
+  filesystem:
+    directory: /loki/data # This is the single directory for all data.
+
+# -----------------------------------------------------------------------------
+# Schema Configuration
+# Defines how Loki stores data over time.
+# -----------------------------------------------------------------------------
+schema_config:
+  configs:
+    - from: 2020-01-01 # Date from which this schema becomes active.
+      store: tsdb    # Use TSDB as the index store.
+      object_store: filesystem # HERE: Chunks are stored on the local filesystem.
+      schema: v13    # Latest recommended schema version for TSDB.
+      index:
+        prefix: index_ # Prefix for index files within the filesystem directory
+        period: 24h    # How often new index files are created (e.g., daily)
+
+# -----------------------------------------------------------------------------
+# Chunk Store Configuration
+# No explicit settings are typically needed here for local filesystem.
+# -----------------------------------------------------------------------------
+chunk_store_config:
+  # No direct fields typically needed here for common filesystem setups.
+
+# -----------------------------------------------------------------------------
+# Limits Configuration
+# Global limits for Loki operations (ingestion, queries, retention, etc.).
+# All relevant fields are directly under this block.
+# -----------------------------------------------------------------------------
+limits_config:
+  # Ingestion Limits
+  ingestion_rate_mb: 20
+  ingestion_burst_size_mb: 30
+  max_streams_per_user: 0
+  max_line_size: 262144
+  max_label_names_per_series: 15
+  max_label_value_length: 2048
+
+  # Query Limits
+  max_query_series: 10000
+  max_entries_limit_per_query: 10000
+  split_queries_by_interval: 15m
+  query_timeout: 2m
+  max_query_length: 720h
+  max_query_lookback: 720h
+
+  # Retention Limits (CRITICAL for local storage to prevent disk filling)
+  retention_period: 720h      # Keep logs for 30 days. ADJUST THIS VALUE!
+
+  # Rate Limiting
+  cardinality_limit: 100000
+  
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h # 7 days: Reject logs older than this timestamp at ingestion.
+
+# -----------------------------------------------------------------------------
+# Ingester Configuration
+# -----------------------------------------------------------------------------
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+  chunk_idle_period: 5m
+  chunk_block_size: 262144
+  chunk_retain_period: 1m
+  wal:
+    dir: /loki/data/wal # WAL directory is under the main data path for simplicity.
+
+# -----------------------------------------------------------------------------
+# Querier Configuration
+# -----------------------------------------------------------------------------
+querier:
+  # No specific querier settings explicitly needed in simple monolithic setup.
+
+# -----------------------------------------------------------------------------
+# Ruler Configuration (for alerting and recording rules)
+# -----------------------------------------------------------------------------
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/data/rules # Rules stored under the main data path.
+  rule_path: /loki/data/rules-temp
+  ring:
+    kvstore:
+      store: inmemory
+  # alertmanager_url: http://localhost:9093/api/v1/alerts
+
+# -----------------------------------------------------------------------------
+# Compactor Configuration
+# Uses the global filesystem storage defined under storage_config.
+# -----------------------------------------------------------------------------
+compactor:
+  working_directory: /loki/data/compactor # Local directory for compactor operations
+  compaction_interval: 5m
+
+# -----------------------------------------------------------------------------
+# Analytics/Telemetry
+# -----------------------------------------------------------------------------
+analytics:
+  reporting_enabled: false
+
+# -----------------------------------------------------------------------------
+# Tracing
+# -----------------------------------------------------------------------------
+# tracing:
+#   jaeger:
+#     agent_host: localhost:6831
+
+# -----------------------------------------------------------------------------
+# Memberlist (Completely removed as per request - not used for single instance)
+# -----------------------------------------------------------------------------
