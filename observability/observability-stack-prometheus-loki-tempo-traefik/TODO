@@ -1,4 +1,4 @@
-  - [ ] write readme 
+  - [x] write readme 
   - [ ] create minio cluster
   - [ ] create mimir cluster
   - [ ] connect prometheus to mimir
