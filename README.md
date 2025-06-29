@@ -64,6 +64,7 @@ Implement effective monitoring, logging, and tracing solutions for better system
   - **Mimir Stack:** Set up Mimir, a scalable and efficient long-term storage solution for Prometheus metrics. You'll learn how to configure Mimir to store large volumes of metrics data for extended periods, ensuring you can maintain historical data without compromising performance.
   - **Tempo Stack:** Dive into Tempo, a distributed tracing backend that integrates seamlessly with Prometheus, Loki, and Grafana. This section will help you implement tracing across microservices, enabling you to track and visualize the full lifecycle of requests through your applications for faster root cause analysis.
   - **Jaeger:** Implement distributed tracing to analyze microservice performance.
+  - **Observability full stack** This Docker project sets up a powerful observability stack using industry-standard tools for **monitoring, logging, and tracing**. It leverages Docker Compose profiles for flexible deployment, allowing you to bring up only the components you need.
 
 ### [8. GitLab (CI/CD Pipelines)](gitlab)
 Build robust continuous integration and delivery pipelines using GitLab CI:
