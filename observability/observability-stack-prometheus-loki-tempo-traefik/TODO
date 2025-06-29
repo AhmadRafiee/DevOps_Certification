@@ -1,8 +1,0 @@
-  - [x] write readme 
-  - [ ] create minio cluster
-  - [ ] create mimir cluster
-  - [ ] connect prometheus to mimir
-  - [ ] connect grafana to mimir
-  - [ ] create LB for mimir and minio
-  - [ ] create client monlog
-  - [ ] 
