@@ -25,7 +25,7 @@ volumes:
 services:
   traefik:
     image: traefik:${TRAEFIK_TAG}
-    restart: always
+    restart: ${RESTART_POLICY}
     container_name: traefik
     command:
       - "--log.level=ERROR"
@@ -110,7 +110,7 @@ services:
       - traefik.http.services.prometheus.loadbalancer.server.port=9090
 
   grafana:
-    image: grafana/grafana:${GRFANA_TAG}
+    image: grafana/grafana:${GRAFANA_TAG}
     restart: ${RESTART_POLICY}
     container_name: grafana
     volumes:
