@@ -28,7 +28,7 @@ This Docker Compose project sets up a robust, single-node observability stack us
 
 ## Design
 
-<img alt="VictoriaMetrics single-server deployment" width="500" src="../../images/vm-single.png">
+<img alt="VictoriaMetrics single-server deployment" width="500" src="../../images/vm-cluster.png">
 
 
 ## Overview
@@ -45,20 +45,15 @@ This project provides a complete monitoring solution based on the VictoriaMetric
 
 ## Key Components
 
-* **Traefik**: Acts as the edge router, providing HTTP/HTTPS ingress, load balancing, and automated SSL certificate management for all web UIs.
-* **VictoriaMetrics Cluster Components**:
-    * **`vmstorage` (2 instances: `vmstorage-1`, `vmstorage-2`)**: Stores all the raw time-series data. Data is sharded and replicated across these nodes for scalability and durability.
-    * **`vminsert` (2 instances: `vminsert-1`, `vminsert-2`)**: Receives incoming metrics (writes) and distributes them to the `vmstorage` nodes. It handles load balancing and replication for writes.
-    * **`vmselect` (2 instances: `vmselect-1`, `vmselect-2`)**: Processes read queries. It fetches and merges data from all `vmstorage` nodes, providing a unified view for Grafana and other query clients.
-* **`vmauth`**: An authentication and authorization proxy for the VictoriaMetrics cluster. It sits in front of `vminsert` and `vmselect` nodes, authenticates requests (e.g., using basic auth), and load balances them across the appropriate cluster components.
-* **`vmagent`**: A lightweight, Prometheus-compatible scraping agent. It scrapes metrics from various exporters and efficiently remote-writes them to the `vminsert` nodes (via `vmauth`).
-* **`vmalert`**: An alerting solution for VictoriaMetrics. It continuously evaluates alerting and recording rules against `vmselect` (via `vmauth`) and sends alerts to Alertmanager.
-* **`alertmanager`**: Handles alerts received from `vmalert`. It deduplicates, groups, and routes them to configured notification receivers (e.g., email, Slack, PagerDuty).
-* **`grafana`**: The open-source platform for data visualization, monitoring, and analysis. It connects to `vmauth` (which queries `vmselect`) to display interactive dashboards.
-* **Exporters**:
-    * **`node-exporter`**: Collects system metrics (CPU, RAM, disk I/O, network) from the host machine.
-    * **`cadvisor`**: Provides container-level resource usage and performance metrics for Docker containers.
-    * **`blackbox-exporter`**: Allows for external endpoint probing (HTTP, TCP, ICMP) to monitor availability and latency.
+* **Traefik**: A modern Edge Router (reverse proxy and load balancer) that automatically discovers services and handles HTTPS (via Let's Encrypt) and request routing.
+* **VictoriaMetrics (VM)**: The core, fast, cost-effective, and scalable open-source time-series database. It's a drop-in replacement for Prometheus.
+* **VMAgent**: A lightweight agent that scrapes metrics from targets (compatible with Prometheus's scraping configuration) and efficiently remote-writes them to VictoriaMetrics.
+* **VMAlert**: An alerting solution for VictoriaMetrics. It evaluates alerting rules and sends alerts to Alertmanager.
+* **Grafana**: An open-source platform for data visualization, monitoring, and analysis. It integrates with VictoriaMetrics to display dashboards.
+* **Alertmanager**: Handles alerts sent by VMAlert, deduplicating, grouping, and routing them to the correct receiver integrations.
+* **Node Exporter**: Exporter for hardware and OS metrics exposed by Unix kernels (CPU, memory, disk I/O, network stats, etc.).
+* **cAdvisor**: Container Advisor that provides container users with an understanding of the resource usage and performance characteristics of their running containers.
+* **Blackbox Exporter**: Allows for probing of endpoints over various protocols (HTTP, HTTPS, DNS, TCP, ICMP) and exports metrics about their availability and response time. Useful for uptime checks.
 
 ## Prerequisites
 
@@ -84,7 +79,7 @@ RESTART_POLICY=on-failure
 # Domain address
 DOMAIN_ADDRESS=monlog.mecan.ir
 TRAEFIK_SUB=web
-VM_SUB=vm
+VMAUTH_SUB=vm
 GRAFANA_SUB=grafana
 ALERTMANAGER_SUB=alerts
 VMAGENT_SUB=agent
@@ -93,18 +88,25 @@ VMALERTS_SUB=vmalerts
 # image tags
 TRAEFIK_TAG=v3.4.1
 VMAGENT_TAG=v1.120.0
-VM_TAG=v1.120.0
 GRAFANA_TAG=12.0.2
 VMALERT_TAG=v1.120.0
 ALERTMANAGER_TAG=v0.28.0
 CADVISOR_TAG=latest
 NODE_EXPORTER_TAG=v1.9.1
 BLACKBOX_TAG=v0.26.0
+VMSTORAGE_TAG=v1.120.0-cluster
+VMINSERT_TAG=v1.120.0-cluster
+VMSELECT_TAG=v1.120.0-cluster
+VMAUTH_TAG=v1.120.0
 
 # Grafana Auth
 GRAFANA_USERNAME=MeCan
 GRAFANA_PASSWORD=hNA6iQxwNcgZse2vZm4iLHhothC77Jsdfwe
 GRAFANA_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
+
+# vmauth authentication
+VMAUTH_USERNAME=MeCan
+VMAUTH_PASSWORD=hNA6iQxwNcgZse2vZ
 
 # ACME variables
 ACME_EMAIL=cert@mecan.ir
@@ -240,9 +242,12 @@ datasources:
 - name: Prometheus
   type: prometheus
   access: proxy
-  url: http://victoriametrics:8428
+  url: http://vmauth:8427/select/0/prometheus
   orgId: 1
-  basicAuth: false
+  basicAuth: true
+  basicAuthUser: "${VMAUTH_USERNAME}"
+  secureJsonData:
+    basicAuthPassword: "${VMAUTH_PASSWORD}"
   isDefault: true
   editable: true
   jsonData:
@@ -259,6 +264,28 @@ vmalert
 ├── alerts-vmagent.yml
 ├── alerts-vmalert.yml
 └── alerts.yml
+```
+
+`vmauth/auth.yml`
+This is the critical authentication and routing configuration for vmauth. It uses the env_var function to read credentials from environment variables.
+```YAML
+# balance load among vmselects
+# see https://docs.victoriametrics.com/victoriametrics/vmauth/#load-balancing
+users:
+  - username: "MeCan"
+    password: "hNA6iQxwNcgZse2vZ"
+    url_map:
+    - src_paths:
+      - "/select/.*"
+      - "/admin/.*"
+      url_prefix:
+      - http://vmselect-1:8481
+      - http://vmselect-2:8481
+    - src_paths:
+      - "/insert/.*"
+      url_prefix:
+      - http://vminsert-1:8480
+      - http://vminsert-2:8480
 ```
 
 `alertmanager/alertmanager.yml`
@@ -341,7 +368,6 @@ docker compose down
 Once all services are running and your DNS records are correctly configured, you can access the various UIs via Traefik. Replace <YOUR_DOMAIN_ADDRESS> with the value from your `.env` file.
 
 * **Traefik Dashboard:** http://web.<YOUR_DOMAIN_ADDRESS> (protected by WEB_AUTH_USER/WEB_AUTH_PASS)
-* **VictoriaMetrics UI (VMUI):** http://vm.<YOUR_DOMAIN_ADDRESS>/vmui
 * **VMAgent UI:** http://agent.<YOUR_DOMAIN_ADDRESS>:8429/metrics (or http://agent.<YOUR_DOMAIN_ADDRESS>) - Provides VMAgent's own metrics.
 * **Grafana:** http://vfana.<YOUR_DOMAIN_ADDRESS>
 * **Default Credentials:** admin / admin-password (from your .env file)
@@ -350,11 +376,16 @@ Once all services are running and your DNS records are correctly configured, you
 
 
 ## Information
+VictoriaMetrics cluster environment consists of vminsert, vmstorage and vmselect components. vminsert exposes port :8480 for ingestion. Access to vmselect for reads goes through vmauth on port :8427, and the rest of components are available only inside the environment.
+
 The communication scheme between components is the following:
-* [vmagent](#vmagent) sends scraped metrics to `VictoriaMetrics single-node`;
-* [grafana](#grafana) is configured with datasource pointing to `VictoriaMetrics single-node`;
-* [vmalert](#vmalert) is configured to query `VictoriaMetrics single-node`, and send alerts state
-  and recording rules results back to `vmagent`;
+* [vmagent](#vmagent) sends scraped metrics to `vminsert`;
+* `vminsert` shards and forwards data to `vmstorage`;
+* `vmselect`s are connected to `vmstorage` for querying data;
+* [vmauth](#vmauth) balances incoming read requests among `vmselect`s;
+* [grafana](#grafana) is configured with datasource pointing to `vmauth`;
+* [vmalert](#vmalert) is configured to query `vmselect`s via `vmauth` and send alerts state
+  and recording rules to `vmagent`;
 * [alertmanager](#alertmanager) is configured to receive notifications from `vmalert`.
 
 

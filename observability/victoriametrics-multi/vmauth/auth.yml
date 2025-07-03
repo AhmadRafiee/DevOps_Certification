@@ -1,0 +1,17 @@
+# balance load among vmselects
+# see https://docs.victoriametrics.com/victoriametrics/vmauth/#load-balancing
+users:
+  - username: "MeCan"
+    password: "hNA6iQxwNcgZse2vZ"
+    url_map:
+    - src_paths:
+      - "/select/.*"
+      - "/admin/.*"
+      url_prefix:
+      - http://vmselect-1:8481
+      - http://vmselect-2:8481
+    - src_paths:
+      - "/insert/.*"
+      url_prefix:
+      - http://vminsert-1:8480
+      - http://vminsert-2:8480

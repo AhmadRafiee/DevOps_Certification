@@ -56,6 +56,8 @@ Kubernetes is a powerful tool for managing and orchestrating containerized appli
 #### [7. Observability](observability)
 Implement effective monitoring, logging, and tracing solutions for better system observability:
 
+  - **Observability full stack** This Docker project sets up a powerful observability stack using industry-standard tools for **monitoring, logging, and tracing**. It leverages Docker Compose profiles for flexible deployment, allowing you to bring up only the components you need.
+  - **VictoriaMetrics Single Node:** Single-Node VictoriaMetrics Observability Stack
   - **ELK Stack (Single Node):** Get started with a single-node setup of the ELK Stack (Elasticsearch, Logstash, Kibana). This configuration is ideal for smaller environments or development purposes. You'll learn how to centralize logs from multiple sources, process them with Logstash, and visualize them using Kibana.
   - **ELK Stack (Multi-Node):** For production-level setups, you'll learn how to deploy an ELK multi-node cluster, ensuring high availability and scalability. This section will cover cluster architecture, index management, and performance tuning for handling large volumes of logs.
   - **Prometheus Stack:** Set up the Prometheus stack for metrics collection and alerting. You'll learn to monitor system and application performance, configure Alertmanager for notifications, and visualize metrics using Grafana. This stack is essential for real-time observability and proactive issue resolution.
@@ -64,7 +66,6 @@ Implement effective monitoring, logging, and tracing solutions for better system
   - **Mimir Stack:** Set up Mimir, a scalable and efficient long-term storage solution for Prometheus metrics. You'll learn how to configure Mimir to store large volumes of metrics data for extended periods, ensuring you can maintain historical data without compromising performance.
   - **Tempo Stack:** Dive into Tempo, a distributed tracing backend that integrates seamlessly with Prometheus, Loki, and Grafana. This section will help you implement tracing across microservices, enabling you to track and visualize the full lifecycle of requests through your applications for faster root cause analysis.
   - **Jaeger:** Implement distributed tracing to analyze microservice performance.
-  - **Observability full stack** This Docker project sets up a powerful observability stack using industry-standard tools for **monitoring, logging, and tracing**. It leverages Docker Compose profiles for flexible deployment, allowing you to bring up only the components you need.
 
 ### [8. GitLab (CI/CD Pipelines)](gitlab)
 Build robust continuous integration and delivery pipelines using GitLab CI:

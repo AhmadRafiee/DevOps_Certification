@@ -1,0 +1,18 @@
+apiVersion: 1
+
+datasources:
+- name: Prometheus
+  type: prometheus
+  access: proxy
+  url: http://vmauth:8427/select/0/prometheus
+  orgId: 1
+  basicAuth: true
+  basicAuthUser: "${VMAUTH_USERNAME}"
+  secureJsonData:
+    basicAuthPassword: "${VMAUTH_PASSWORD}"
+  isDefault: true
+  editable: true
+  jsonData:
+    prometheusType: Prometheus
+    prometheusVersion: 2.24.0
+    httpMethod: GET

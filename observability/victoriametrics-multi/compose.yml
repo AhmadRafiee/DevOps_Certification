@@ -1,0 +1,371 @@
+name: victoriametrics-single
+
+networks:
+  web_net:
+    external: true
+  app_net:
+    external: true
+
+volumes:
+  traefik_data:
+    name: traefik_data
+  vmagent_data:
+    name: vmagent_data
+  vmstg_data_1:
+    name: vmstg_data_1
+  vmstg_data_2:
+    name: vmstg_data_2
+  grafana_data:
+    name: grafana_data
+  alertmanager_data:
+    name: alertmanager_data
+
+services:
+  traefik:
+    image: traefik:${TRAEFIK_TAG}
+    restart: ${RESTART_POLICY}
+    container_name: traefik
+    command:
+      - "--log.level=ERROR"
+      - "--log.filepath=/log-file.log"
+      - "--log.format=json"
+      - "--api=true"
+      - "--ping=true"
+      - "--accesslog=true"
+      - "--accesslog.fields.names.StartUTC=drop"
+      - "--accesslog.bufferingsize=250"
+      - "--api.insecure=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=web_net"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--metrics.prometheus=true"
+      - "--entryPoints.metrics.address=:8082"
+      - "--metrics.prometheus.entryPoint=metrics"
+      - "--certificatesresolvers.mycert.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.mycert.acme.storage=/acme/acme.json"
+      - "--certificatesresolvers.mycert.acme.tlschallenge=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_data:/acme
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.traefik.entrypoints=http
+      - traefik.http.routers.traefik.rule=Host(`${TRAEFIK_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.middlewares.web-auth.basicauth.users=${WEB_AUTH_USER}:${WEB_AUTH_PASS}
+      - traefik.http.routers.traefik.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.traefik-secure.entrypoints=https
+      - traefik.http.routers.traefik-secure.rule=Host(`${TRAEFIK_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.traefik-secure.tls=true
+      - traefik.http.routers.traefik-secure.tls.options=default
+      - traefik.http.routers.traefik-secure.middlewares=web-auth
+      - traefik.http.routers.traefik-secure.tls.certresolver=mycert
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+    networks:
+      - web_net
+
+  vmagent:
+    image: victoriametrics/vmagent:${VMAGENT_TAG}
+    container_name: vmagent
+    hostname: vmagent
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmauth"
+    volumes:
+      - vmagent_data:/vmagentdata
+      - ./vmagent:/etc/prometheus
+    command:
+      - "--promscrape.config=/etc/prometheus/prometheus.yml"
+      - "--remoteWrite.url=http://vmauth:8427/insert/0/prometheus/api/v1/write"
+      - "--remoteWrite.basicAuth.username=${VMAUTH_USERNAME}"
+      - "--remoteWrite.basicAuth.password=${VMAUTH_PASSWORD}"
+    networks:
+      - app_net
+      - web_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.vmagent.entrypoints=http
+      - traefik.http.routers.vmagent.rule=Host(`${VMAGENT_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vmagent.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.vmagent-secure.entrypoints=https
+      - traefik.http.routers.vmagent-secure.rule=Host(`${VMAGENT_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vmagent-secure.tls=true
+      - traefik.http.routers.vmagent-secure.tls.options=default
+      - traefik.http.routers.vmagent-secure.middlewares=web-auth
+      - traefik.http.routers.vmagent-secure.tls.certresolver=mycert
+      - traefik.http.services.vmagent.loadbalancer.server.port=8429
+
+  vmstorage-1:
+    image: victoriametrics/vmstorage:${VMSTORAGE_TAG}
+    container_name: vmstorage-1
+    hostname: vmstorage-1
+    restart: ${RESTART_POLICY}
+    volumes:
+      - vmstg_data_1:/storage
+    command:
+      - "--storageDataPath=/storage"
+    networks:
+      - app_net
+
+  vmstorage-2:
+    image: victoriametrics/vmstorage:${VMSTORAGE_TAG}
+    container_name: vmstorage-2
+    hostname: vmstorage-2
+    restart: ${RESTART_POLICY}
+    volumes:
+      - vmstg_data_2:/storage
+    command:
+      - "--storageDataPath=/storage"
+    networks:
+      - app_net
+
+  vminsert-1:
+    image: victoriametrics/vminsert:${VMINSERT_TAG}
+    container_name: vminsert-1
+    hostname: vminsert-1
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmstorage-1"
+      - "vmstorage-2"
+    command:
+      - "--storageNode=vmstorage-1:8400"
+      - "--storageNode=vmstorage-2:8400"
+    networks:
+      - app_net
+
+  vminsert-2:
+    image: victoriametrics/vminsert:${VMINSERT_TAG}
+    container_name: vminsert-2
+    hostname: vminsert-2
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmstorage-1"
+      - "vmstorage-2"
+    command:
+      - "--storageNode=vmstorage-1:8400"
+      - "--storageNode=vmstorage-2:8400"
+    networks:
+      - app_net
+
+  # vmselect is a query fronted. It serves read queries in MetricsQL or PromQL.
+  # vmselect collects results from configured `--storageNode` shards.
+  vmselect-1:
+    image: victoriametrics/vmselect:${VMSELECT_TAG}
+    container_name: vmselect-1
+    hostname: vmselect-1
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmstorage-1"
+      - "vmstorage-2"
+    command:
+      - "--storageNode=vmstorage-1:8401"
+      - "--storageNode=vmstorage-2:8401"
+      - "--vmalert.proxyURL=http://vmalert:8880"
+    networks:
+      - app_net
+
+  vmselect-2:
+    image: victoriametrics/vmselect:${VMSELECT_TAG}
+    container_name: vmselect-2
+    hostname: vmselect-2
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmstorage-1"
+      - "vmstorage-2"
+    command:
+      - "--storageNode=vmstorage-1:8401"
+      - "--storageNode=vmstorage-2:8401"
+      - "--vmalert.proxyURL=http://vmalert:8880"
+    networks:
+      - app_net
+
+  # vmauth is a router and balancer for HTTP requests.
+  # It is configured via --auth.config and balances
+  # read requests from Grafana, vmui, vmalert among vmselects.
+  # It can be used as an authentication proxy.
+  vmauth:
+    image: victoriametrics/vmauth:${VMAUTH_TAG}
+    container_name: vmauth
+    hostname: vmauth
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmselect-1"
+      - "vmselect-2"
+    volumes:
+      - ./vmauth:/etc/vmauth/
+    environment:
+      - VMAUTH_USERNAME=${VMAUTH_USERNAME}
+      - VMAUTH_PASSWORD=${VMAUTH_PASSWORD}
+    command:
+      - "--auth.config=/etc/vmauth/auth.yml"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.vmauth.entrypoints=http
+      - traefik.http.routers.vmauth.rule=Host(`${VMAUTH_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vmauth.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.vmauth-secure.entrypoints=https
+      - traefik.http.routers.vmauth-secure.rule=Host(`${VMAUTH_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vmauth-secure.tls=true
+      - traefik.http.routers.vmauth-secure.tls.options=default
+      - traefik.http.routers.vmauth-secure.tls.certresolver=mycert
+      - traefik.http.services.vmauth.loadbalancer.server.port=8427
+    networks:
+      - web_net
+      - app_net
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_TAG}
+    container_name: grafana
+    hostname: grafana
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmauth"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      #- GF_INSTALL_PLUGINS=${GRAFANA_INSTALL_PLUGINS}
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_USERS_DEFAULT_THEME=light
+      - GF_LOG_MODE=console
+      - GF_LOG_LEVEL=critical
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+      - VMAUTH_USERNAME=${VMAUTH_USERNAME}
+      - VMAUTH_PASSWORD=${VMAUTH_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/:/etc/grafana/provisioning/
+    networks:
+      - web_net
+      - app_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.vm-grafana.entrypoints=http
+      - traefik.http.routers.vm-grafana.rule=Host(`${GRAFANA_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vm-grafana.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.vm-grafana-secure.entrypoints=https
+      - traefik.http.routers.vm-grafana-secure.rule=Host(`${GRAFANA_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vm-grafana-secure.tls=true
+      - traefik.http.routers.vm-grafana-secure.tls.options=default
+      - traefik.http.routers.vm-grafana-secure.tls.certresolver=mycert
+      - traefik.http.services.vm-grafana.loadbalancer.server.port=3000
+
+  vmalert:
+    image: victoriametrics/vmalert:${VMALERT_TAG}
+    container_name: vmalert
+    hostname: vmalert
+    restart: ${RESTART_POLICY}
+    depends_on:
+      - "vmauth"
+      - "alertmanager"
+    volumes:
+      - ./vmalert:/etc/alerts/
+    command:
+      - "--datasource.url=http://victoriametrics:8428/"
+      - "--remoteRead.url=http://victoriametrics:8428/"
+      - "--remoteWrite.url=http://vmagent:8429/"
+      - "--notifier.url=http://alertmanager:9093/"
+      - "--rule=/etc/alerts/*.yml"
+      - "--external.url=http://grafana:3000"
+      - '--external.alert.source=explore?orgId=1&left={"datasource":"VictoriaMetrics","queries":[{"expr":{{.Expr|jsonEscape|queryEscape}},"refId":"A"}],"range":{"from":"{{ .ActiveAt.UnixMilli }}","to":"now"}}'
+    networks:
+      - app_net
+      - web_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.vm-alerts.entrypoints=http
+      - traefik.http.routers.vm-alerts.rule=Host(`${VMALERTS_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vm-alerts.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.vm-alerts-secure.entrypoints=https
+      - traefik.http.routers.vm-alerts-secure.rule=Host(`${VMALERTS_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vm-alerts-secure.tls=true
+      - traefik.http.routers.vm-alerts-secure.tls.options=default
+      - traefik.http.routers.vm-alerts-secure.middlewares=web-auth
+      - traefik.http.routers.vm-alerts-secure.tls.certresolver=mycert
+      - traefik.http.services.vm-alerts.loadbalancer.server.port=8880
+
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_TAG}
+    container_name: vm-alertmanager
+    hostname: vm-alertmanager
+    restart: ${RESTART_POLICY}
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./alertmanager:/etc/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    networks:
+      - web_net
+      - app_net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.vm-alertmanager.entrypoints=http
+      - traefik.http.routers.vm-alertmanager.rule=Host(`${ALERTMANAGER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vm-alertmanager.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.vm-alertmanager-secure.entrypoints=https
+      - traefik.http.routers.vm-alertmanager-secure.rule=Host(`${ALERTMANAGER_SUB}.${DOMAIN_ADDRESS}`)
+      - traefik.http.routers.vm-alertmanager-secure.tls=true
+      - traefik.http.routers.vm-alertmanager-secure.tls.options=default
+      - traefik.http.routers.vm-alertmanager-secure.middlewares=web-auth
+      - traefik.http.routers.vm-alertmanager-secure.tls.certresolver=mycert
+      - traefik.http.services.vm-alertmanager.loadbalancer.server.port=9093
+
+  cadvisor:
+    image: docker.io/ahmadrafiee/cadvisor:${CADVISOR_TAG}
+    command: --disable_metrics=disk,udp,percpu
+    restart: ${RESTART_POLICY}
+    hostname: '${HOSTNAME}'
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - app_net
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:${BLACKBOX_TAG}
+    restart: ${RESTART_POLICY}
+    hostname: '${HOSTNAME}'
+    container_name: blackbox-exporter
+    command:
+      - '--config.file=/etc/blackboxexporter/blackbox-exporter.yml'
+    volumes:
+      - ./blackbox:/etc/blackboxexporter
+    networks:
+      - app_net
+
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_TAG}
+    restart: ${RESTART_POLICY}
+    hostname: '${HOSTNAME}'
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    networks:
+      - app_net
