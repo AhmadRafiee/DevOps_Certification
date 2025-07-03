@@ -58,6 +58,7 @@ Implement effective monitoring, logging, and tracing solutions for better system
 
   - **Observability full stack** This Docker project sets up a powerful observability stack using industry-standard tools for **monitoring, logging, and tracing**. It leverages Docker Compose profiles for flexible deployment, allowing you to bring up only the components you need.
   - **VictoriaMetrics Single Node:** Single-Node VictoriaMetrics Observability Stack
+  - **VictoriaMetrics Multi Node:** Multi-Node VictoriaMetrics Observability Stack
   - **ELK Stack (Single Node):** Get started with a single-node setup of the ELK Stack (Elasticsearch, Logstash, Kibana). This configuration is ideal for smaller environments or development purposes. You'll learn how to centralize logs from multiple sources, process them with Logstash, and visualize them using Kibana.
   - **ELK Stack (Multi-Node):** For production-level setups, you'll learn how to deploy an ELK multi-node cluster, ensuring high availability and scalability. This section will cover cluster architecture, index management, and performance tuning for handling large volumes of logs.
   - **Prometheus Stack:** Set up the Prometheus stack for metrics collection and alerting. You'll learn to monitor system and application performance, configure Alertmanager for notifications, and visualize metrics using Grafana. This stack is essential for real-time observability and proactive issue resolution.
