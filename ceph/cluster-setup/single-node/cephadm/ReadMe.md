@@ -2,11 +2,27 @@
 
 ![ceph orchestration](../../../images/ceph-orchestrators.png)
 
-#### Step1: preparing and hardening OS with ansible
+- [Create a Ceph cluster on a single node with `cephadm`](#create-a-ceph-cluster-on-a-single-node-with-cephadm)
+  - [Step1: preparing and hardening OS with ansible](#step1-preparing-and-hardening-os-with-ansible)
+  - [Step2: Install and config docker service with ansible](#step2-install-and-config-docker-service-with-ansible)
+  - [Step3: Add ceph repository and install requirement tools](#step3-add-ceph-repository-and-install-requirement-tools)
+  - [Step4: Pull all docker image](#step4-pull-all-docker-image)
+  - [Step5: Create ssh-key and create ssh config](#step5-create-ssh-key-and-create-ssh-config)
+  - [Step6: Bootstraping cluster with cephadm commands](#step6-bootstraping-cluster-with-cephadm-commands)
+  - [Step7: Configuration grafana and set admin password](#step7-configuration-grafana-and-set-admin-password)
+  - [Step8: Config ceph service](#step8-config-ceph-service)
+  - [Step8: ceph and grafana dashboard access](#step8-ceph-and-grafana-dashboard-access)
+  - [Step9: Test the cluster](#step9-test-the-cluster)
+  - [Useful commands:](#useful-commands)
+  - [Good link:](#good-link)
+  - [🔗 Stay connected with DockerMe! 🚀](#-stay-connected-with-dockerme-)
 
-#### Step2: Install and config docker service with ansible
 
-#### Step3: Add ceph repository and install requirement tools
+## Step1: preparing and hardening OS with ansible
+
+## Step2: Install and config docker service with ansible
+
+## Step3: Add ceph repository and install requirement tools
 
 To install the release.asc key, execute the following:
 ```bash
@@ -83,43 +99,20 @@ apt install -y cephadm ceph-common ceph-base
 ceph --version
 ```
 
-#### Step4: Pull all docker image
+## Step4: Pull all docker image
 Pull from MeCan registry:
-
 ```bash
-# for ceph version 18
-docker pull registry.mecan.ir/cephadm/ceph:v18
-docker pull registry.mecan.ir/cephadm/ceph-grafana:9.4.7
-docker pull registry.mecan.ir/cephadm/prometheus:v2.43.0
-docker pull registry.mecan.ir/cephadm/alertmanager:v0.25.0
-docker pull registry.mecan.ir/cephadm/node-exporter:v1.5.0
-docker pull registry.mecan.ir/cephadm/loki:2.4.0
-docker pull registry.mecan.ir/cephadm/promtail:2.4.0
-```
-
-Tag all image to orginal image tag
-```
-docker tag registry.mecan.ir/cephadm/ceph:v18  quay.io/ceph/ceph:v18
-docker tag registry.mecan.ir/cephadm/ceph-grafana:9.4.7  quay.io/ceph/ceph-grafana:9.4.7
-docker tag registry.mecan.ir/cephadm/prometheus:v2.43.0  quay.io/prometheus/prometheus:v2.43.0
-docker tag registry.mecan.ir/cephadm/alertmanager:v0.25.0  quay.io/prometheus/alertmanager:v0.25.0
-docker tag registry.mecan.ir/cephadm/node-exporter:v1.5.0  quay.io/prometheus/node-exporter:v1.5.0
-docker tag registry.mecan.ir/cephadm/loki:2.4.0  grafana/loki:2.4.0
-docker tag registry.mecan.ir/cephadm/promtail:2.4.0  grafana/promtail:2.4.0
+docker pull quay.mecan.ir/ceph/ceph:v18
+docker pull quay.mecan.ir/ceph/ceph:v19
 ```
 
 Pull from public registry
-```
+```bash
 docker pull quay.io/ceph/ceph:v18
-docker pull quay.io/ceph/ceph-grafana:9.4.7
-docker pull quay.io/prometheus/prometheus:v2.43.0
-docker pull quay.io/prometheus/alertmanager:v0.25.0
-docker pull quay.io/prometheus/node-exporter:v1.5.0
-docker pull grafana/loki:2.4.0
-docker pull grafana/promtail:2.4.0
+docker pull quay.io/ceph/ceph:v19
 ```
 
-#### Step5: Create ssh-key and create ssh config
+## Step5: Create ssh-key and create ssh config
 
 Create ssh-key with this commands:
 ```
@@ -169,7 +162,7 @@ ssh ceph-aio
 
 ![ceph network](../../../images/ceph-network.png)
 
-#### Step6: Bootstraping cluster with cephadm commands
+## Step6: Bootstraping cluster with cephadm commands
 
 ```bash
 cephadm bootstrap --cluster-network 192.168.200.0/24 \
@@ -213,7 +206,17 @@ For more information see:
 Bootstrap complete.
 ```
 
-#### Step7: Configuration grafana and set admin password
+get docker image with ceph command
+```bash
+ceph config get mgr mgr/cephadm/container_image_promtail
+ceph config get mgr mgr/cephadm/container_image_prometheus
+ceph config get mgr mgr/cephadm/container_image_grafana
+ceph config get mgr mgr/cephadm/container_image_alertmanager
+ceph config get mgr mgr/cephadm/container_image_loki
+ceph config get mgr mgr/cephadm/container_image_node_exporter
+```
+
+## Step7: Configuration grafana and set admin password
 
 grafana config file path on your host:
 
@@ -236,7 +239,7 @@ ceph orch apply -i grafana.yml
 ceph orch redeploy grafana
 ```
 
-#### Step8: Config ceph service
+## Step8: Config ceph service
 
 usage this command for config all ceph service
 
@@ -304,7 +307,7 @@ ceph orch ps --daemon-type mon
 ceph orch ps --daemon-type osd
 ```
 
-#### Step8: ceph and grafana dashboard access
+## Step8: ceph and grafana dashboard access
 
 To access the Ceph dashboard, you can configure iptables rules to allow access to ports 8443 and 3000. Alternatively, you can set up a reverse proxy using a tool like Nginx to provide access to the dashboards using custom names or URLs.
 
@@ -521,7 +524,7 @@ systemctl restart nginx
 systemctl enable nginx
 ```
 
-#### Step9: Test the cluster
+## Step9: Test the cluster
 The block storage provided by Ceph is named RBD, which stands for RADOS block device.
 
 To create disks, you need a pool enabled to work with RBD. The commands below create a pool called rbd and then activate this pool for RBD:
@@ -544,8 +547,7 @@ The output will be:
     mongodb
     mysql
 
-#
-Useful commands:
+## Useful commands:
 
     ceph osd ls
     ceph osd tree
@@ -588,7 +590,13 @@ The container for a daemon can be stopped, recreated, and restarted with the red
     ceph orch daemon redeploy <name> [--image <image>]
 
 
-Good link:
+## Good link:
   - https://www.redhat.com/sysadmin/ceph-cluster-single-machine
   - https://docs.ceph.com/en/latest/cephadm/services/monitoring/
   - https://www.ibm.com/docs/en/storage-ceph/5?topic=access-setting-admin-user-password-grafana
+
+## 🔗 Stay connected with DockerMe! 🚀
+
+**Subscribe to our channels, leave a comment, and drop a like to support our content. Your engagement helps us create more valuable DevOps and cloud content!** 🙌
+
+[![Site](https://img.shields.io/badge/Dockerme.ir-0A66C2?style=for-the-badge&logo=docker&logoColor=white)](https://dockerme.ir/) [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmad-rafiee/) [![Telegram](https://img.shields.io/badge/telegram-0A66C2?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/dockerme) [![YouTube](https://img.shields.io/badge/youtube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@dockerme) [![Instagram](https://img.shields.io/badge/instagram-FF0000?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/dockerme)

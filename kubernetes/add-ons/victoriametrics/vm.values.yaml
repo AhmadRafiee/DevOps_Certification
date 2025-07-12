@@ -1,0 +1,14 @@
+vmselect:
+  podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8481"
+
+vminsert:
+  podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8480"
+
+vmstorage:
+  podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8482"

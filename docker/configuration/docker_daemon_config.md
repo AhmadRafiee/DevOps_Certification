@@ -66,7 +66,6 @@ ExecStart=/usr/bin/dockerd \
     --log-opt max-size=100m --log-opt max-file=5
 ```
 
-
 ## Change daemon configuration
 
 **Create daemon config file**
@@ -83,6 +82,25 @@ Either pass the --registry-mirror option when starting dockerd manually, or edit
   "registry-mirrors": ["https://docker.DockerMe.ir/"]
 }
 ````
+
+The best configuration
+```bash
+{
+  "proxies": {
+    "http-proxy": "http://USER:PASS@PROXY_ADDRESS:PORT",
+    "https-proxy": "http://USER:PASS@PROXY_ADDRESS:PORT",
+    "no-proxy": "localhost,127.0.0.1,.mecan.ir,hub.hamdocker.ir,docker.arvancloud.ir"
+    },
+ "log-opts": {
+    "max-file": "5",
+    "max-size": "100m"
+  },
+ "experimental": true,
+ "live-restore": true,
+ "registry-mirrors": ["https://hub.hamdocker.ir","https://hub.mecan.ir","https://docker.arvancloud.ir"]
+}
+```
+
 
 **apply this change and check it**
 
