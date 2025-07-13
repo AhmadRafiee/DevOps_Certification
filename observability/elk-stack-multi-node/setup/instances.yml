@@ -1,0 +1,55 @@
+instances:
+  - name: elasticsearch
+    dns:
+      - elasticsearch-node-1
+      - elasticsearch-node-2
+      - elasticsearch-node-3
+      - es.monlog.mecan.ir
+      - es1.monlog.mecan.ir
+      - es2.monlog.mecan.ir
+      - es3.monlog.mecan.ir
+      - localhost
+    ip:
+      - 127.0.0.1
+
+  - name: kibana
+    dns:
+      - kibana-node-1
+      - kibana-node-2
+      - kibana-node-3
+      - localhost
+      - kibana.monlog.mecan.ir
+      - kibana1.monlog.mecan.ir
+      - kibana2.monlog.mecan.ir
+      - kibana3.monlog.mecan.ir
+    ip:
+      - 127.0.0.1
+
+  - name: logstash
+    dns:
+      - logstash-node-1
+      - logstash-node-2
+      - logstash-node-3
+      - localhost
+    ip:
+      - 127.0.0.1
+
+  - name: apm-server
+    dns:
+      - apm-server
+      - localhost
+    ip:
+      - 127.0.0.1
+
+  - name: fleet
+    dns:
+      - fleet-node-1
+      - fleet-node-2
+      - fleet-node-3
+      - localhost
+      - fleet.monlog.mecan.ir
+      - fleet1.monlog.mecan.ir
+      - fleet2.monlog.mecan.ir
+      - fleet3.monlog.mecan.ir
+    ip:
+      - 127.0.0.1

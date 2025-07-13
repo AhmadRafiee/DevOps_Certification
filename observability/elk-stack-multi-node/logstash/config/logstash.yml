@@ -1,0 +1,9 @@
+---
+http.host: "0.0.0.0"
+
+## X-Pack security credentials
+xpack.monitoring.elasticsearch.hosts: ["https://elasticsearch-node-1:9200","https://elasticsearch-node-2:9200","https://elasticsearch-node-3:9200"]
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch.username: ${ELASTIC_USERNAME}
+xpack.monitoring.elasticsearch.password: ${ELASTIC_PASSWORD}
+xpack.monitoring.elasticsearch.ssl.certificate_authority: /certs/ca.crt

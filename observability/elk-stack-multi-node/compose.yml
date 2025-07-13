@@ -1,275 +1,544 @@
-version: '3.8'
-
-volumes:
-  elasticsearch_node1_data:
-    name: elasticsearch_node1_data
-  elasticsearch_node2_data:
-    name: elasticsearch_node2_data
-  elasticsearch_node3_data:
-    name: elasticsearch_node3_data
-  filebeat_logstash_data:
-    name: filebeat_logstash_data
-  filebeat_elasticsearch_data:
-    name: filebeat_elasticsearch_data
-  auditbeat_data:
-    name: auditbeat_data
-  metricbeat_data:
-    name: metricbeat_data
-  packetbeat_data:
-    name: packetbeat_data
+name: elk-stack-cluster
 
 networks:
   web_net:
-    external: true
     name: web_net
-  elk_net:
     external: true
-    name: elk_net
+  app_net:
+    name: app_net
+    external: true
+
+volumes:
+  es1_data:
+    name: es1_data
+    external: false
+  es2_data:
+    name: es2_data
+    external: false
+  es3_data:
+    name: es3_data
+    external: false
+
+secrets:
+  elasticsearch.keystore:
+    file: ./secrets/keystore/elasticsearch.keystore
+  elasticsearch.service_tokens:
+    file: ./secrets/service_tokens
+  elastic.ca:
+    file: ./secrets/certs/ca/ca.crt
+  elasticsearch.certificate:
+    file: ./secrets/certs/elasticsearch/elasticsearch.crt
+  elasticsearch.key:
+    file: ./secrets/certs/elasticsearch/elasticsearch.key
+  kibana.certificate:
+    file: ./secrets/certs/kibana/kibana.crt
+  kibana.key:
+    file: ./secrets/certs/kibana/kibana.key
+  fleet.certificate:
+    file: ./secrets/certs/fleet/fleet.crt
+  fleet.key:
+    file: ./secrets/certs/fleet/fleet.key
+  apm-server.certificate:
+    file: ./secrets/certs/apm-server/apm-server.crt
+  apm-server.key:
+    file: ./secrets/certs/apm-server/apm-server.key
+
+configs:
+  elasticsearch:
+    file: ./elasticsearch/elasticsearch.yml
+  logstash:
+    file: ./logstash/config/logstash.yml
+  kibana:
+    file: ./kibana/kibana.yml
+  log4j2:
+    file: ./elasticsearch/log4j2.properties
+  pipelines:
+    file: ./logstash/config/pipelines.yml
 
 services:
-  elasticsearch-node1:
+  elasticsearch-node-1:
     image: elasticsearch:${ELK_VERSION}
-    container_name: elasticsearch-node1
-    hostname: elasticsearch-node1
+    container_name: elasticsearch-node-1
     restart: ${RESTART_POLICY}
     environment:
-      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
-      ELASTIC_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      node.name: elasticsearch-node1
-      network.host: 0.0.0.0
-      http.port: 9200
-      cluster.name: docker-cluster-multi-node
-      discovery.seed_hosts: ${ELASTICSEARCH_SEED_HOSTS}
-      cluster.initial_master_nodes: ${ELASTICSEARCH_INITIAL_MASTER_NODES}
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTIC_CLUSTER_NAME: ${ELASTIC_CLUSTER_NAME}
+      ELASTIC_NODE_NAME: ${ELASTIC_NODE_NAME_1}
+      ELASTIC_INIT_MASTER_NODE: ${ELASTIC_INIT_MASTER_NODE}
+      ELASTIC_DISCOVERY_SEEDS: ${ELASTIC_DISCOVERY_SEEDS}
+      ES_JAVA_OPTS: "-Xmx${ELASTICSEARCH_HEAP} -Xms${ELASTICSEARCH_HEAP} -Des.enforce.bootstrap.checks=true -Dlog4j2.formatMsgNoLookups=true"
       bootstrap.memory_lock: "true"
-      http.cors.enabled: "true"
-      xpack.security.authc.api_key.enabled: "true"
-      xpack.license.self_generated.type: basic
-      xpack.security.enabled: "true"
-      xpack.monitoring.collection.enabled: "true"
     volumes:
-      - elasticsearch_node1_data:/usr/share/elasticsearch/data
-      - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
+      - es1_data:/usr/share/elasticsearch/data
+    configs:
+      - source: log4j2
+        target: /usr/share/elasticsearch/config/log4j2.properties
+      - source: elasticsearch
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+    secrets:
+      - source: elasticsearch.keystore
+        target: /usr/share/elasticsearch/config/elasticsearch.keystore
+      - source: elasticsearch.service_tokens
+        target: /usr/share/elasticsearch/config/service_tokens
+      - source: elastic.ca
+        target: /usr/share/elasticsearch/config/certs/ca.crt
+      - source: elasticsearch.certificate
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.crt
+      - source: elasticsearch.key
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.key
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    networks:
-      - web_net
-      - elk_net
+      nofile:
+        soft: 200000
+        hard: 200000
     healthcheck:
-      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      test: ["CMD", "sh", "-c", "curl -sf --insecure https://$ELASTIC_USERNAME:$ELASTIC_PASSWORD@localhost:9200/_cat/health | grep -ioE 'green|yellow' || echo 'not green/yellow cluster status'"]
       interval: 30s
       timeout: 3s
+    networks:
+      - web_net
+      - app_net
     labels:
       - traefik.enable=true
       - traefik.docker.network=web_net
-      - traefik.http.routers.elasticsearch_node1.entrypoints=http
-      - traefik.http.routers.elasticsearch_node1.rule=Host(`${ELASTICSEARCH_NODE1_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.elasticsearch_node1.middlewares=https-redirect
+      - traefik.http.routers.es1.entrypoints=http
+      - traefik.http.routers.es1.rule=Host(`${ES1_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.es1.middlewares=https-redirect
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.elasticsearch_node1-secure.entrypoints=https
-      - traefik.http.routers.elasticsearch_node1-secure.rule=Host(`${ELASTICSEARCH_NODE1_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.elasticsearch_node1-secure.tls=true
-      - traefik.http.routers.elasticsearch_node1-secure.tls.options=default
-      - traefik.http.routers.elasticsearch_node1-secure.tls.certresolver=mycert
-      - traefik.http.services.elasticsearch_node1.loadbalancer.server.port=9200
+      - traefik.http.routers.es1-secure.entrypoints=https
+      - traefik.http.routers.es1-secure.rule=Host(`${ES1_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.es1-secure.tls=true
+      - traefik.http.routers.es1-secure.tls.options=default
+      - traefik.http.routers.es1-secure.tls.certresolver=mycert
+      - traefik.http.services.es1.loadbalancer.server.scheme=https
+      - traefik.http.services.es1.loadbalancer.server.port=9200
 
-  elasticsearch-node2:
+  elasticsearch-node-2:
     image: elasticsearch:${ELK_VERSION}
-    container_name: elasticsearch-node2
-    hostname: elasticsearch-node2
+    container_name: elasticsearch-node-2
     restart: ${RESTART_POLICY}
     environment:
-      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
-      ELASTIC_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      node.name: elasticsearch-node2
-      network.host: 0.0.0.0
-      http.port: 9200
-      cluster.name: docker-cluster-multi-node
-      discovery.seed_hosts: ${ELASTICSEARCH_SEED_HOSTS}
-      cluster.initial_master_nodes: ${ELASTICSEARCH_INITIAL_MASTER_NODES}
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTIC_CLUSTER_NAME: ${ELASTIC_CLUSTER_NAME}
+      ELASTIC_NODE_NAME: ${ELASTIC_NODE_NAME_2}
+      ELASTIC_INIT_MASTER_NODE: ${ELASTIC_INIT_MASTER_NODE}
+      ELASTIC_DISCOVERY_SEEDS: ${ELASTIC_DISCOVERY_SEEDS}
+      ES_JAVA_OPTS: -Xmx${ELASTICSEARCH_HEAP} -Xms${ELASTICSEARCH_HEAP} -Des.enforce.bootstrap.checks=true
       bootstrap.memory_lock: "true"
-      http.cors.enabled: "true"
-      xpack.security.authc.api_key.enabled: "true"
-      xpack.license.self_generated.type: basic
-      xpack.security.enabled: "true"
-      xpack.monitoring.collection.enabled: "true"
     volumes:
-      - elasticsearch_node2_data:/usr/share/elasticsearch/data
-      - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
+      - es2_data:/usr/share/elasticsearch/data
+    configs:
+      - source: log4j2
+        target: /usr/share/elasticsearch/config/log4j2.properties
+      - source: elasticsearch
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+    secrets:
+      - source: elasticsearch.keystore
+        target: /usr/share/elasticsearch/config/elasticsearch.keystore
+      - source: elasticsearch.service_tokens
+        target: /usr/share/elasticsearch/config/service_tokens
+      - source: elastic.ca
+        target: /usr/share/elasticsearch/config/certs/ca.crt
+      - source: elasticsearch.certificate
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.crt
+      - source: elasticsearch.key
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.key
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    networks:
-      - web_net
-      - elk_net
+      nofile:
+        soft: 200000
+        hard: 200000
     healthcheck:
-      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      test: ["CMD", "sh", "-c", "curl -sf --insecure https://$ELASTIC_USERNAME:$ELASTIC_PASSWORD@localhost:9200/_cat/health | grep -ioE 'green|yellow' || echo 'not green/yellow cluster status'"]
       interval: 30s
       timeout: 3s
+    networks:
+      - web_net
+      - app_net
     labels:
       - traefik.enable=true
       - traefik.docker.network=web_net
-      - traefik.http.routers.elasticsearch_node2.entrypoints=http
-      - traefik.http.routers.elasticsearch_node2.rule=Host(`${ELASTICSEARCH_NODE2_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.elasticsearch_node2.middlewares=https-redirect
+      - traefik.http.routers.es2.entrypoints=http
+      - traefik.http.routers.es2.rule=Host(`${ES2_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.es2.middlewares=https-redirect
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.elasticsearch_node2-secure.entrypoints=https
-      - traefik.http.routers.elasticsearch_node2-secure.rule=Host(`${ELASTICSEARCH_NODE2_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.elasticsearch_node2-secure.tls=true
-      - traefik.http.routers.elasticsearch_node2-secure.tls.options=default
-      - traefik.http.routers.elasticsearch_node2-secure.tls.certresolver=mycert
-      - traefik.http.services.elasticsearch_node2.loadbalancer.server.port=9200
+      - traefik.http.routers.es2-secure.entrypoints=https
+      - traefik.http.routers.es2-secure.rule=Host(`${ES2_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.es2-secure.tls=true
+      - traefik.http.routers.es2-secure.tls.options=default
+      - traefik.http.routers.es2-secure.tls.certresolver=mycert
+      - traefik.http.services.es2.loadbalancer.server.scheme=https
+      - traefik.http.services.es2.loadbalancer.server.port=9200
 
-  elasticsearch-node3:
+  elasticsearch-node-3:
     image: elasticsearch:${ELK_VERSION}
-    container_name: elasticsearch-node3
-    hostname: elasticsearch-node3
+    container_name: elasticsearch-node-3
     restart: ${RESTART_POLICY}
     environment:
-      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
-      ELASTIC_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTIC_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      node.name: elasticsearch-node3
-      network.host: 0.0.0.0
-      http.port: 9200
-      cluster.name: docker-cluster-multi-node
-      discovery.seed_hosts: ${ELASTICSEARCH_SEED_HOSTS}
-      cluster.initial_master_nodes: ${ELASTICSEARCH_INITIAL_MASTER_NODES}
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTIC_CLUSTER_NAME: ${ELASTIC_CLUSTER_NAME}
+      ELASTIC_NODE_NAME: ${ELASTIC_NODE_NAME_3}
+      ELASTIC_INIT_MASTER_NODE: ${ELASTIC_INIT_MASTER_NODE}
+      ELASTIC_DISCOVERY_SEEDS: ${ELASTIC_DISCOVERY_SEEDS}
+      ES_JAVA_OPTS: -Xmx${ELASTICSEARCH_HEAP} -Xms${ELASTICSEARCH_HEAP} -Des.enforce.bootstrap.checks=true
       bootstrap.memory_lock: "true"
-      http.cors.enabled: "true"
-      xpack.security.authc.api_key.enabled: "true"
-      xpack.license.self_generated.type: basic
-      xpack.security.enabled: "true"
-      xpack.monitoring.collection.enabled: "true"
     volumes:
-      - elasticsearch_node3_data:/usr/share/elasticsearch/data
-      - ./elasticsearch/health-check.sh:/usr/share/elasticsearch/health-check.sh
+      - es3_data:/usr/share/elasticsearch/data
+    configs:
+      - source: log4j2
+        target: /usr/share/elasticsearch/config/log4j2.properties
+      - source: elasticsearch
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        mode: 0644
+    secrets:
+      - source: elasticsearch.keystore
+        target: /usr/share/elasticsearch/config/elasticsearch.keystore
+      - source: elasticsearch.service_tokens
+        target: /usr/share/elasticsearch/config/service_tokens
+      - source: elastic.ca
+        target: /usr/share/elasticsearch/config/certs/ca.crt
+      - source: elasticsearch.certificate
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.crt
+      - source: elasticsearch.key
+        target: /usr/share/elasticsearch/config/certs/elasticsearch.key
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    networks:
-      - web_net
-      - elk_net
+      nofile:
+        soft: 200000
+        hard: 200000
     healthcheck:
-      test: [ "CMD", "sh",  "/usr/share/elasticsearch/health-check.sh" ]
+      test: ["CMD", "sh", "-c", "curl -sf --insecure https://$ELASTIC_USERNAME:$ELASTIC_PASSWORD@localhost:9200/_cat/health | grep -ioE 'green|yellow' || echo 'not green/yellow cluster status'"]
       interval: 30s
       timeout: 3s
+    networks:
+      - web_net
+      - app_net
     labels:
       - traefik.enable=true
       - traefik.docker.network=web_net
-      - traefik.http.routers.elasticsearch_node3.entrypoints=http
-      - traefik.http.routers.elasticsearch_node3.rule=Host(`${ELASTICSEARCH_NODE3_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.elasticsearch_node3.middlewares=https-redirect
+      - traefik.http.routers.es3.entrypoints=http
+      - traefik.http.routers.es3.rule=Host(`${ES3_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.es3.middlewares=https-redirect
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.elasticsearch_node3-secure.entrypoints=https
-      - traefik.http.routers.elasticsearch_node3-secure.rule=Host(`${ELASTICSEARCH_NODE3_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.elasticsearch_node3-secure.tls=true
-      - traefik.http.routers.elasticsearch_node3-secure.tls.options=default
-      - traefik.http.routers.elasticsearch_node3-secure.tls.certresolver=mycert
-      - traefik.http.services.elasticsearch_node3.loadbalancer.server.port=9200
+      - traefik.http.routers.es3-secure.entrypoints=https
+      - traefik.http.routers.es3-secure.rule=Host(`${ES3_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.es3-secure.tls=true
+      - traefik.http.routers.es3-secure.tls.options=default
+      - traefik.http.routers.es3-secure.tls.certresolver=mycert
+      - traefik.http.services.es3.loadbalancer.server.scheme=https
+      - traefik.http.services.es3.loadbalancer.server.port=9200
 
-  logstash:
+  logstash-node-1:
     image: logstash:${ELK_VERSION}
-    container_name: logstash
     restart: ${RESTART_POLICY}
+    container_name: logstash-node-1
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
-      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-    ports:
-      - 5044:5044
-      - 9600:9600
     environment:
-      - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
-      - "ELASTICSEARCH_LOGSTASH_HOSTNAME=${ELASTICSEARCH_LOGSTASH_HOSTNAME}"
-      - "ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}"
-      - "ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}"
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_CLUSTER_HOSTS: ${ELASTICSEARCH_CLUSTER_HOSTS}
+      LS_JAVA_OPTS: "-Xmx${LOGSTASH_HEAP} -Xms${LOGSTASH_HEAP} -Dlog4j2.formatMsgNoLookups=true"
+    configs:
+      - source: logstash
+        target: /usr/share/logstash/config/logstash.yml
+      - source: pipelines
+        target: /usr/share/logstash/config/pipelines.yml
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    healthcheck:
+      test: ["CMD", "curl", "-s" ,"-XGET", "http://127.0.0.1:9600"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
     networks:
-      - elk_net
+      - app_net
     depends_on:
-      elasticsearch-node1:
+      elasticsearch-node-1:
         condition: service_healthy
-      elasticsearch-node2:
+      elasticsearch-node-2:
         condition: service_healthy
-      elasticsearch-node3:
+      elasticsearch-node-3:
         condition: service_healthy
 
-  kibana:
-    image: kibana:${ELK_VERSION}
-    container_name: kibana
+  logstash-node-2:
+    image: logstash:${ELK_VERSION}
     restart: ${RESTART_POLICY}
-    environment:
-      - SERVERNAME=kibana
-      - ELASTICSEARCH_HOSTNAME=${ELASTICSEARCH_HOSTNAME}
-      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
-      - KIBANA_PUBLIC_URL=${KIBANA_PUBLIC_URL}
-      - MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED=true
-      - XPACK_FLEET_ENABLED=true
-      - XPACK_FLEET_AGENTS_ENABLED=true
-      - "XPACK_FLEET_AGENTS_FLEET_SERVER_HOSTS=[\"http://fleet:8220\"]"
-      - "XPACK_FLEET_AGENTS_TLSCHECKDISABLED=true"
+    container_name: logstash-node-2
     volumes:
-      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_CLUSTER_HOSTS: ${ELASTICSEARCH_CLUSTER_HOSTS}
+      LS_JAVA_OPTS: "-Xmx${LOGSTASH_HEAP} -Xms${LOGSTASH_HEAP} -Dlog4j2.formatMsgNoLookups=true"
+    configs:
+      - source: logstash
+        target: /usr/share/logstash/config/logstash.yml
+      - source: pipelines
+        target: /usr/share/logstash/config/pipelines.yml
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+    #ports:
+    #  - "5044:5044"
+    #  - "9600:9600"
     healthcheck:
-      test: "curl -f http://localhost:5601/login | grep kbn-injected-metadata 2>&1 >/dev/null"
-      retries: 600
-      interval: 1s
+      test: ["CMD", "curl", "-s" ,"-XGET", "http://127.0.0.1:9600"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+    networks:
+      - app_net
+    depends_on:
+      elasticsearch-node-1:
+        condition: service_healthy
+      elasticsearch-node-2:
+        condition: service_healthy
+      elasticsearch-node-3:
+        condition: service_healthy
+
+  logstash-node-3:
+    image: logstash:${ELK_VERSION}
+    restart: ${RESTART_POLICY}
+    container_name: logstash-node-3
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_CLUSTER_HOSTS: ${ELASTICSEARCH_CLUSTER_HOSTS}
+      LS_JAVA_OPTS: "-Xmx${LOGSTASH_HEAP} -Xms${LOGSTASH_HEAP} -Dlog4j2.formatMsgNoLookups=true"
+    configs:
+      - source: logstash
+        target: /usr/share/logstash/config/logstash.yml
+      - source: pipelines
+        target: /usr/share/logstash/config/pipelines.yml
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+    #ports:
+    #  - "5044:5044"
+    #  - "9600:9600"
+    healthcheck:
+      test: ["CMD", "curl", "-s" ,"-XGET", "http://127.0.0.1:9600"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+    networks:
+      - app_net
+    depends_on:
+      elasticsearch-node-1:
+        condition: service_healthy
+      elasticsearch-node-2:
+        condition: service_healthy
+      elasticsearch-node-3:
+        condition: service_healthy
+
+  kibana-node-1:
+    image: kibana:${ELK_VERSION}
+    restart: ${RESTART_POLICY}
+    container_name: kibana-node-1
+    environment:
+      - "ELASTIC_USERNAME=${ELASTIC_USERNAME}"
+      - "ELASTIC_PASSWORD=${ELASTIC_PASSWORD}"
+      - "ELASTICSEARCH_CLUSTER_HOSTS=${ELASTICSEARCH_CLUSTER_HOSTS}"
+      - "SERVERNAME=kibana"
+      - "KIBANA_PUBLIC_URL=${KIBANA_PUBLIC_URL}"
+      - "MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED=true"
+    env_file:
+      - ./secrets/.env.kibana.token
+    configs:
+      - source: kibana
+        target: /usr/share/kibana/config/kibana.yml
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: kibana.certificate
+        target: /certs/kibana.crt
+      - source: kibana.key
+        target: /certs/kibana.key
     networks:
       - web_net
-      - elk_net
+      - app_net
     depends_on:
-      elasticsearch-node1:
+      elasticsearch-node-1:
         condition: service_healthy
-      elasticsearch-node2:
+      elasticsearch-node-2:
         condition: service_healthy
-      elasticsearch-node3:
+      elasticsearch-node-3:
         condition: service_healthy
+    healthcheck:
+      test: "curl -kf https://localhost:5601/login | grep kbn-injected-metadata 2>&1 >/dev/null"
+      retries: 60
+      interval: 30s
     labels:
       - traefik.enable=true
       - traefik.docker.network=web_net
-      - traefik.http.routers.kibana.entrypoints=http
-      - traefik.http.routers.kibana.rule=Host(`${KIBANA_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.kibana.middlewares=https-redirect
+      - traefik.http.routers.kibana1.entrypoints=http
+      - traefik.http.routers.kibana1.rule=Host(`${KIBANA1_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.kibana1.middlewares=https-redirect
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.kibana-secure.entrypoints=https
-      - traefik.http.routers.kibana-secure.rule=Host(`${KIBANA_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.kibana-secure.tls=true
-      - traefik.http.routers.kibana-secure.tls.options=default
-      - traefik.http.routers.kibana-secure.tls.certresolver=mycert
-      - traefik.http.services.kibana.loadbalancer.server.port=5601
+      - traefik.http.routers.kibana1-secure.entrypoints=https
+      - traefik.http.routers.kibana1-secure.rule=Host(`${KIBANA1_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.kibana1-secure.tls=true
+      - traefik.http.routers.kibana1-secure.tls.options=default
+      - traefik.http.routers.kibana1-secure.tls.certresolver=mycert
+      - traefik.http.services.kibana1.loadbalancer.server.scheme=https
+      - traefik.http.services.kibana1.loadbalancer.server.port=5601
 
-  fleet:
+  kibana-node-2:
+    image: kibana:${ELK_VERSION}
+    restart: ${RESTART_POLICY}
+    container_name: kibana-node-2
+    environment:
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_CLUSTER_HOSTS: ${ELASTICSEARCH_CLUSTER_HOSTS}
+      SERVERNAME: kibana
+      KIBANA_PUBLIC_URL: ${KIBANA_PUBLIC_URL}
+      MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: true
+    env_file:
+      - ./secrets/.env.kibana.token
+    configs:
+      - source: kibana
+        target: /usr/share/kibana/config/kibana.yml
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: kibana.certificate
+        target: /certs/kibana.crt
+      - source: kibana.key
+        target: /certs/kibana.key
+    networks:
+      - web_net
+      - app_net
+    depends_on:
+      elasticsearch-node-1:
+        condition: service_healthy
+      elasticsearch-node-2:
+        condition: service_healthy
+      elasticsearch-node-3:
+        condition: service_healthy
+    healthcheck:
+      test: "curl -kf https://localhost:5601/login | grep kbn-injected-metadata 2>&1 >/dev/null"
+      retries: 60
+      interval: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.kibana2.entrypoints=http
+      - traefik.http.routers.kibana2.rule=Host(`${KIBANA2_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.kibana2.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.kibana2-secure.entrypoints=https
+      - traefik.http.routers.kibana2-secure.rule=Host(`${KIBANA2_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.kibana2-secure.tls=true
+      - traefik.http.routers.kibana2-secure.tls.options=default
+      - traefik.http.routers.kibana2-secure.tls.certresolver=mycert
+      - traefik.http.services.kibana2.loadbalancer.server.scheme=https
+      - traefik.http.services.kibana2.loadbalancer.server.port=5601
+
+  kibana-node-3:
+    image: kibana:${ELK_VERSION}
+    restart: ${RESTART_POLICY}
+    container_name: kibana-node-3
+    environment:
+      ELASTIC_USERNAME: ${ELASTIC_USERNAME}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_CLUSTER_HOSTS: ${ELASTICSEARCH_CLUSTER_HOSTS}
+      SERVERNAME: kibana
+      KIBANA_PUBLIC_URL: ${KIBANA_PUBLIC_URL}
+      MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: true
+    env_file:
+      - ./secrets/.env.kibana.token
+    configs:
+      - source: kibana
+        target: /usr/share/kibana/config/kibana.yml
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: kibana.certificate
+        target: /certs/kibana.crt
+      - source: kibana.key
+        target: /certs/kibana.key
+    networks:
+      - web_net
+      - app_net
+    depends_on:
+      elasticsearch-node-1:
+        condition: service_healthy
+      elasticsearch-node-2:
+        condition: service_healthy
+      elasticsearch-node-3:
+        condition: service_healthy
+    healthcheck:
+      test: "curl -kf https://localhost:5601/login | grep kbn-injected-metadata 2>&1 >/dev/null"
+      retries: 60
+      interval: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.kibana3.entrypoints=http
+      - traefik.http.routers.kibana3.rule=Host(`${KIBANA3_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.kibana3.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.kibana3-secure.entrypoints=https
+      - traefik.http.routers.kibana3-secure.rule=Host(`${KIBANA3_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.kibana3-secure.tls=true
+      - traefik.http.routers.kibana3-secure.tls.options=default
+      - traefik.http.routers.kibana3-secure.tls.certresolver=mycert
+      - traefik.http.services.kibana3.loadbalancer.server.scheme=https
+      - traefik.http.services.kibana3.loadbalancer.server.port=5601
+
+  fleet-node-1:
     image: elastic/elastic-agent:${ELK_VERSION}
     restart: ${RESTART_POLICY}
-    container_name: fleet
-    hostname: "${FLEET_SUB_DOMAIN}.${DOMAIN_NAME}"
+    container_name: fleet-node-1
+    hostname: fleet-node-1
     environment:
-      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME}
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
+      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTICSEARCH_CA=/certs/ca.crt
       - FLEET_SERVER_ENABLE=true
-      - FLEET_SERVER_ELASTICSEARCH_HOST=${FLEET_SERVER_ELASTICSEARCH_HOST}
+      - FLEET_SERVER_ELASTICSEARCH_HOST=https://elasticsearch-node-1:9200
       - FLEET_SERVER_INSECURE_HTTP=true
-      - KIBANA_FLEET_SETUP=true
-      - KIBANA_FLEET_HOST=${KIBANA_HOSTNAME}
       - FLEET_SERVER_HOST=0.0.0.0
       - FLEET_SERVER_PORT=8220
+      - FLEET_SERVER_SERVICE_TOKEN=${FLEET_SERVER_SERVICE_TOKEN}
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: fleet.certificate
+        target: /certs/fleet.crt
+      - source: fleet.key
+        target: /certs/fleet.key
+      - source: kibana.certificate
+        target: /certs/kibana.crt
+      - source: kibana.key
+        target: /certs/kibana.key
     networks:
-      - elk_net
+      - app_net
       - web_net
     depends_on:
-      elasticsearch-node1:
+      elasticsearch-node-1:
         condition: service_healthy
-      elasticsearch-node2:
+      elasticsearch-node-2:
         condition: service_healthy
-      elasticsearch-node3:
-        condition: service_healthy
-      kibana:
+      elasticsearch-node-3:
         condition: service_healthy
     healthcheck:
       test: "curl -f http://127.0.0.1:8220/api/status | grep HEALTHY 2>&1 >/dev/null"
@@ -278,219 +547,121 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=web_net
-      - traefik.http.routers.fleet.entrypoints=http
-      - traefik.http.routers.fleet.rule=Host(`${FLEET_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.fleet.middlewares=https-redirect
+      - traefik.http.routers.fleet1.entrypoints=http
+      - traefik.http.routers.fleet1.rule=Host(`${FLEET1_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.fleet1.middlewares=https-redirect
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.fleet-secure.entrypoints=https
-      - traefik.http.routers.fleet-secure.rule=Host(`${FLEET_SUB_DOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.fleet-secure.tls=true
-      - traefik.http.routers.fleet-secure.tls.options=default
-      - traefik.http.routers.fleet-secure.tls.certresolver=mycert
-      - traefik.http.services.fleet.loadbalancer.server.port=8220
+      - traefik.http.routers.fleet1-secure.entrypoints=https
+      - traefik.http.routers.fleet1-secure.rule=Host(`${FLEET1_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.fleet1-secure.tls=true
+      - traefik.http.routers.fleet1-secure.tls.options=default
+      - traefik.http.routers.fleet1-secure.tls.certresolver=mycert
+      - traefik.http.services.fleet1.loadbalancer.server.port=8220
 
-  filebeat-logstash:
-    image: elastic/filebeat:${ELK_VERSION}
-    user: root
-    container_name: filebeat-logstash
-    hostname: "filebeat-logstash-${HOSTNAME}"
+  fleet-node-2:
+    image: elastic/elastic-agent:${ELK_VERSION}
     restart: ${RESTART_POLICY}
-    command: ["--strict.perms=false"]
+    container_name: fleet-node-2
+    hostname: fleet-node-2
     environment:
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
-    volumes:
-      - ./filebeat-logstash/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /var/log:/var/log:ro
-      - filebeat_logstash_data:/var/lib/filebeat/data
+      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTICSEARCH_CA=/certs/ca.crt
+      - FLEET_SERVER_ENABLE=true
+      - FLEET_SERVER_ELASTICSEARCH_HOST=https://elasticsearch-node-1:9200
+      - FLEET_SERVER_INSECURE_HTTP=true
+      - FLEET_SERVER_HOST=0.0.0.0
+      - FLEET_SERVER_PORT=8220
+      - FLEET_SERVER_SERVICE_TOKEN=${FLEET_SERVER_SERVICE_TOKEN}
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: fleet.certificate
+        target: /certs/fleet.crt
+      - source: fleet.key
+        target: /certs/fleet.key
+      - source: kibana.certificate
+        target: /certs/kibana.crt
+      - source: kibana.key
+        target: /certs/kibana.key
     networks:
-      - elk_net
-    depends_on:
-      elasticsearch-node1:
-        condition: service_healthy
-      elasticsearch-node2:
-        condition: service_healthy
-      elasticsearch-node3:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-
-  filebeat-elasticsearch:
-    image: elastic/filebeat:${ELK_VERSION}
-    user: root
-    container_name: filebeat-elasticsearch
-    hostname: "filebeat-elasticsearch-${HOSTNAME}"
-    restart: ${RESTART_POLICY}
-    command: ["--strict.perms=false"]
-    environment:
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
-    volumes:
-      - ./filebeat-elasticsearch/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /var/log:/var/log:ro
-      - filebeat_elasticsearch_data:/var/lib/filebeat/data
-    networks:
-      - elk_net
-    depends_on:
-      elasticsearch-node1:
-        condition: service_healthy
-      elasticsearch-node2:
-        condition: service_healthy
-      elasticsearch-node3:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-
-  auditbeat:
-    image: elastic/auditbeat:${ELK_VERSION}
-    container_name: auditbeat
-    hostname: "auditbeat-${HOSTNAME}"
-    user: root
-    pid: host
-    restart: ${RESTART_POLICY}
-    cap_add:
-      - AUDIT_CONTROL
-      - AUDIT_READ
-    environment:
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
-    command: ["--strict.perms=false"]
-    volumes:
-      - ./auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml:ro
-      - /var/log:/var/log:ro
-      - auditbeat_data:/usr/share/auditbeat/data
-    networks:
-      - elk_net
-    depends_on:
-      elasticsearch-node1:
-        condition: service_healthy
-      elasticsearch-node2:
-        condition: service_healthy
-      elasticsearch-node3:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-
-  metricbeat:
-    image: elastic/metricbeat:${ELK_VERSION}
-    hostname: "metricbeat-${HOSTNAME}"
-    container_name: metricbeat
-    restart: ${RESTART_POLICY}
-    user: root
-    volumes:
-      - ./metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-      - /proc:/hostfs/proc:ro
-      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
-      - /:/hostfs:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - metricbeat_data:/usr/share/metricbeat/data
-    environment:
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-    command: ["--strict.perms=false", "-system.hostfs=/hostfs"]
-    networks:
-      - elk_net
-    depends_on:
-      elasticsearch-node1:
-        condition: service_healthy
-      elasticsearch-node2:
-        condition: service_healthy
-      elasticsearch-node3:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-
-  packetbeat:
-    image: elastic/packetbeat:${ELK_VERSION}
-    hostname: "packetbeat-${HOSTNAME}"
-    container_name: packetbeat
-    user: root
-    restart: ${RESTART_POLICY}
-    volumes:
-      - packetbeat_data:/usr/share/packetbeat/data
-      - ./packetbeat/packetbeat.yml:/usr/share/packetbeat/packetbeat.yml:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-    cap_add:
-      - NET_RAW
-      - NET_ADMIN
-    command: ["--strict.perms=false"]
-    networks:
-      - elk_net
-    depends_on:
-      elasticsearch-node1:
-        condition: service_healthy
-      elasticsearch-node2:
-        condition: service_healthy
-      elasticsearch-node3:
-        condition: service_healthy
-      kibana:
-        condition: service_healthy
-
-  heartbeat:
-    image: elastic/heartbeat:${ELK_VERSION}
-    hostname: "heartbeat-${HOSTNAME}"
-    container_name: heartbeat
-    user: root
-    restart: ${RESTART_POLICY}
-    volumes:
-      - ./heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
-    environment:
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      KIBANA_HOSTNAME: ${KIBANA_HOSTNAME}
-      KIBANA_PUBLIC_URL: ${KIBANA_PUBLIC_URL}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-    command: ["--strict.perms=false"]
-    networks:
-      - elk_net
+      - app_net
       - web_net
     depends_on:
-      elasticsearch-node1:
+      elasticsearch-node-1:
         condition: service_healthy
-      elasticsearch-node2:
+      elasticsearch-node-2:
         condition: service_healthy
-      elasticsearch-node3:
+      elasticsearch-node-3:
         condition: service_healthy
-      kibana:
-        condition: service_healthy
+    healthcheck:
+      test: "curl -f http://127.0.0.1:8220/api/status | grep HEALTHY 2>&1 >/dev/null"
+      retries: 12
+      interval: 5s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.fleet2.entrypoints=http
+      - traefik.http.routers.fleet2.rule=Host(`${FLEET2_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.fleet2.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.fleet2-secure.entrypoints=https
+      - traefik.http.routers.fleet2-secure.rule=Host(`${FLEET2_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.fleet2-secure.tls=true
+      - traefik.http.routers.fleet2-secure.tls.options=default
+      - traefik.http.routers.fleet2-secure.tls.certresolver=mycert
+      - traefik.http.services.fleet2.loadbalancer.server.port=8220
 
-  apm-server:
-    image: elastic/apm-server:${ELK_VERSION}
-    container_name: apm-server
-    hostname: "apm-${HOSTNAME}"
+  fleet-node-3:
+    image: elastic/elastic-agent:${ELK_VERSION}
     restart: ${RESTART_POLICY}
-    volumes:
-      - ./apm-server/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    container_name: fleet-node-3
+    hostname: fleet-node-3
     environment:
-      ELASTICSEARCH_HOSTNAME: ${ELASTICSEARCH_HOSTNAME}
-      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME}
-      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD}
-      ELASTICSEARCH_APM_SECRET_TOKEN: ${ELASTICSEARCH_APM_SECRET_TOKEN}
+      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTICSEARCH_CA=/certs/ca.crt
+      - FLEET_SERVER_ENABLE=true
+      - FLEET_SERVER_ELASTICSEARCH_HOST=https://elasticsearch-node-1:9200
+      - FLEET_SERVER_INSECURE_HTTP=true
+      - FLEET_SERVER_HOST=0.0.0.0
+      - FLEET_SERVER_PORT=8220
+      - FLEET_SERVER_SERVICE_TOKEN=${FLEET_SERVER_SERVICE_TOKEN}
+    secrets:
+      - source: elastic.ca
+        target: /certs/ca.crt
+      - source: fleet.certificate
+        target: /certs/fleet.crt
+      - source: fleet.key
+        target: /certs/fleet.key
+      - source: kibana.certificate
+        target: /certs/kibana.crt
+      - source: kibana.key
+        target: /certs/kibana.key
     networks:
-      - elk_net
+      - app_net
+      - web_net
     depends_on:
-      elasticsearch-node1:
+      elasticsearch-node-1:
         condition: service_healthy
-      elasticsearch-node2:
+      elasticsearch-node-2:
         condition: service_healthy
-      elasticsearch-node3:
+      elasticsearch-node-3:
         condition: service_healthy
-      kibana:
-        condition: service_healthy
+    healthcheck:
+      test: "curl -f http://127.0.0.1:8220/api/status | grep HEALTHY 2>&1 >/dev/null"
+      retries: 12
+      interval: 5s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web_net
+      - traefik.http.routers.fleet3.entrypoints=http
+      - traefik.http.routers.fleet3.rule=Host(`${FLEET3_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.fleet3.middlewares=https-redirect
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.fleet3-secure.entrypoints=https
+      - traefik.http.routers.fleet3-secure.rule=Host(`${FLEET3_SUB_DOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.fleet3-secure.tls=true
+      - traefik.http.routers.fleet3-secure.tls.options=default
+      - traefik.http.routers.fleet3-secure.tls.certresolver=mycert
+      - traefik.http.services.fleet3.loadbalancer.server.port=8220

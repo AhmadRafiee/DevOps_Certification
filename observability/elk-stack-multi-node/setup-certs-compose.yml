@@ -1,0 +1,32 @@
+name: create-certificates
+
+networks:
+  web_net:
+    name: web_net
+    external: true
+  app_net:
+    name: app_net
+    external: true
+
+services:
+  keystore:
+    image: elasticsearch:${ELK_VERSION}
+    command: bash /setup/setup-keystore.sh
+    user: "0"
+    volumes:
+        - ./secrets:/secrets
+        - ./setup/:/setup/
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+    networks:
+      - app_net
+
+  certs:
+    image: elasticsearch:${ELK_VERSION}
+    command: bash /setup/setup-certs.sh
+    user: "0"
+    volumes:
+      - ./secrets:/secrets
+      - ./setup/:/setup
+    networks:
+      - app_net

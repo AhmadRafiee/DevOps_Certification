@@ -57,10 +57,8 @@ Kubernetes is a powerful tool for managing and orchestrating containerized appli
 Implement effective monitoring, logging, and tracing solutions for better system observability:
 
   - **Observability full stack** This Docker project sets up a powerful observability stack using industry-standard tools for **monitoring, logging, and tracing**. It leverages Docker Compose profiles for flexible deployment, allowing you to bring up only the components you need.
-  - **VictoriaMetrics Single Node:** Single-Node VictoriaMetrics Observability Stack
-  - **VictoriaMetrics Multi Node:** Multi-Node VictoriaMetrics Observability Stack
-  - **ELK Stack (Single Node):** Get started with a single-node setup of the ELK Stack (Elasticsearch, Logstash, Kibana). This configuration is ideal for smaller environments or development purposes. You'll learn how to centralize logs from multiple sources, process them with Logstash, and visualize them using Kibana.
-  - **ELK Stack (Multi-Node):** For production-level setups, you'll learn how to deploy an ELK multi-node cluster, ensuring high availability and scalability. This section will cover cluster architecture, index management, and performance tuning for handling large volumes of logs.
+  - **VictoriaMetrics (Single Node and Multi Node):** VictoriaMetrics Monitoring Stack
+  - **ELK Stack (Single Node and Multi Node):** Get started with a single-node setup of the ELK Stack (Elasticsearch, Logstash, Kibana). This configuration is ideal for smaller environments or development purposes. You'll learn how to centralize logs from multiple sources, process them with Logstash, and visualize them using Kibana.
   - **Prometheus Stack:** Set up the Prometheus stack for metrics collection and alerting. You'll learn to monitor system and application performance, configure Alertmanager for notifications, and visualize metrics using Grafana. This stack is essential for real-time observability and proactive issue resolution.
   - **Graylog Stack:** Explore the Graylog stack for log management and analysis. Graylog simplifies log ingestion and searching with its user-friendly interface. This section will guide you through configuring Graylog to centralize and analyze logs from various sources in your infrastructure.
   - **Loki Stack:** Learn how to implement Loki for scalable log aggregation. Unlike traditional log management systems, Loki is designed to work efficiently with Prometheus and stores logs as streams associated with Prometheus metrics, optimizing storage and retrieval.

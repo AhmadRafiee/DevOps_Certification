@@ -1,13 +1,48 @@
 ---
-## Default Kibana configuration from kibana-docker.
-## https://github.com/elastic/kibana-docker/blob/master/.tedi/template/kibana.yml.j2
-
+## Default Kibana configuration from Kibana base image.
+## https://github.com/elastic/kibana/blob/master/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.js
+#
 server.name: kibana
-server.host: "0"
-server.publicBaseUrl: ${KIBANA_PUBLIC_URL}
-elasticsearch.hosts: ${ELASTICSEARCH_HOSTNAME}
-xpack.monitoring.ui.container.elasticsearch.enabled: true
+server.host: "0.0.0.0"
+
+# Elasticsearch Connection
+elasticsearch.hosts: ${ELASTICSEARCH_CLUSTER_HOSTS}
+
+# SSL settings
+server.ssl.enabled: true
+server.ssl.certificate: /certs/kibana.crt
+server.ssl.key: /certs/kibana.key
+server.ssl.certificateAuthorities: [ "/certs/ca.crt" ]
+xpack.security.encryptionKey: C1tHnfrlfxSPxPlQ8BlgPB5qMNRtg5V5
+xpack.encryptedSavedObjects.encryptionKey: D12GTfrlfxSPxPlGRBlgPB5qM5GOPDV5
+xpack.reporting.encryptionKey: RSCueeHKzrqzOVTJhkjt17EMnzM96LlN
 
 ## X-Pack security credentials
-elasticsearch.username: ${ELASTICSEARCH_USERNAME}
-elasticsearch.password: ${ELASTICSEARCH_PASSWORD}
+elasticsearch.serviceAccountToken: "${KIBANA_SERVICE_ACCOUNT_TOKEN}"
+elasticsearch.ssl.certificateAuthorities: [ "/certs/ca.crt" ]
+
+## Add policy for apm-server integration
+xpack.fleet.packages:
+  - name: apm
+    version: latest
+xpack.fleet.agentPolicies:
+  - name: Agent policy 1
+    id: agent-policy-1
+    namespace: default
+    monitoring_enabled:
+      - logs
+      - metrics
+    package_policies:
+      - name: apm-1
+        id: default-apm
+        package:
+          name: apm
+
+## Misc
+elasticsearch.requestTimeout: 90000
+
+
+
+## ElastAlert Plugin
+#elastalert-kibana-plugin.serverHost: elastalert
+#elastalert-kibana-plugin.serverPort: 3030
