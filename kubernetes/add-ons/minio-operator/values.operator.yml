@@ -1,0 +1,12 @@
+operator:
+  image:
+    repository: quay.io/minio/operator
+    tag: v7.1.1
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+      ephemeral-storage: 500Mi
+

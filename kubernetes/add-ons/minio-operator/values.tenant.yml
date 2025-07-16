@@ -1,0 +1,50 @@
+# Root key for MinIO Tenant Chart
+tenant:
+  name: mecan
+  image:
+    repository: quay.io/minio/minio
+    tag: RELEASE.2025-04-08T15-41-24Z
+    pullPolicy: IfNotPresent
+  configSecret:
+    name: myminio-env-configuration
+    accessKey: minio
+    secretKey: minio123
+  pools:
+    - servers: 4
+      name: pool-0
+      volumesPerServer: 4
+      size: 1Gi
+  mountPath: /export
+  subPath: /data
+  metrics:
+    enabled: false
+    port: 9000
+    protocol: http
+  certificate:
+    requestAutoCert: true
+  features:
+    bucketDNS: false
+    domains: { }
+    enableSFTP: false
+  buckets: [ ]
+  users: [ ]
+  podManagementPolicy: Parallel
+ingress:
+  api:
+    enabled: false
+    ingressClassName: ""
+    labels: { }
+    annotations: { }
+    tls: [ ]
+    host: minio.local
+    path: /
+    pathType: Prefix
+  console:
+    enabled: false
+    ingressClassName: ""
+    labels: { }
+    annotations: { }
+    tls: [ ]
+    host: minio-console.local
+    path: /
+    pathType: Prefix

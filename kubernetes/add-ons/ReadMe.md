@@ -10,6 +10,8 @@
   - [Deploy and config argo-cd](#deploy-and-config-argo-cd)
   - [Deploy and config VPA on kube](#deploy-and-config-vpa-on-kube)
   - [Deploy and config minio](#deploy-and-config-minio)
+  - [Deploy and config minio operator](#deploy-and-config-minio-operator)
+  - [Deploy and config minio with operator](#deploy-and-config-minio-with-operator)
   - [Deploy and config velero](#deploy-and-config-velero)
   - [Deploy and config gatekeeper on Kubernetes](#deploy-and-config-gatekeeper-on-kubernetes)
   - [Deploy and config gatekeeper policy](#deploy-and-config-gatekeeper-policy)
@@ -369,8 +371,7 @@ vim minio/helm.values.yaml
 **Step2:** Add helm repository and update all repo
 ```bash
 helm repo add minio https://charts.min.io/
-helm repo list
-helm repo update
+helm repo update minio
 ```
 
 **Step3:** Deploy Minio
@@ -399,6 +400,86 @@ SECRET_KEY=$(kubectl -n minio get secret minio -o jsonpath="{.data.rootPassword}
 
 <p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
+## Deploy and config minio operator
+
+![minio operator](images/minio-operator.png)
+
+**Step1:** Add the MinIO Operator Repo to Helm
+MinIO maintains a Helm-compatible repository at https://operator.min.io. Add this repository to Helm:
+```bash
+helm repo add minio-operator https://operator.min.io
+helm repo update minio-operator
+```
+
+**Step2:** You can validate the repo contents using helm search:
+```bash
+helm search repo minio-operator
+```
+
+The response should resemble the following:
+```bash
+NAME                            CHART VERSION   APP VERSION     DESCRIPTION
+minio-operator/minio-operator   4.3.7           v4.3.7          A Helm chart for MinIO Operator
+minio-operator/operator         6.0.1           v6.0.1          A Helm chart for MinIO Operator
+minio-operator/tenant           6.0.1           v6.0.1          A Helm chart for MinIO Operator
+```
+
+**Note:** The `minio-operator/minio-operator` is a legacy chart and should not be installed under normal circumstances.
+
+**Step3:** Install the Operator
+Run the helm install command to install the Operator. The following command specifies and creates a dedicated namespace minio-operator for installation. MinIO strongly recommends using a dedicated namespace for the Operator.
+```bash
+helm upgrade --install operator minio-operator/operator \
+  --namespace minio-operator \
+  --create-namespace \
+  -f minio-operator/values.operator.yml
+```
+
+**Step4:** Verify the Operator installation
+
+Check the contents of the specified namespace (minio-operator) to ensure all pods and services have started successfully.
+```bash
+kubectl get all -n minio-operator
+```
+
+The response should resemble the following:
+```bash
+NAME                                  READY   STATUS    RESTARTS   AGE
+pod/minio-operator-699f797b8b-th5bk   1/1     Running   0          25h
+pod/minio-operator-699f797b8b-nkrn9   1/1     Running   0          25h
+
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+service/operator   ClusterIP   10.43.44.204    <none>        4221/TCP            25h
+service/sts        ClusterIP   10.43.70.4      <none>        4223/TCP            25h
+
+NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/minio-operator   2/2     2            2           25h
+
+NAME                                        DESIRED   CURRENT   READY   AGE
+replicaset.apps/minio-operator-79f7bfc48    2         2         2       123m
+```
+
+You can now deploy a tenant using Helm Charts
+
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
+
+## Deploy and config minio with operator
+
+**Step1:** Install the Minio Tenant
+Run the helm install command to install the Tenant. The following command specifies and creates a dedicated namespace `minio-operator` for installation. MinIO strongly recommends using a dedicated namespace for the Tenant.
+```bash
+helm upgrade --install operator minio-operator/tenant \
+  --namespace minio-operator \
+  --create-namespace \
+  -f minio-operator/values.tenant.yml
+```
+
+**Step2:** get access key and secret key
+```bash
+kubectl -n minio-operator get secret myminio-env-configuration -o jsonpath='{.data.config\.env}' | base64 --decode
+```
+
+<p align="right"><a href="#table-of-contents">🔼 Back to Top</a></p>
 
 ## Deploy and config velero
 
