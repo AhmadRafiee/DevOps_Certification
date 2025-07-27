@@ -157,9 +157,15 @@ Download the Google Cloud public signing key:
 # If the directory `/etc/apt/keyrings` does not exist, it should be created before the curl command, read the note below.
 # sudo mkdir -p -m 755 /etc/apt/keyrings
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 # OR Download from Store.DockerMe.ir
-curl -fsSL https://repo.mecan.ir/repository/apt-kube/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://store.dockerme.ir/Software/Release_v30.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://store.dockerme.ir/Software/Release_v31.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://store.dockerme.ir/Software/Release_v32.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://store.dockerme.ir/Software/Release_v33.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 # Check gpg key
 sudo ls -alh /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 ```
@@ -167,7 +173,18 @@ sudo ls -alh /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 Add the Kubernetes apt repository:
 ```bash
 # This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+# for kubernetes 1.30
 echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# for kubernetes 1.31
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# for kubernetes 1.32
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# for kubernetes 1.33
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
 cat /etc/apt/sources.list.d/kubernetes.list
 apt-get update -y
 ```
@@ -176,6 +193,17 @@ If apt mirror repository, add this line instead. We are using mirror repository 
 ```bash
 # for kubernetes 1.30
 echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://repo.mecan.ir/repository/apt-kube/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# for kubernetes 1.31
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://repo.mecan.ir/repository/apt-kube/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# for kubernetes 1.32
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://repo.mecan.ir/repository/apt-kube/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# for kubernetes 1.33
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://repo.mecan.ir/repository/apt-kube/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+
 cat /etc/apt/sources.list.d/kubernetes.list
 
 apt-get update
