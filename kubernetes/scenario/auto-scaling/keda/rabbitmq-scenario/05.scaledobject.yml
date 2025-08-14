@@ -1,10 +1,10 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: rabbitmq-worker-scaler
+  name: rabbitmq-consumer-scaler
 spec:
   scaleTargetRef:
-    name: worker
+    name: consumer
   minReplicaCount: 1
   maxReplicaCount: 10
   triggers:

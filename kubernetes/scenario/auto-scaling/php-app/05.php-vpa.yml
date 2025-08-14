@@ -8,7 +8,7 @@ spec:
     kind: Deployment
     name: php-apache
   updatePolicy:
-    updateMode: Recreate
+    updateMode: Auto
   resourcePolicy:
     containerPolicies:
       - containerName: '*'

@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: worker
+  name: consumer
 spec:
   replicas: 0  # KEDA will scale this
   selector:
     matchLabels:
-      app: worker
+      app: consumer
   template:
     metadata:
       labels:
-        app: worker
+        app: consumer
     spec:
       containers:
-        - name: worker
+        - name: consumer
           image: python:3.9
           command:
             - sh
