@@ -27,7 +27,7 @@
 To install the release.asc key, execute the following:
 ```bash
 # download from ceph site
-wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo gpg --dearmor -o /usr/share/keyrings/ceph-archive-keyring.gpg -
 
 # download from DockerMe site and use gpg commands
 wget -q -O- 'https://store.dockerme.ir/Software/release.asc' | sudo gpg --dearmor -o /usr/share/keyrings/ceph-archive-keyring.gpg
