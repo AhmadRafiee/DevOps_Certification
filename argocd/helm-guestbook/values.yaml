@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: quay.io/flexcaas/ks-guestbook-demo
+  repository: quay.mecan.ir/flexcaas/ks-guestbook-demo
   tag: 0.1
   pullPolicy: IfNotPresent
 
