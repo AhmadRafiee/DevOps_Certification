@@ -81,7 +81,7 @@ Installations:
 wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
 tar xf kubeval-linux-amd64.tar.gz
 sudo cp kubeval /usr/local/bin
-sudo chmode +x /usr/local/bin/kubeval
+sudo chmod +x /usr/local/bin/kubeval
 ```
 
 Check Yaml file:
