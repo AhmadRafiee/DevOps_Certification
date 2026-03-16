@@ -3,15 +3,31 @@
 ```bash
 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 ```
+or
+
+```bash
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+```
+
 ### Add the official HashiCorp Linux repository.
 ```bash
 sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 ```
+or
+```bash
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+```
+
 ### Update and install.
 ```bash
 sudo apt-get update
 sudo apt-get install vagrant
 sudo apt-get install packer
+```
+
+### Make sure of correct installation
+```bash
+vagrant --version
 ```
 
 # Add public box in vagrant
