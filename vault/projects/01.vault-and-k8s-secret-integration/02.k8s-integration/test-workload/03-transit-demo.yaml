@@ -1,0 +1,63 @@
+---
+# Transit Engine Demo — shows encryption-as-a-service from a pod.
+# This pod encrypts and decrypts data using Vault's Transit engine
+# without ever having access to the raw encryption key.
+#
+# The key "k8s-secrets" lives entirely inside Vault.
+# The pod only ever sees ciphertext (vault:v1:...) and the plaintext it provided.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: transit-demo
+  namespace: default
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "myapp"
+    # Inject a Vault token file so the demo script can call the Transit API
+    vault.hashicorp.com/agent-inject-token: "true"
+spec:
+  serviceAccountName: myapp-sa
+  restartPolicy: Never
+
+  containers:
+    - name: transit-demo
+      image: curlimages/curl:8.6.0
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          VAULT_ADDR="http://172.18.0.2:8200"
+          TOKEN_FILE="/vault/secrets/token"
+
+          echo "==> Waiting for Vault token..."
+          while [ ! -f "$TOKEN_FILE" ]; do sleep 1; done
+          TOKEN=$(cat "$TOKEN_FILE")
+
+          PLAINTEXT="super-secret-data"
+          B64=$(echo -n "$PLAINTEXT" | base64)
+
+          echo ""
+          echo "==> Encrypting '$PLAINTEXT' with Transit key k8s-secrets..."
+          RESPONSE=$(curl -sf \
+              -H "X-Vault-Token: $TOKEN" \
+              -d "{\"plaintext\":\"$B64\"}" \
+              "$VAULT_ADDR/v1/transit/encrypt/k8s-secrets")
+          CIPHERTEXT=$(echo "$RESPONSE" | grep -o '"ciphertext":"[^"]*"' | cut -d'"' -f4)
+          echo "    Ciphertext: $CIPHERTEXT"
+
+          echo ""
+          echo "==> Decrypting ciphertext..."
+          DEC_RESPONSE=$(curl -sf \
+              -H "X-Vault-Token: $TOKEN" \
+              -d "{\"ciphertext\":\"$CIPHERTEXT\"}" \
+              "$VAULT_ADDR/v1/transit/decrypt/k8s-secrets")
+          DECODED_B64=$(echo "$DEC_RESPONSE" | grep -o '"plaintext":"[^"]*"' | cut -d'"' -f4)
+          DECODED=$(echo "$DECODED_B64" | base64 -d)
+          echo "    Decrypted : $DECODED"
+
+          echo ""
+          echo "==> Transit demo complete. Key never left Vault."
+      resources:
+        requests:
+          cpu: "50m"
+          memory: "32Mi"

@@ -1,0 +1,52 @@
+---
+# ServiceAccount used by Vault to validate K8s tokens (TokenReview API)
+# Vault calls TokenReview to verify that a pod's JWT is genuine before issuing a Vault token.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: default
+
+---
+# Long-lived token for vault-auth (K8s 1.24+ no longer auto-creates SA secrets)
+# Vault uses this token to call the K8s TokenReview API for pod authentication.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-auth-token
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: vault-auth
+type: kubernetes.io/service-account-token
+
+---
+# ClusterRoleBinding: lets vault-auth call TokenReview and check ServiceAccount existence
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: vault-auth
+    namespace: default
+
+---
+# ServiceAccount for the demo application
+# Vault role "myapp" is bound to this SA — pods using it can authenticate to Vault.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp-sa
+  namespace: default
+
+---
+# ServiceAccount for a database workload (separate trust boundary)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: db-sa
+  namespace: default

@@ -1,0 +1,82 @@
+---
+# Demo deployment — Vault Agent Injector injects secrets before the app container starts.
+#
+# How it works:
+#  1. The MutatingWebhook intercepts this Pod spec.
+#  2. Injector adds an init-container (vault-agent-init) that authenticates to Vault
+#     using the pod's ServiceAccount JWT and writes secrets to /vault/secrets/.
+#  3. A sidecar (vault-agent) keeps the secrets refreshed for the lifetime of the pod.
+#  4. The app container reads secrets as files from /vault/secrets/.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: default
+  labels:
+    app: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+      annotations:
+        # ── Required: enable injection ───────────────────────────────────────
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "myapp"           # Vault role to authenticate as
+
+        # ── Secret 1: app config → /vault/secrets/config ─────────────────────
+        vault.hashicorp.com/agent-inject-secret-config: "secret/data/myapp/config"
+        # Render as KEY=VALUE env-file format
+        vault.hashicorp.com/agent-inject-template-config: |
+          {{- with secret "secret/data/myapp/config" -}}
+          API_KEY={{ .Data.data.API_KEY }}
+          APP_ENV={{ .Data.data.APP_ENV }}
+          LOG_LEVEL={{ .Data.data.LOG_LEVEL }}
+          {{- end }}
+
+        # ── Secret 2: database creds → /vault/secrets/database ───────────────
+        vault.hashicorp.com/agent-inject-secret-database: "secret/data/myapp/database"
+        vault.hashicorp.com/agent-inject-template-database: |
+          {{- with secret "secret/data/myapp/database" -}}
+          DB_HOST={{ .Data.data.DB_HOST }}
+          DB_PORT={{ .Data.data.DB_PORT }}
+          DB_NAME={{ .Data.data.DB_NAME }}
+          DB_USER={{ .Data.data.DB_USER }}
+          DB_PASSWORD={{ .Data.data.DB_PASSWORD }}
+          {{- end }}
+
+        # ── Optional: pre-populate env from the secret file ──────────────────
+        vault.hashicorp.com/agent-inject-command-config: "sh -c 'kill -SIGHUP $(pidof myapp) 2>/dev/null || true'"
+
+    spec:
+      serviceAccountName: myapp-sa
+
+      containers:
+        - name: myapp
+          image: busybox:1.36
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "=== Waiting for Vault secrets ==="
+              while [ ! -f /vault/secrets/config ]; do sleep 1; done
+              echo "=== /vault/secrets/config ==="
+              cat /vault/secrets/config
+              echo ""
+              echo "=== /vault/secrets/database ==="
+              cat /vault/secrets/database
+              echo ""
+              echo "=== Secrets loaded. Sleeping... ==="
+              sleep infinity
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+          # /vault/secrets is mounted automatically by the Vault Agent Injector — no manual volume needed

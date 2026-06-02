@@ -1,0 +1,38 @@
+# Vault Helm chart — deploy only the Agent Injector (server is already running externally)
+# Chart: hashicorp/vault
+# Docs:  https://developer.hashicorp.com/vault/docs/platform/k8s/injector
+
+server:
+  enabled: false          # Do NOT deploy an in-cluster Vault server
+
+injector:
+  enabled: true
+  replicas: 1
+
+  # Point injector to the external Vault container on app_net
+  externalVaultAddr: "http://172.18.0.2:8200"
+
+  # Resource limits for the injector pod
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "250m"
+
+  # Resource limits for the agent sidecar injected into workload pods
+  agentDefaults:
+    cpuLimit: "500m"
+    cpuRequest: "250m"
+    memLimit: "128Mi"
+    memRequest: "64Mi"
+
+  # vault-k8s is versioned separately from the Vault server
+  image:
+    tag: "1.5.0"
+
+  # Agent sidecar uses the same image as the Vault server
+  agentImage:
+    repository: "hashicorp/vault"
+    tag: "1.18.5"
