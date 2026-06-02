@@ -1,0 +1,30 @@
+name: vault
+
+networks:
+  app_net:
+    name: app_net
+    external: true
+  web_net:
+    name: web_net
+    external: true
+
+volumes:
+  vault-logs:
+    name: vault-logs                            # audit log volume — mounted into Vault container
+
+services:
+  vault:
+    image: hashicorp/vault:2.0
+    container_name: hashicorp_vault
+    networks:
+      - app_net
+      - web_net
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "myroot"         # fixed root token for dev
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    volumes:
+      - vault-logs:/vault/logs
+    cap_add:
+      - IPC_LOCK                                # prevents memory from being swapped to disk

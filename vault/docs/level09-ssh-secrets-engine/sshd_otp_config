@@ -1,0 +1,9 @@
+Port 2223
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication no
+ChallengeResponseAuthentication yes
+KbdInteractiveAuthentication yes
+UsePAM yes
+PAMServiceName sshd-otp
+AuthorizedKeysFile /dev/null

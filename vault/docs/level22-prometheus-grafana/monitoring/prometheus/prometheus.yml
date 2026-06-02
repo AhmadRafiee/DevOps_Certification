@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: vault-dev
+    metrics_path: /v1/sys/metrics
+    params:
+      format: [prometheus]
+    scheme: http
+    authorization:
+      credentials: myroot
+    static_configs:
+      - targets: [172.19.0.2:8200]
+        labels:
+          instance: vault-dev
+
+  - job_name: vault-autounseal
+    metrics_path: /v1/sys/metrics
+    params:
+      format: [prometheus]
+    scheme: http
+    authorization:
+      credentials: "<YOUR_VAULT_ROOT_TOKEN>"
+    static_configs:
+      - targets: [172.19.0.3:8200]
+        labels:
+          instance: vault-autounseal

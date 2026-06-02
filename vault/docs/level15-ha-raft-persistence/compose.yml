@@ -1,0 +1,64 @@
+networks:
+  app_net:
+    external: true
+
+services:
+  vault-node-1:
+    image: hashicorp/vault:2.0
+    container_name: vault-node-1
+    hostname: vault-node-1
+    networks:
+      - app_net
+    ports:
+      - "8210:8200"
+    volumes:
+      - ./data/vault-1:/vault/data
+      - ./config/vault-1.hcl:/vault/config/vault.hcl
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/vault.hcl
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8200/v1/sys/health || true"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  vault-node-2:
+    image: hashicorp/vault:2.0
+    container_name: vault-node-2
+    hostname: vault-node-2
+    networks:
+      - app_net
+    ports:
+      - "8220:8200"
+    volumes:
+      - ./data/vault-2:/vault/data
+      - ./config/vault-2.hcl:/vault/config/vault.hcl
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/vault.hcl
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8200/v1/sys/health || true"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  vault-node-3:
+    image: hashicorp/vault:2.0
+    container_name: vault-node-3
+    hostname: vault-node-3
+    networks:
+      - app_net
+    ports:
+      - "8230:8200"
+    volumes:
+      - ./data/vault-3:/vault/data
+      - ./config/vault-3.hcl:/vault/config/vault.hcl
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/vault.hcl
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8200/v1/sys/health || true"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

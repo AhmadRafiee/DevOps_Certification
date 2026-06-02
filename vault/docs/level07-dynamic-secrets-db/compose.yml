@@ -1,0 +1,32 @@
+name: postgresql
+
+networks:
+  app_net:
+    name: app_net
+    external: true
+  web_net:
+    name: web_net
+    external: true
+
+volumes:
+  postgres_data:
+    name: postgres_data
+    
+services:
+  postgres:
+    image: postgres:16
+    container_name: vault_postgres
+    networks:
+      - app_net
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: vaultadmin
+      POSTGRES_PASSWORD: vaultadmin-pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaultadmin -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  

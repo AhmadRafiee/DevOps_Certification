@@ -1,0 +1,6 @@
+auth requisite pam_exec.so quiet expose_authtok log=/var/log/vault-ssh.log /usr/local/bin/vault-ssh-helper -dev -config=/etc/vault-ssh-helper.d/config.hcl
+auth optional pam_unix.so not_set_pass use_first_pass nodelay
+account required pam_nologin.so
+account required pam_unix.so
+session required pam_limits.so
+session required pam_unix.so

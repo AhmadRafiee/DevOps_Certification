@@ -1,0 +1,22 @@
+name: ssh-service
+
+networks:
+  app_net:
+    name: app_net
+    external: true
+  web_net:
+    name: web_net
+    external: true
+    
+services:
+  ssh-server:
+    build: ./
+    container_name: vault_ssh_server
+    networks:
+      - app_net
+    ports:
+      - "2222:22"
+      - "2223:2223"
+    # volumes:
+    #   - ssh-ca-keys:/etc/ssh/ca
+  

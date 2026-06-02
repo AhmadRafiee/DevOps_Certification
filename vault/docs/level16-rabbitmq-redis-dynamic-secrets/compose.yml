@@ -1,0 +1,47 @@
+name: rabbitmq-redis-dynamic-secrets
+
+networks:
+  app_net:
+    external: true
+
+volumes:
+  rabbitmq-data:
+    name: rabbitmq-data
+  redis-data:
+    name: redis-data
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: vault_rabbitmq
+    networks:
+      - app_net
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: vaultadmin
+      RABBITMQ_DEFAULT_PASS: vaultadmin-pass
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  redis:
+    image: redis:7.2
+    container_name: vault_redis
+    networks:
+      - app_net
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass vaultadmin-pass --loglevel warning
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "vaultadmin-pass", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

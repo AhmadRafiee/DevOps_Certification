@@ -1,0 +1,21 @@
+Port 22
+Port 2223
+PermitRootLogin no
+UsePAM yes
+
+# Default: cert auth only, no password
+PasswordAuthentication no
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
+
+# Cert auth settings (port 22)
+TrustedUserCAKeys /etc/ssh/trusted-user-ca-keys.pem
+AuthorizedKeysFile /dev/null
+
+# OTP auth on port 2223
+Match LocalPort 2223
+    PubkeyAuthentication no
+    ChallengeResponseAuthentication yes
+    KbdInteractiveAuthentication yes
+    AuthenticationMethods keyboard-interactive

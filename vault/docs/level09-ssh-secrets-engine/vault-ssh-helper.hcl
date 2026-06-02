@@ -1,0 +1,5 @@
+vault_addr = "http://hashicorp_vault:8200"
+ssh_mount_point = "ssh"
+namespace = ""
+ca_cert = "-dev"
+allowed_roles = "*"

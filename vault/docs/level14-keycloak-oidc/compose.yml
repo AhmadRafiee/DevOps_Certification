@@ -1,0 +1,31 @@
+name: keycloak-oidc
+
+networks:
+  app_net:
+    name: app_net
+    external: true
+  web_net:
+    name: web_net
+    external: true
+
+volumes:
+  keycloak_data:
+    name: keycloak_data
+
+services:
+  keycloak:
+    image: keycloak/keycloak:24.0
+    container_name: vault_keycloak
+    networks:
+      - app_net
+      - web_net
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    command: start-dev
