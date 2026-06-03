@@ -16,6 +16,8 @@ key never leaves Vault.
 | One leaked token = full secret exposure | Short-lived Vault tokens per pod (TTL: 1h) |
 | No audit trail | Every secret read is logged in Vault |
 | Encryption key lives in the app | Key stays in Vault — only ciphertext crosses the wire |
+| Static DB password shared by all operations | Ephemeral DB user per operation, auto-revoked by Vault |
+| Read and write use the same credentials | Read-only credentials for SELECT, write credentials for CRUD — separate TTLs |
 
 ---
 
@@ -28,18 +30,26 @@ vault/
 │   ├── compose.yml                  ← Vault Docker Compose stack
 │   ├── kind-vault-lab.yaml          ← Kubernetes cluster definition (kind)
 │   └── README.md                    ← Run Vault with Docker Compose
-└── 02.k8s-integration/
-    ├── README.md                    ← Detailed level docs
-    ├── 01-vault-setup.sh            ← Step 1: configure Vault engines, policies, secrets
-    ├── 02-k8s-rbac.yaml             ← Step 2: ServiceAccounts + RBAC + reviewer token
-    ├── 03-vault-token-reviewer.sh   ← Step 3: give Vault the K8s TokenReview token
-    ├── vault-agent-injector/
-    │   ├── helm-values.yaml         ← Helm overrides (injector-only, external Vault)
-    │   └── install.sh               ← Step 4: install Vault Agent Injector via Helm
-    └── test-workload/
-        ├── 01-serviceaccount.yaml   ← App ServiceAccount
-        ├── 02-deployment.yaml       ← Demo app with Vault annotations
-        └── 03-transit-demo.yaml     ← Transit engine: encrypt/decrypt demo
+├── 02.k8s-integration/              ← Scenario 1: static KV secrets via Agent Injector
+│   ├── README.md                    ← Detailed level docs
+│   ├── 01-vault-setup.sh            ← Step 1: configure Vault engines, policies, secrets
+│   ├── 02-k8s-rbac.yaml             ← Step 2: ServiceAccounts + RBAC + reviewer token
+│   ├── 03-vault-token-reviewer.sh   ← Step 3: give Vault the K8s TokenReview token
+│   ├── vault-agent-injector/
+│   │   ├── helm-values.yaml         ← Helm overrides (injector-only, external Vault)
+│   │   └── install.sh               ← Step 4: install Vault Agent Injector via Helm
+│   └── test-workload/
+│       ├── 01-serviceaccount.yaml   ← App ServiceAccount
+│       ├── 02-deployment.yaml       ← Demo app with Vault annotations
+│       └── 03-transit-demo.yaml     ← Transit engine: encrypt/decrypt demo
+└── 03.dynamic-db-secrets/           ← Scenario 2: dynamic PostgreSQL credentials
+    ├── 01-postgres.yaml             ← PostgreSQL StatefulSet + NodePort service
+    ├── 02-vault-db-engine-setup.sh  ← Configure Database engine + app-reader/app-writer roles
+    ├── 03-k8s-rbac.yaml             ← ServiceAccount for the app
+    ├── 04-deployment.yaml           ← Flask app + ConfigMap (no Docker build needed)
+    ├── app/app.py                   ← App source: read path cached, write path never cached
+    ├── demo.sh                      ← End-to-end demo script
+    └── README.md                    ← Scenario docs
 ```
 
 ---
@@ -48,17 +58,17 @@ vault/
 
 ```
 Kubernetes Cluster (kind-vault-lab)
-┌───────────────────────────────────────────────────────────────────┐
-│                                                                   │
-│  vault namespace                                                  │
-│  ┌────────────────────────────────────────────────────────────┐   │
-│  │  vault-agent-injector  (MutatingWebhookConfiguration)      │   │
-│  └──────────────────────────┬─────────────────────────────────┘   │
-│                             │ intercepts every annotated pod      │
-│  default namespace          │                                     │
-│  ┌──────────────────────────▼─────────────────────────────────┐   │
+┌────────────────────────────────────────────────────────────────────┐
+│                                                                    │
+│  vault namespace                                                   │
+│  ┌────────────────────────────────────────────────────────────┐    │
+│  │  vault-agent-injector  (MutatingWebhookConfiguration)      │    │
+│  └──────────────────────────┬─────────────────────────────────┘    │
+│                             │ intercepts every annotated pod       │
+│  default namespace          │                                      │
+│  ┌──────────────────────────▼──────────────────────────────────┐   │
 │  │  Pod: myapp                                                 │   │
-│  │  ┌──────────────┐   ┌────────────────┐   ┌──────────────┐  │   │
+│  │  ┌───────────────┐   ┌────────────────┐   ┌──────────────┐  │   │
 │  │  │ init-container│   │ vault-agent    │   │ app          │  │   │
 │  │  │ (vault-agent) │   │ (sidecar)      │   │ container    │  │   │
 │  │  │               │   │                │   │              │  │   │
@@ -67,20 +77,20 @@ Kubernetes Cluster (kind-vault-lab)
 │  │  │ 2. Write to   │   │                │   │ /vault/      │  │   │
 │  │  │    /vault/    │   │                │   │ secrets/     │  │   │
 │  │  │    secrets/   │   │                │   │ (tmpfs)      │  │   │
-│  │  └──────────────┘   └────────────────┘   └──────────────┘  │   │
+│  │  └───────────────┘   └────────────────┘   └──────────────┘  │   │
 │  └─────────────────────────────────────────────────────────────┘   │
-└──────────────────────────────┬────────────────────────────────────┘
+└──────────────────────────────┬─────────────────────────────────────┘
                                │ Docker network: app_net (172.18.0.0/16)
-          ┌────────────────────▼────────────────────┐
-          │  hashicorp_vault  (Docker container)     │
-          │  172.18.0.2:8200                         │
-          │                                          │
-          │  ┌──────────────┐  ┌──────────────────┐  │
-          │  │  KV v2       │  │  Transit Engine  │  │
-          │  │  secret/     │  │  AES-256-GCM     │  │
-          │  │  (encrypted  │  │  encrypt/decrypt │  │
-          │  │   at rest)   │  │  API             │  │
-          │  └──────────────┘  └──────────────────┘  │
+          ┌────────────────────▼──────────────────────┐
+          │  hashicorp_vault  (Docker container)      │
+          │  172.18.0.2:8200                          │
+          │                                           │
+          │  ┌──────────────┐  ┌──────────────────┐   │
+          │  │  KV v2       │  │  Transit Engine  │   │
+          │  │  secret/     │  │  AES-256-GCM     │   │
+          │  │  (encrypted  │  │  encrypt/decrypt │   │
+          │  │   at rest)   │  │  API             │   │
+          │  └──────────────┘  └──────────────────┘   │
           │  ┌──────────────────────────────────────┐ │
           │  │  Kubernetes Auth Method              │ │
           │  │  validates pod SA tokens via         │ │
@@ -235,6 +245,23 @@ pod login returns `permission denied`.
 
 ### Phase 4 — Install the Vault Agent Injector (Step 4)
 
+Before installing, update `helm-values.yaml` with the actual Vault IP on the `kind` network
+(the injector sidecar runs inside the cluster, so it must use Vault's address on that network,
+not the `app_net` address):
+
+```bash
+# Auto-detect Vault's IP on the kind Docker network and patch helm-values.yaml
+VAULT_KIND_IP=$(docker inspect hashicorp_vault \
+  --format '{{(index .NetworkSettings.Networks "kind").IPAddress}}')
+
+sed -i "s|externalVaultAddr:.*|externalVaultAddr: \"http://${VAULT_KIND_IP}:8200\"|" \
+  vault-agent-injector/helm-values.yaml
+
+echo "externalVaultAddr → http://${VAULT_KIND_IP}:8200"
+```
+
+Then install:
+
 ```bash
 bash vault-agent-injector/install.sh
 ```
@@ -288,6 +315,7 @@ LOG_LEVEL=info
 
 ### Phase 6 — Transit Engine Demo (Encryption-as-a-Service)
 
+
 ```bash
 kubectl apply -f test-workload/03-transit-demo.yaml --context kind-vault-lab
 kubectl logs transit-demo -c transit-demo --context kind-vault-lab -f
@@ -305,6 +333,81 @@ Expected output:
 
 The encryption key `k8s-secrets` exists only inside Vault. The application sends plaintext
 to Vault and receives ciphertext back — the key is never exported.
+
+---
+
+## Scenario 2 — Dynamic Database Credentials
+
+> **Directory:** `03.dynamic-db-secrets/`
+
+Instead of storing a static database password in Vault's KV engine, this scenario uses
+Vault's **Database Secrets Engine** to create ephemeral PostgreSQL users on demand.
+
+```
+GET /items   →  Vault creates a temporary user with SELECT only  (TTL 1 h,  cached)
+POST /items  →  Vault creates a temporary user with full CRUD    (TTL 15 m, never cached)
+DELETE /items/<id>  →  same as POST: fresh write credentials every time
+```
+
+Each credential set is an actual PostgreSQL role created by Vault, used for one operation
+(or a cached window), then automatically revoked when the TTL expires. The database never
+holds a long-lived application password.
+
+```
+                         ┌──────────────────────────────────┐
+                         │  Vault  Database Secrets Engine  │
+                         │                                  │
+  GET /items ──────────▶│  database/creds/app-reader       │──▶  CREATE ROLE v-xxx  SELECT
+                         │  TTL 1h  ·  cached in app        │
+  POST /items ─────────▶│  database/creds/app-writer       │──▶  CREATE ROLE v-yyy  CRUD
+                         │  TTL 15m ·  never cached         │
+                         └─────────────────────┬────────────┘
+                                               │  manages lifecycle
+                                               ▼
+                                       PostgreSQL (appdb)
+                                       ephemeral roles revoked at TTL
+```
+
+### Quick start (requires Phases 0–3 from Scenario 1 to be complete)
+
+```bash
+# 1. Deploy PostgreSQL
+kubectl apply -f 03.dynamic-db-secrets/01-postgres.yaml
+kubectl rollout status statefulset/postgres
+
+# 2. Configure Vault Database engine, roles, and policy
+bash 03.dynamic-db-secrets/02-vault-db-engine-setup.sh
+
+# 3. Create ServiceAccount
+kubectl apply -f 03.dynamic-db-secrets/03-k8s-rbac.yaml
+
+# 4. Deploy the Flask app (no Docker build needed)
+kubectl apply -f 03.dynamic-db-secrets/04-deployment.yaml
+kubectl rollout status deployment/dynamic-db-app
+
+# 5. Run the end-to-end demo
+bash 03.dynamic-db-secrets/demo.sh
+```
+
+**See live ephemeral users in PostgreSQL:**
+
+```bash
+kubectl exec -it postgres-0 -- psql -U postgres -d appdb -c \
+  "SELECT usename, valuntil FROM pg_user WHERE usename LIKE 'v-kubernet-%' ORDER BY valuntil;"
+```
+
+**Confirm the privilege boundary — a read-only user cannot write:**
+
+```bash
+# Fetch a reader credential directly from Vault
+READER=$(curl -s http://172.18.0.2:8200/v1/database/creds/app-reader -H "X-Vault-Token: myroot")
+RUSER=$(echo $READER | python3 -c 'import sys,json; print(json.load(sys.stdin)["data"]["username"])')
+RPASS=$(echo $READER | python3 -c 'import sys,json; print(json.load(sys.stdin)["data"]["password"])')
+
+kubectl exec -it postgres-0 -- psql "postgresql://${RUSER}:${RPASS}@localhost/appdb" \
+  -c "INSERT INTO items (name) VALUES ('should-fail');"
+# ERROR:  permission denied for table items  ✓
+```
 
 ---
 

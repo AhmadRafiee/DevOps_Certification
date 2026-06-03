@@ -10,7 +10,7 @@ injector:
   replicas: 1
 
   # Point injector to the external Vault container on app_net
-  externalVaultAddr: "http://172.18.0.2:8200"
+  externalVaultAddr: "http://172.20.0.4:8200"
 
   # Resource limits for the injector pod
   resources:

@@ -18,7 +18,6 @@ services:
     container_name: hashicorp_vault
     networks:
       - app_net
-      - web_net
     ports:
       - "8200:8200"
     environment:

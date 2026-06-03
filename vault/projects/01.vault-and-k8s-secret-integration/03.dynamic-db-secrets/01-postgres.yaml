@@ -1,0 +1,107 @@
+---
+# ConfigMap: init script creates the DB, vault admin user, and seed data
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: default
+data:
+  01-init.sh: |
+    #!/bin/bash
+    set -e
+
+    # Step 1: create appdb + vault admin user (needs SUPERUSER to GRANT on behalf of others)
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+      CREATE DATABASE appdb;
+      CREATE ROLE vaultadmin WITH LOGIN PASSWORD 'vaultadmin-secret' SUPERUSER;
+    EOSQL
+
+    # Step 2: create schema and seed rows inside appdb
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "appdb" <<-EOSQL
+      CREATE TABLE IF NOT EXISTS items (
+          id         SERIAL PRIMARY KEY,
+          name       VARCHAR(255) NOT NULL,
+          value      TEXT         DEFAULT '',
+          created_at TIMESTAMP    DEFAULT NOW()
+      );
+
+      INSERT INTO items (name, value) VALUES
+          ('item-alpha',  'Vault dynamic secrets demo'),
+          ('item-beta',   'Read credentials can only SELECT this row'),
+          ('item-gamma',  'Write credentials can INSERT, UPDATE, DELETE');
+    EOSQL
+---
+# Service: ClusterIP + NodePort so Vault (Docker) can reach PostgreSQL from outside the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      nodePort: 30432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: default
+  labels:
+    app: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres-root-password"
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: postgres-init
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

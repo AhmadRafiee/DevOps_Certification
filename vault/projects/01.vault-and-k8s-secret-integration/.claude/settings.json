@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /home/ahmad/Projects/08.GitRepos/DevOps_Certification/vault/projects/01.vault-and-k8s-secret-integration/03.dynamic-db-secrets/app)",
+      "Bash(chmod +x /home/ahmad/Projects/08.GitRepos/DevOps_Certification/vault/projects/01.vault-and-k8s-secret-integration/03.dynamic-db-secrets/02-vault-db-engine-setup.sh /home/ahmad/Projects/08.GitRepos/DevOps_Certification/vault/projects/01.vault-and-k8s-secret-integration/03.dynamic-db-secrets/demo.sh)"
+    ],
+    "additionalDirectories": [
+      "/home/ahmad/Projects/08.GitRepos/DevOps_Certification/vault/projects/01.vault-and-k8s-secret-integration/03.dynamic-db-secrets"
+    ]
+  }
+}

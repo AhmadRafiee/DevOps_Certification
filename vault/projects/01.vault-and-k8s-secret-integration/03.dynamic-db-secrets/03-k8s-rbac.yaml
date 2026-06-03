@@ -1,0 +1,13 @@
+---
+# ServiceAccount used by the dynamic-db-app pod.
+# Vault's Kubernetes auth validates the pod's JWT against this SA.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dynamic-db-app-sa
+  namespace: default
+---
+# The app needs to call the Vault API with its own SA JWT.
+# No additional ClusterRoleBinding is needed here — the vault-token-reviewer
+# ClusterRoleBinding from 02.k8s-integration/02-k8s-rbac.yaml already grants
+# the vault-reviewer SA permission to validate tokens on behalf of all pods.
