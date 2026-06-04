@@ -1,0 +1,24 @@
+role: Agent
+
+existingConfigMaps:
+  - vector-agent-config
+
+dataDir: /vector-data-dir
+
+tolerations:
+  - key:    node-role.kubernetes.io/control-plane
+    effect: NoSchedule
+  - key:    node-role.kubernetes.io/master
+    effect: NoSchedule
+
+# Agents don't need to be reached from outside
+service:
+  enabled: false
+
+resources:
+  requests:
+    cpu:    50m
+    memory: 32Mi
+  limits:
+    cpu:    200m
+    memory: 128Mi

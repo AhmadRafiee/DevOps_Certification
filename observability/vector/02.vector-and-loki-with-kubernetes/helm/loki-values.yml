@@ -1,0 +1,54 @@
+# ── Loki — Single Binary mode (suitable for dev / staging) ──
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: filesystem
+
+  schemaConfig:
+    configs:
+      - from: "2024-01-01"
+        store:        tsdb
+        object_store: filesystem
+        schema:       v13
+        index:
+          prefix: index_
+          period: 24h
+
+  limits_config:
+    allow_structured_metadata: true
+    reject_old_samples:         true
+    reject_old_samples_max_age: 168h
+    ingestion_rate_mb:          16
+    ingestion_burst_size_mb:    32
+
+singleBinary:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 5Gi
+
+# Disable distributed components — not needed in SingleBinary mode
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+
+minio:
+  enabled: false
+
+# Expose Loki via NodePort for direct access from host
+gateway:
+  enabled: false
+
+service:
+  type: NodePort
+  nodePort: 30100
+  port: 3100

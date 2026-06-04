@@ -1,0 +1,33 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: vector-demo
+
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30000   # Grafana NodePort → host:3000
+        hostPort: 3000
+        protocol: TCP
+      - containerPort: 30100   # Loki NodePort → host:3100
+        hostPort: 3100
+        protocol: TCP
+      # Vector API: use kubectl port-forward instead of NodePort
+      # kubectl port-forward -n logging daemonset/vector 8686:8686
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+
+  - role: worker
+    labels:
+      role: worker
+
+  - role: worker
+    labels:
+      role: worker
+
+networking:
+  podSubnet:     "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"

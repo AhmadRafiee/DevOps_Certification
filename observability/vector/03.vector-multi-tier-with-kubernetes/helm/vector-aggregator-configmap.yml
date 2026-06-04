@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-aggregator-config
+  namespace: logging
+data:
+  vector.toml: |
+    # ── Aggregator: receive → parse → enrich → buffer → ship ──
+    data_dir = "/vector-data-dir"
+
+    [api]
+    enabled = true
+    address  = "0.0.0.0:8686"
+
+    # ── Sources ────────────────────────────────────────────────
+
+    # Receive events from all Agent pods via gRPC
+    [sources.from_agents]
+    type    = "vector"
+    address = "0.0.0.0:9000"
+
+    [sources.internal_metrics]
+    type = "internal_metrics"
+
+    [sources.internal_logs]
+    type = "internal_logs"
+
+    # ── Transforms ─────────────────────────────────────────────
+
+    [transforms.enrich]
+    type   = "remap"
+    inputs = ["from_agents"]
+    source = '''
+      # Parse JSON message body
+      structured, err = parse_json(.message)
+      if err == null && is_object(structured) {
+        . = merge!(., structured)
+      }
+
+      # Re-normalise level (agent may have set it from a non-JSON field;
+      # parsed JSON might expose a different .level key)
+      if !exists(.level) || is_null(.level) {
+        .level = "info"
+        if is_string(.severity)  { .level = downcase!(.severity)  }
+        if is_string(.log_level) { .level = downcase!(.log_level) }
+      }
+      if is_string(.level) { .level = downcase!(.level) }
+
+      # Service name: pod label > container name
+      if !exists(.service) || is_null(.service) {
+        .service = "unknown"
+        if is_string(.kubernetes.container_name) { .service = .kubernetes.container_name }
+      }
+
+      # Ensure host fallback
+      if !exists(.host) || is_null(.host) { .host = "unknown" }
+
+      .environment = get_env_var("ENVIRONMENT") ?? "production"
+    '''
+
+    [transforms.internal_meta]
+    type   = "remap"
+    inputs = ["internal_logs"]
+    source = '''
+      .level = string(.metadata.level) ?? "info"
+    '''
+
+    # ── Sinks ──────────────────────────────────────────────────
+
+    [sinks.loki]
+    type                = "loki"
+    inputs              = ["enrich"]
+    endpoint            = "http://loki.logging.svc.cluster.local:3100"
+    compression         = "snappy"
+    out_of_order_action = "rewrite_timestamp"
+
+      # Disk buffer: events survive Aggregator restarts.
+      # Agents backpressure when this fills up.
+      [sinks.loki.buffer]
+      type      = "disk"
+      max_size  = 268435488   # 256 MiB
+      when_full = "block"
+
+      [sinks.loki.labels]
+      namespace = "{{ kubernetes.pod_namespace }}"
+      pod       = "{{ kubernetes.pod_name }}"
+      container = "{{ kubernetes.container_name }}"
+      node      = "{{ kubernetes.node_name }}"
+      level     = "{{ level }}"
+      service   = "{{ service }}"
+
+      [sinks.loki.encoding]
+      codec = "json"
+
+    [sinks.loki_self]
+    type                = "loki"
+    inputs              = ["internal_meta"]
+    endpoint            = "http://loki.logging.svc.cluster.local:3100"
+    out_of_order_action = "rewrite_timestamp"
+
+      [sinks.loki_self.labels]
+      namespace = "logging"
+      service   = "vector-aggregator"
+      level     = "{{ level }}"
+
+      [sinks.loki_self.encoding]
+      codec = "json"
+
+    [sinks.console]
+    type   = "console"
+    inputs = ["internal_metrics"]
+      [sinks.console.encoding]
+      codec = "json"

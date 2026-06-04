@@ -1,0 +1,137 @@
+# =============================================================
+# Vector configuration
+# Docs: https://vector.dev/docs/reference/configuration/
+# =============================================================
+
+# ── API (health-check & introspection) ──────────────────────
+[api]
+enabled = true
+address  = "0.0.0.0:8686"
+
+# ── SOURCES ─────────────────────────────────────────────────
+
+# Internal Vector metrics & logs
+[sources.internal_metrics]
+type = "internal_metrics"
+
+[sources.internal_logs]
+type = "internal_logs"
+
+# Syslog over TCP (port 9000)
+[sources.syslog_tcp]
+type    = "syslog"
+address = "0.0.0.0:9000"
+mode    = "tcp"
+
+# Syslog over UDP (port 9001)
+[sources.syslog_udp]
+type    = "syslog"
+address = "0.0.0.0:9001"
+mode    = "udp"
+
+# Docker container logs from host (bind-mounted /var/log)
+[sources.host_logs]
+type              = "file"
+include           = ["/var/log/**/*.log"]
+ignore_older_secs = 86400  # ignore files not touched in 24 h
+
+# Docker container logs via Docker socket
+[sources.docker_logs]
+type                = "docker_logs"
+docker_host         = "unix:///var/run/docker.sock"
+exclude_containers  = ["vector"]   # avoid Vector reading its own logs twice
+
+# ── TRANSFORMS ──────────────────────────────────────────────
+
+# Normalise Docker metadata before merging into the main pipeline
+[transforms.docker_meta]
+type   = "remap"
+inputs = ["docker_logs"]
+source = '''
+  .service = string!(.container_name)
+  .level   = if .stream == "stderr" { "error" } else { "info" }
+'''
+
+# Parse JSON application logs when the message field is valid JSON
+[transforms.parse_json]
+type   = "remap"
+inputs = ["syslog_tcp", "syslog_udp", "host_logs", "docker_meta"]
+source = '''
+  structured, err = parse_json(.message)
+  if err == null && is_object(structured) {
+    . = merge!(., structured)
+  }
+
+  # Normalise log level to lowercase
+  if exists(.level) {
+    .level = downcase(string!(.level))
+  } else if exists(.severity) {
+    .level = downcase(string!(.severity))
+  } else {
+    .level = "info"
+  }
+
+  # Ensure a service label exists
+  if !exists(.service) || is_null(.service) {
+    .service = "unknown"
+    if is_string(.appname) { .service = .appname } else if is_string(.host) { .service = .host }
+  }
+'''
+
+# Add a standard environment label
+[transforms.add_labels]
+type   = "remap"
+inputs = ["parse_json"]
+source = '''
+  .environment = get_env_var("ENVIRONMENT") ?? "production"
+  if !exists(.host) || is_null(.host) { .host = "unknown" }
+'''
+
+# ── SINKS ────────────────────────────────────────────────────
+
+# Forward all processed logs to Loki
+[sinks.loki]
+type              = "loki"
+inputs            = ["add_labels"]
+endpoint          = "http://loki:3100"
+compression       = "snappy"
+out_of_order_action = "rewrite_timestamp"
+
+  [sinks.loki.labels]
+  level       = "{{ level }}"
+  service     = "{{ service }}"
+  environment = "{{ environment }}"
+  host        = "{{ host }}"
+
+  [sinks.loki.encoding]
+  codec = "json"
+
+# Promote metadata.level to top-level for loki_internal sink
+[transforms.internal_log_meta]
+type   = "remap"
+inputs = ["internal_logs"]
+source = '''
+  .level = string(.metadata.level) ?? "info"
+'''
+
+# Forward internal Vector logs to Loki as well
+[sinks.loki_internal]
+type     = "loki"
+inputs   = ["internal_log_meta"]
+endpoint = "http://loki:3100"
+
+  [sinks.loki_internal.labels]
+  service = "vector"
+  level   = "{{ level }}"
+
+  [sinks.loki_internal.encoding]
+  codec = "json"
+
+# Debug sink — prints to stdout while developing
+[sinks.console]
+type     = "console"
+inputs   = ["internal_metrics"]
+target   = "stdout"
+
+  [sinks.console.encoding]
+  codec = "json"

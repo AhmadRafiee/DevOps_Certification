@@ -1,0 +1,36 @@
+# ── Vector — DaemonSet Agent ─────────────────────────────────
+# Config is in vector-configmap.yml (TOML) to avoid Helm's
+# tpl engine misinterpreting Vector's {{ label }} templates.
+role: Agent
+
+# Use our pre-deployed ConfigMap instead of letting Helm
+# generate one from customConfig (which goes through tpl).
+existingConfigMaps:
+  - vector-config
+
+dataDir: /vector-data-dir
+
+# Run on all nodes including control-plane
+tolerations:
+  - key:    node-role.kubernetes.io/control-plane
+    effect: NoSchedule
+  - key:    node-role.kubernetes.io/master
+    effect: NoSchedule
+
+# Vector API — ClusterIP (use kubectl port-forward to access)
+service:
+  enabled: true
+  type:    ClusterIP
+  ports:
+    - name:       api
+      port:       8686
+      protocol:   TCP
+      targetPort: 8686
+
+resources:
+  requests:
+    cpu:    100m
+    memory: 64Mi
+  limits:
+    cpu:    500m
+    memory: 256Mi

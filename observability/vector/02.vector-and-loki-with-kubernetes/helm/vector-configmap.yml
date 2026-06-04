@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-config
+  namespace: logging
+data:
+  vector.toml: |
+    data_dir = "/vector-data-dir"
+
+    [api]
+    enabled = true
+    address  = "0.0.0.0:8686"
+
+    # ── Sources ────────────────────────────────────────────────
+
+    [sources.kubernetes_logs]
+    type = "kubernetes_logs"
+    # metadata stored at kubernetes.* paths by default:
+    # kubernetes.pod_namespace, kubernetes.pod_name,
+    # kubernetes.container_name, kubernetes.node_name, ...
+
+    [sources.internal_metrics]
+    type = "internal_metrics"
+
+    [sources.internal_logs]
+    type = "internal_logs"
+
+    # ── Transforms ─────────────────────────────────────────────
+
+    [transforms.enrich]
+    type   = "remap"
+    inputs = ["kubernetes_logs"]
+    source = '''
+      structured, err = parse_json(.message)
+      if err == null && is_object(structured) {
+        . = merge!(., structured)
+      }
+
+      if !exists(.level) || is_null(.level) {
+        .level = "info"
+        if is_string(.severity)  { .level = downcase!(.severity)  }
+        if is_string(.log_level) { .level = downcase!(.log_level) }
+      }
+      if is_string(.level) { .level = downcase!(.level) }
+
+      if !exists(.service) || is_null(.service) {
+        .service = "unknown"
+        if is_string(.kubernetes.container_name) { .service = .kubernetes.container_name }
+      }
+    '''
+
+    [transforms.internal_meta]
+    type   = "remap"
+    inputs = ["internal_logs"]
+    source = '''
+      .level = string(.metadata.level) ?? "info"
+    '''
+
+    # ── Sinks ──────────────────────────────────────────────────
+
+    [sinks.loki]
+    type     = "loki"
+    inputs   = ["enrich"]
+    endpoint = "http://loki.logging.svc.cluster.local:3100"
+    compression         = "snappy"
+    out_of_order_action = "rewrite_timestamp"
+
+      [sinks.loki.labels]
+      namespace = "{{ kubernetes.pod_namespace }}"
+      pod       = "{{ kubernetes.pod_name }}"
+      container = "{{ kubernetes.container_name }}"
+      node      = "{{ kubernetes.node_name }}"
+      level     = "{{ level }}"
+      service   = "{{ service }}"
+
+      [sinks.loki.encoding]
+      codec = "json"
+
+    [sinks.loki_self]
+    type     = "loki"
+    inputs   = ["internal_meta"]
+    endpoint = "http://loki.logging.svc.cluster.local:3100"
+    out_of_order_action = "rewrite_timestamp"
+
+      [sinks.loki_self.labels]
+      namespace = "logging"
+      service   = "vector"
+      level     = "{{ level }}"
+
+      [sinks.loki_self.encoding]
+      codec = "json"
+
+    [sinks.console]
+    type   = "console"
+    inputs = ["internal_metrics"]
+
+      [sinks.console.encoding]
+      codec = "json"

@@ -1,0 +1,29 @@
+role: Agent
+
+existingConfigMaps:
+  - vector-metrics-config
+
+dataDir: /vector-data-dir
+
+tolerations:
+  - key:    node-role.kubernetes.io/control-plane
+    effect: NoSchedule
+  - key:    node-role.kubernetes.io/master
+    effect: NoSchedule
+
+service:
+  enabled: true
+  type:    ClusterIP
+  ports:
+    - name:       api
+      port:       8686
+      protocol:   TCP
+      targetPort: 8686
+
+resources:
+  requests:
+    cpu:    100m
+    memory: 64Mi
+  limits:
+    cpu:    500m
+    memory: 256Mi

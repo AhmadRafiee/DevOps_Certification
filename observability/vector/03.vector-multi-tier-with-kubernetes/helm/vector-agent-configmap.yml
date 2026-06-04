@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-agent-config
+  namespace: logging
+data:
+  vector.toml: |
+    # ── Agent: collect → normalise → forward ──────────────────
+    # Heavy processing (JSON parsing, enrichment, buffering) is
+    # delegated to the Aggregator to keep agent overhead minimal.
+    data_dir = "/vector-data-dir"
+
+    [api]
+    enabled = true
+    address  = "0.0.0.0:8686"
+
+    # ── Sources ────────────────────────────────────────────────
+
+    [sources.kubernetes_logs]
+    type = "kubernetes_logs"
+
+    [sources.internal_metrics]
+    type = "internal_metrics"
+
+    # ── Transforms ─────────────────────────────────────────────
+
+    # Only normalise level — everything else happens at Aggregator
+    [transforms.normalize]
+    type   = "remap"
+    inputs = ["kubernetes_logs"]
+    source = '''
+      if !exists(.level) || is_null(.level) {
+        .level = "info"
+        if is_string(.severity)  { .level = downcase!(.severity)  }
+        if is_string(.log_level) { .level = downcase!(.log_level) }
+      }
+      if is_string(.level) { .level = downcase!(.level) }
+    '''
+
+    # ── Sinks ──────────────────────────────────────────────────
+
+    # Forward to Aggregator using Vector's native gRPC protocol
+    [sinks.aggregator]
+    type        = "vector"
+    inputs      = ["normalize"]
+    address     = "vector-aggregator.logging.svc.cluster.local:9000"
+    compression = true
+
+      # Memory buffer: if Aggregator is temporarily unreachable,
+      # hold up to 5 000 events before dropping newest arrivals.
+      [sinks.aggregator.buffer]
+      type       = "memory"
+      max_events = 5000
+      when_full  = "drop_newest"
+
+    [sinks.console]
+    type   = "console"
+    inputs = ["internal_metrics"]
+      [sinks.console.encoding]
+      codec = "json"

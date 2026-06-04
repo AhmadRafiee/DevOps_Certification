@@ -1,0 +1,86 @@
+adminUser:     admin
+adminPassword: admin
+
+service:
+  type:     NodePort
+  nodePort: 30000
+
+# ── Pre-wire Loki as the default datasource ──────────────────
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name:      Loki
+        type:      loki
+        url:       http://loki.logging.svc.cluster.local:3100
+        isDefault: true
+        editable:  false
+        jsonData:
+          maxLines: 5000
+
+# ── Dashboard provisioning ───────────────────────────────────
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name:    kubernetes-logs
+        orgId:   1
+        folder:  Kubernetes Logs
+        type:    file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        options:
+          path: /var/lib/grafana/dashboards/kubernetes-logs
+
+dashboards:
+  kubernetes-logs:
+    k8s-logs-overview:
+      json: |
+        {
+          "title": "Kubernetes Logs",
+          "uid": "k8s-logs",
+          "schemaVersion": 38,
+          "version": 1,
+          "refresh": "30s",
+          "time": { "from": "now-1h", "to": "now" },
+          "panels": [
+            {
+              "id": 1, "type": "logs", "title": "All Pod Logs",
+              "gridPos": { "x": 0, "y": 0, "w": 24, "h": 12 },
+              "datasource": { "type": "loki" },
+              "targets": [{ "expr": "{namespace=~\".+\"}", "refId": "A" }],
+              "options": { "showTime": true, "showLabels": true, "enableLogDetails": true, "sortOrder": "Descending" }
+            },
+            {
+              "id": 2, "type": "timeseries", "title": "Log Rate by Namespace",
+              "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+              "datasource": { "type": "loki" },
+              "targets": [{ "expr": "sum by (namespace) (rate({namespace=~\".+\"}[2m]))", "refId": "A", "legendFormat": "{{namespace}}" }]
+            },
+            {
+              "id": 3, "type": "timeseries", "title": "Log Rate by Level",
+              "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+              "datasource": { "type": "loki" },
+              "targets": [{ "expr": "sum by (level) (rate({level=~\".+\"}[2m]))", "refId": "A", "legendFormat": "{{level}}" }]
+            },
+            {
+              "id": 4, "type": "logs", "title": "Errors Only",
+              "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+              "datasource": { "type": "loki" },
+              "targets": [{ "expr": "{level=~\"error|critical|fatal\"}", "refId": "A" }],
+              "options": { "showTime": true, "showLabels": true, "sortOrder": "Descending" }
+            }
+          ]
+        }
+
+persistence:
+  enabled: true
+  size: 2Gi
+
+resources:
+  requests:
+    cpu:    100m
+    memory: 128Mi
+  limits:
+    cpu:    200m
+    memory: 256Mi

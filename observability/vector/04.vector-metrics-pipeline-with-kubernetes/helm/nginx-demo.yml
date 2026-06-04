@@ -1,0 +1,108 @@
+---
+# ConfigMap: nginx با JSON access log
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: default
+data:
+  nginx.conf: |
+    events {}
+    http {
+      log_format json_access escape=json
+        '{'
+          '"time":"$time_iso8601",'
+          '"method":"$request_method",'
+          '"uri":"$request_uri",'
+          '"status":$status,'
+          '"bytes":$body_bytes_sent,'
+          '"duration":$request_time,'
+          '"remote_addr":"$remote_addr"'
+        '}';
+
+      access_log /dev/stdout json_access;
+      error_log  /dev/stderr warn;
+
+      server {
+        listen 80;
+        location / {
+          return 200 '{"status":"ok","service":"nginx-demo"}\n';
+          add_header Content-Type application/json;
+        }
+        location /error {
+          return 500 '{"error":"internal"}\n';
+          add_header Content-Type application/json;
+        }
+        location /not-found {
+          return 404 '{"error":"not found"}\n';
+          add_header Content-Type application/json;
+        }
+      }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-demo
+  namespace: default
+  labels:
+    app: nginx-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-demo
+  template:
+    metadata:
+      labels:
+        app: nginx-demo
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits:   { cpu: 100m, memory: 32Mi }
+
+        # Sidecar: sends traffic to generate realistic access logs
+        - name: traffic-gen
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              while true; do
+                wget -q -O/dev/null http://localhost/         || true
+                wget -q -O/dev/null http://localhost/         || true
+                wget -q -O/dev/null http://localhost/not-found || true
+                wget -q -O/dev/null http://localhost/error    || true
+                sleep 2
+              done
+          resources:
+            requests: { cpu: 5m, memory: 8Mi }
+            limits:   { cpu: 20m, memory: 16Mi }
+
+      volumes:
+        - name: config
+          configMap:
+            name: nginx-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-demo
+  namespace: default
+spec:
+  selector:
+    app: nginx-demo
+  ports:
+    - port: 80
+      targetPort: 80

@@ -1,0 +1,92 @@
+services:
+
+  # ─────────────────────────────────────────────
+  # Vector — log aggregation & routing pipeline
+  # ─────────────────────────────────────────────
+  vector:
+    image: timberio/vector:0.41.0-alpine
+    container_name: vector
+    restart: unless-stopped
+    ports:
+      - "8686:8686"      # Vector API / health-check
+      - "9000:9000"      # Syslog TCP input
+      - "9001:9001/udp"  # Syslog UDP input
+    volumes:
+      - ./config/vector.toml:/etc/vector/vector.toml:ro
+      - vector_data:/var/lib/vector
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: ["--config", "/etc/vector/vector.toml"]
+    environment:
+      VECTOR_LOG: info
+      VECTOR_WATCH_CONFIG: "true"
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - logging
+    healthcheck:
+      test: ["CMD", "vector", "--version"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ─────────────────────────────────────────────
+  # Loki — log storage backend
+  # ─────────────────────────────────────────────
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - logging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ─────────────────────────────────────────────
+  # Grafana — log visualisation dashboard
+  # ─────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - logging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+networks:
+  logging:
+    name: logging_network
+    driver: bridge
+
+volumes:
+  vector_data:
+  loki_data:
+  grafana_data:

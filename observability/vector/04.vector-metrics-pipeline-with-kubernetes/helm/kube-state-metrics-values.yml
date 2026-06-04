@@ -1,0 +1,18 @@
+replicaCount: 1
+
+resources:
+  requests: { cpu: 10m, memory: 32Mi }
+  limits:   { cpu: 100m, memory: 64Mi }
+
+# Expose on a stable ClusterIP — Vector scrapes this endpoint
+service:
+  type: ClusterIP
+  port: 8080
+
+# Collect only the resource types we actually use in Vector transforms
+collectors:
+  - deployments
+  - pods
+  - nodes
+  - namespaces
+  - replicasets

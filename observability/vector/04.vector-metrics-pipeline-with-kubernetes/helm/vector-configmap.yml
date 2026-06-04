@@ -1,0 +1,186 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-metrics-config
+  namespace: monitoring
+data:
+  vector.toml: |
+    data_dir = "/vector-data-dir"
+
+    [api]
+    enabled = true
+    address  = "0.0.0.0:8686"
+
+    # ══════════════════════════════════════════════════════════
+    # SOURCES
+    # ══════════════════════════════════════════════════════════
+
+    [sources.internal_metrics]
+    type = "internal_metrics"
+
+    [sources.internal_logs]
+    type = "internal_logs"
+
+    # Scrape Prometheus /metrics endpoints
+    [sources.prometheus_scrape]
+    type                 = "prometheus_scrape"
+    scrape_interval_secs = 30
+    scrape_timeout_secs  = 10
+    endpoints = [
+      "http://victoria-metrics-victoria-metrics-single-server.monitoring.svc.cluster.local:8428/metrics",
+      "http://loki.logging.svc.cluster.local:3100/metrics",
+    ]
+
+    # kube-state-metrics
+    [sources.kube_state_metrics]
+    type                 = "prometheus_scrape"
+    scrape_interval_secs = 30
+    endpoints            = ["http://kube-state-metrics.monitoring.svc.cluster.local:8080/metrics"]
+
+    # Pod logs — used both for log_to_metric and raw log storage
+    [sources.kubernetes_logs]
+    type = "kubernetes_logs"
+
+    # ══════════════════════════════════════════════════════════
+    # TRANSFORMS
+    # ══════════════════════════════════════════════════════════
+
+    # Drop noisy Go runtime and process metrics before storing
+    [transforms.filter_metrics]
+    type   = "filter"
+    inputs = ["prometheus_scrape", "kube_state_metrics", "internal_metrics"]
+    condition = '''
+      !starts_with(string!(.name), "go_") &&
+      !starts_with(string!(.name), "process_")
+    '''
+
+    # Normalise logs for Loki storage
+    [transforms.normalize_logs]
+    type   = "remap"
+    inputs = ["kubernetes_logs"]
+    source = '''
+      if !exists(.level) || is_null(.level) {
+        .level = "info"
+        if is_string(.severity)  { .level = downcase!(.severity)  }
+        if is_string(.log_level) { .level = downcase!(.log_level) }
+      }
+      if is_string(.level) { .level = downcase!(.level) }
+
+      if !exists(.service) || is_null(.service) {
+        .service = "unknown"
+        if is_string(.kubernetes.container_name) { .service = .kubernetes.container_name }
+      }
+    '''
+
+    # Promote level from internal log metadata
+    [transforms.internal_meta]
+    type   = "remap"
+    inputs = ["internal_logs"]
+    source = '''
+      .level = string(.metadata.level) ?? "info"
+    '''
+
+    # Parse nginx JSON access logs and abort non-HTTP events
+    [transforms.parse_access_log]
+    type   = "remap"
+    inputs = ["kubernetes_logs"]
+    source = '''
+      structured, err = parse_json(.message)
+      if err == null && is_object(structured) {
+        . = merge!(., structured)
+      }
+      if !exists(.status) || !exists(.method) {
+        abort
+      }
+      if is_string(.status) {
+        .status = to_int!(.status)
+      }
+    '''
+
+    # Convert HTTP access log events → Prometheus metrics
+    [transforms.log_to_metric]
+    type   = "log_to_metric"
+    inputs = ["parse_access_log"]
+
+      [[transforms.log_to_metric.metrics]]
+      type      = "counter"
+      field     = "status"
+      name      = "http_requests_total"
+      namespace = "app"
+        [transforms.log_to_metric.metrics.tags]
+        namespace = "{{kubernetes.pod_namespace}}"
+        service   = "{{kubernetes.pod_name}}"
+        method    = "{{method}}"
+        status    = "{{status}}"
+
+      [[transforms.log_to_metric.metrics]]
+      type      = "histogram"
+      field     = "bytes"
+      name      = "http_response_bytes"
+      namespace = "app"
+        [transforms.log_to_metric.metrics.tags]
+        namespace = "{{kubernetes.pod_namespace}}"
+        service   = "{{kubernetes.pod_name}}"
+
+      [[transforms.log_to_metric.metrics]]
+      type      = "histogram"
+      field     = "duration"
+      name      = "http_request_duration_seconds"
+      namespace = "app"
+        [transforms.log_to_metric.metrics.tags]
+        namespace = "{{kubernetes.pod_namespace}}"
+        service   = "{{kubernetes.pod_name}}"
+        method    = "{{method}}"
+
+    # ══════════════════════════════════════════════════════════
+    # SINKS
+    # ══════════════════════════════════════════════════════════
+
+    # All metrics → VictoriaMetrics
+    # VictoriaMetrics returns 204 on successful writes — disable Vector's
+    # healthcheck which expects 200 and would otherwise block the sink.
+    [sinks.victoriametrics]
+    type     = "prometheus_remote_write"
+    inputs   = ["filter_metrics", "log_to_metric"]
+    endpoint = "http://victoria-metrics-victoria-metrics-single-server.monitoring.svc.cluster.local:8428/api/v1/write"
+
+      [sinks.victoriametrics.healthcheck]
+      enabled = false
+
+      [sinks.victoriametrics.buffer]
+      type       = "memory"
+      max_events = 50000
+      when_full  = "drop_newest"
+
+    # All pod logs → Loki
+    [sinks.loki]
+    type                = "loki"
+    inputs              = ["normalize_logs"]
+    endpoint            = "http://loki.logging.svc.cluster.local:3100"
+    out_of_order_action = "rewrite_timestamp"
+
+      [sinks.loki.labels]
+      namespace = "{{ kubernetes.pod_namespace }}"
+      pod       = "{{ kubernetes.pod_name }}"
+      container = "{{ kubernetes.container_name }}"
+      node      = "{{ kubernetes.node_name }}"
+      level     = "{{ level }}"
+      service   = "{{ service }}"
+
+      [sinks.loki.encoding]
+      codec = "json"
+
+    # Vector's own logs → Loki
+    [sinks.loki_self]
+    type                = "loki"
+    inputs              = ["internal_meta"]
+    endpoint            = "http://loki.logging.svc.cluster.local:3100"
+    out_of_order_action = "rewrite_timestamp"
+
+      [sinks.loki_self.labels]
+      namespace = "monitoring"
+      service   = "vector"
+      level     = "{{ level }}"
+
+      [sinks.loki_self.encoding]
+      codec = "json"

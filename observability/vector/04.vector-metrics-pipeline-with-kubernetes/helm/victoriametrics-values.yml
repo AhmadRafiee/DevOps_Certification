@@ -1,0 +1,18 @@
+server:
+  retentionPeriod: 1   # months
+  persistentVolume:
+    enabled: true
+    size:    5Gi
+
+  service:
+    type:     NodePort
+    nodePort: 30428
+    servicePort: 8428
+
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits:   { cpu: 500m, memory: 512Mi }
+
+  # Enable remote write receiver (for Vector's prometheus_remote_write sink)
+  extraArgs:
+    retentionPeriod: "1"

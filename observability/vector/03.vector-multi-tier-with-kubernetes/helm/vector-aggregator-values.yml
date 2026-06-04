@@ -1,0 +1,40 @@
+role: Aggregator
+
+existingConfigMaps:
+  - vector-aggregator-config
+
+dataDir: /vector-data-dir
+
+# StatefulSet with persistent storage for the disk buffer
+persistence:
+  enabled:      true
+  storageClass: standard
+  size:         2Gi
+
+replicas: 1
+
+tolerations:
+  - key:    node-role.kubernetes.io/control-plane
+    effect: NoSchedule
+
+# Expose gRPC port (9000) for Agents + API port (8686)
+service:
+  enabled: true
+  type:    ClusterIP
+  ports:
+    - name:       vector
+      port:       9000
+      protocol:   TCP
+      targetPort: 9000
+    - name:       api
+      port:       8686
+      protocol:   TCP
+      targetPort: 8686
+
+resources:
+  requests:
+    cpu:    200m
+    memory: 128Mi
+  limits:
+    cpu:    1000m
+    memory: 512Mi

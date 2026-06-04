@@ -1,0 +1,105 @@
+adminUser:     admin
+adminPassword: admin
+
+# kind's local-path-provisioner mounts volumes as root;
+# the chown init container fails without this flag.
+initChownData:
+  enabled: false
+
+service:
+  type:     NodePort
+  nodePort: 30000
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name:      VictoriaMetrics
+        type:      prometheus
+        url:       http://victoria-metrics-victoria-metrics-single-server.monitoring.svc.cluster.local:8428
+        isDefault: true
+        editable:  false
+        jsonData:
+          timeInterval: 30s
+      - name:      Loki
+        type:      loki
+        url:       http://loki.logging.svc.cluster.local:3100
+        isDefault: false
+        editable:  false
+        jsonData:
+          maxLines: 5000
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name:    metrics
+        orgId:   1
+        folder:  Metrics
+        type:    file
+        options:
+          path: /var/lib/grafana/dashboards/metrics
+
+dashboards:
+  metrics:
+    vector-metrics:
+      json: |
+        {
+          "title": "Vector Metrics Pipeline",
+          "uid": "vector-metrics",
+          "schemaVersion": 38,
+          "refresh": "30s",
+          "time": { "from": "now-1h", "to": "now" },
+          "panels": [
+            {
+              "id": 1, "type": "timeseries", "title": "HTTP Requests / sec by Status",
+              "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+              "datasource": { "type": "prometheus" },
+              "targets": [{ "expr": "sum by (status) (rate(app_http_requests_total[2m]))", "legendFormat": "{{status}}", "refId": "A" }]
+            },
+            {
+              "id": 2, "type": "timeseries", "title": "HTTP Error Rate ( 4xx + 5xx )",
+              "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+              "datasource": { "type": "prometheus" },
+              "targets": [{ "expr": "sum by (service) (rate(app_http_requests_total{status=~\"[45]..\"}[2m]))", "legendFormat": "{{service}}", "refId": "A" }]
+            },
+            {
+              "id": 3, "type": "timeseries", "title": "Vector Events Processed / sec",
+              "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+              "datasource": { "type": "prometheus" },
+              "targets": [{ "expr": "sum by (component_id) (rate(vector_component_received_events_total[2m]))", "legendFormat": "{{component_id}}", "refId": "A" }]
+            },
+            {
+              "id": 4, "type": "timeseries", "title": "Pod Restarts (kube-state-metrics)",
+              "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+              "datasource": { "type": "prometheus" },
+              "targets": [{ "expr": "increase(kube_pod_container_status_restarts_total[1h])", "legendFormat": "{{pod}}", "refId": "A" }]
+            },
+            {
+              "id": 5, "type": "stat", "title": "Running Pods",
+              "gridPos": { "x": 0, "y": 16, "w": 6, "h": 4 },
+              "datasource": { "type": "prometheus" },
+              "targets": [{ "expr": "count(kube_pod_status_phase{phase=\"Running\"})", "refId": "A" }]
+            },
+            {
+              "id": 6, "type": "stat", "title": "Unavailable Deployments",
+              "gridPos": { "x": 6, "y": 16, "w": 6, "h": 4 },
+              "datasource": { "type": "prometheus" },
+              "targets": [{ "expr": "sum(kube_deployment_status_replicas_unavailable)", "refId": "A" }]
+            },
+            {
+              "id": 7, "type": "timeseries", "title": "Vector Dropped Events",
+              "gridPos": { "x": 12, "y": 16, "w": 12, "h": 4 },
+              "datasource": { "type": "prometheus" },
+              "targets": [{ "expr": "sum by (component_id) (rate(vector_component_discarded_events_total[2m]))", "legendFormat": "{{component_id}}", "refId": "A" }]
+            }
+          ]
+        }
+
+persistence:
+  enabled: true
+  size:    2Gi
+
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits:   { cpu: 200m, memory: 256Mi }

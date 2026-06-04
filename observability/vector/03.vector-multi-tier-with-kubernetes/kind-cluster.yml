@@ -1,0 +1,26 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: vector-multi-tier
+
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30000   # Grafana
+        hostPort: 3001
+        protocol: TCP
+      - containerPort: 30100   # Loki
+        hostPort: 3101
+        protocol: TCP
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+
+  - role: worker
+  - role: worker
+
+networking:
+  podSubnet:     "10.245.0.0/16"
+  serviceSubnet: "10.97.0.0/12"
