@@ -1,0 +1,21 @@
+name: vault-multi-service
+
+networks:
+  app_net:
+    name: app_net
+    external: true                    # Vault is already running on this network
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_vault_lab
+    networks:
+      - app_net
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: vault_admin       # Vault uses this account to create/drop dynamic users
+      POSTGRES_PASSWORD: "VaultAdmin!Pass"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vault_admin -d appdb"]
+      interval: 5s
+      retries: 10
