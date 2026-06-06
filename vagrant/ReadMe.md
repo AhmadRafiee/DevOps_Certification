@@ -1,13 +1,25 @@
 # Installing Vagrant/Packer on Ubuntu/Debian
-### Add the HashiCorp GPG key.
+
+## Add the HashiCorp GPG key.
+
+### Add the HashiCorp GPG key for the new Debian 12+ compatible method.
 ```bash
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/keyrings/hashicorp.gpg > /dev/null
 ```
 ### Add the official HashiCorp Linux repository.
 ```bash
+echo "deb [signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+```
+
+
+#### *Or add the HashiCorp GPG key for the older ones*.
+```bash
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 ```
-### Update and install.
+
+#### Update and install.
 ```bash
 sudo apt-get update
 sudo apt-get install vagrant
