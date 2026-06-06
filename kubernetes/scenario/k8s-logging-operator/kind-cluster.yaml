@@ -1,0 +1,32 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: logging-demo
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.32.0
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 30601
+        hostPort: 5601
+        protocol: TCP
+      - containerPort: 30920
+        hostPort: 9200
+        protocol: TCP
+  - role: worker
+    image: kindest/node:v1.32.0
+    extraMounts:
+      - hostPath: /tmp/kind-logs
+        containerPath: /var/log/app-logs
+  - role: worker
+    image: kindest/node:v1.32.0
+    extraMounts:
+      - hostPath: /tmp/kind-logs
+        containerPath: /var/log/app-logs
+networking:
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"

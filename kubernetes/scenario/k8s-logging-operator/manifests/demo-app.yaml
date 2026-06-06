@@ -1,0 +1,38 @@
+# یه app ساده برای تست لاگ‌ها
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-generator
+  namespace: logging
+  labels:
+    app: log-generator
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: log-generator
+  template:
+    metadata:
+      labels:
+        app: log-generator
+    spec:
+      containers:
+        - name: log-generator
+          image: hub.mecan.ir/busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              i=0
+              while true; do
+                i=$((i+1))
+                echo "{\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"level\":\"INFO\",\"message\":\"Log entry $i from pod $HOSTNAME\",\"pod\":\"$HOSTNAME\",\"namespace\":\"logging\"}"
+                sleep 2
+              done
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "10m"
+            limits:
+              memory: "32Mi"
+              cpu: "50m"

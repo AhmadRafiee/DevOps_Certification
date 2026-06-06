@@ -1,0 +1,77 @@
+# Logging resource — defines Fluentd + Fluent Bit DaemonSet
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: Logging
+metadata:
+  name: default-logging
+  namespace: logging
+spec:
+  fluentd:
+    image:
+      repository: github.mecan.ir/kube-logging/fluentd
+      tag: v1.16-full
+    configReloaderImage:
+      repository: ghcr.io/kube-logging/config-reloader
+      tag: v0.0.5
+      pullPolicy: Never
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    scaling:
+      replicas: 1
+  fluentbit:
+    image:
+      repository: hub.mecan.ir/fluent/fluent-bit
+      tag: "3.2"
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
+  controlNamespace: logging
+---
+# Output — ارسال لاگ‌ها به Elasticsearch
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: Output
+metadata:
+  name: elasticsearch-output
+  namespace: logging
+spec:
+  elasticsearch:
+    host: elasticsearch.logging.svc.cluster.local
+    port: 9200
+    scheme: http
+    index_name: kubernetes-logs
+    type_name: _doc
+    buffer:
+      timekey: 1m
+      timekey_wait: 30s
+      flush_mode: interval
+      flush_interval: 5s
+---
+# Flow — جمع‌آوری لاگ از تمام namespace‌ها
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: Flow
+metadata:
+  name: all-logs-flow
+  namespace: logging
+spec:
+  match:
+    - select: {}
+  filters:
+    - tag_normaliser: {}
+    - parser:
+        remove_key_name_field: true
+        reserve_data: true
+        parse:
+          type: multi_format
+          patterns:
+            - format: json
+            - format: none
+  localOutputRefs:
+    - elasticsearch-output

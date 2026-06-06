@@ -1,0 +1,22 @@
+# =========================================================
+# Complete image list — با رجیستری‌های mecan.ir
+# =========================================================
+# hub.mecan.ir   ← Docker Hub
+# k8s.mecan.ir   ← registry.k8s.io
+# github.mecan.ir ← ghcr.io
+# =========================================================
+
+# --- Kind node (Docker Hub) ---
+hub.mecan.ir/kindest/node:v1.32.2
+
+# --- ELK stack (Docker Hub) ---
+hub.mecan.ir/busybox:1.36
+hub.mecan.ir/elasticsearch:8.17.4
+hub.mecan.ir/kibana:8.17.4
+
+# --- Logging Operator (ghcr.io) ---
+github.mecan.ir/kube-logging/logging-operator:4.2.2
+
+# --- Fluentd (ghcr.io) + Fluent Bit (Docker Hub) ---
+github.mecan.ir/kube-logging/fluentd:v1.16-full
+hub.mecan.ir/fluent/fluent-bit:3.2
