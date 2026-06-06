@@ -91,6 +91,7 @@
   - [Kubernetes Demo Project](scenario/kubernetes-demo-project.md)
   - [Deploy Wordpress service on kubernetes](scenario/wordpress.md)
   - [Deploy Logging Operator on kubernetes](scenario/k8s-logging-operator/README.md)
+  - [Deploy VictoriaMetrics Operator on kubernetes](scenario/k8s-victoria-metrics/README.md)
 
 ### [Sample Helm Repository](helm)
   - [Hello World! helm package](helm/hello-world)

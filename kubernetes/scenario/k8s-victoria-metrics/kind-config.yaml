@@ -1,0 +1,46 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: vm-monitoring
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30000
+        hostPort: 30000
+        protocol: TCP
+      - containerPort: 30001
+        hostPort: 30001
+        protocol: TCP
+      - containerPort: 30002
+        hostPort: 30002
+        protocol: TCP
+      - containerPort: 30003
+        hostPort: 30003
+        protocol: TCP
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraMounts:
+      - hostPath: /home/ahmad/Desktop/New_Service/k8s-victoria-metrics/registry-mirrors
+        containerPath: /etc/containerd/certs.d
+  - role: worker
+    extraMounts:
+      - hostPath: /tmp/vm-worker1
+        containerPath: /data
+      - hostPath: /home/ahmad/Desktop/New_Service/k8s-victoria-metrics/registry-mirrors
+        containerPath: /etc/containerd/certs.d
+  - role: worker
+    extraMounts:
+      - hostPath: /tmp/vm-worker2
+        containerPath: /data
+      - hostPath: /home/ahmad/Desktop/New_Service/k8s-victoria-metrics/registry-mirrors
+        containerPath: /etc/containerd/certs.d
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = "/etc/containerd/certs.d"
+networking:
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"

@@ -1,0 +1,266 @@
+# VictoriaMetrics K8s Stack - Full Monitoring
+# Chart: vm/victoria-metrics-k8s-stack v0.81.0
+
+# ────────────────────────────────────────────────
+# VMSingle - storage engine
+# ────────────────────────────────────────────────
+vmsingle:
+  enabled: true
+  spec:
+    retentionPeriod: "14"
+    storage:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    extraArgs:
+      dedup.minScrapeInterval: "30s"
+  service:
+    type: NodePort
+    servicePort: 8429
+    nodePort: 30001
+
+# ────────────────────────────────────────────────
+# VMAgent - scrapes all targets
+# ────────────────────────────────────────────────
+vmagent:
+  enabled: true
+  spec:
+    selectAllByDefault: true
+    scrapeInterval: "30s"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 512Mi
+    externalLabels:
+      cluster: vm-monitoring
+      environment: local
+
+# ────────────────────────────────────────────────
+# VMAlert - alerting engine
+# ────────────────────────────────────────────────
+vmalert:
+  enabled: true
+  spec:
+    selectAllByDefault: true
+    evaluationInterval: "30s"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+# ────────────────────────────────────────────────
+# AlertManager
+# ────────────────────────────────────────────────
+alertmanager:
+  enabled: true
+  spec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ["alertname", "cluster", "service"]
+      group_wait: 10s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: "null"
+      routes:
+        - receiver: "null"
+          matchers:
+            - alertname =~ "InfoInhibitor|Watchdog"
+    receivers:
+      - name: "null"
+    inhibit_rules:
+      - source_matchers:
+          - severity = critical
+        target_matchers:
+          - severity =~ warning|info
+        equal: ["namespace", "alertname"]
+  service:
+    type: NodePort
+    nodePort: 30003
+
+# ────────────────────────────────────────────────
+# Grafana
+# ────────────────────────────────────────────────
+grafana:
+  enabled: true
+  adminPassword: "admin123"
+  service:
+    type: NodePort
+    nodePort: 30000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 2Gi
+  # Use sidecar for automatic dashboard/datasource discovery
+  sidecar:
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      labelValue: "1"
+      searchNamespace: ALL
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+      provider:
+        allowUiUpdates: true
+  grafana.ini:
+    server:
+      root_url: "http://localhost:30000"
+    auth.anonymous:
+      enabled: false
+
+# ────────────────────────────────────────────────
+# kube-state-metrics
+# ────────────────────────────────────────────────
+kube-state-metrics:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# ────────────────────────────────────────────────
+# Node Exporter
+# ────────────────────────────────────────────────
+prometheus-node-exporter:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# ────────────────────────────────────────────────
+# Default alerting/recording rules
+# ────────────────────────────────────────────────
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: true
+    configReloaders: true
+    general: true
+    k8sContainerCpuUsageSecondsTotal: true
+    k8sContainerMemoryCache: true
+    k8sContainerMemoryRss: true
+    k8sContainerMemorySwap: true
+    k8sContainerResource: true
+    k8sPodOwner: true
+    kubeApiserverAvailability: true
+    kubeApiserverBurnrate: true
+    kubeApiserverHistogram: true
+    kubeApiserverSlos: true
+    kubeControllerManager: true
+    kubelet: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeSchedulerAlerting: true
+    kubeSchedulerRecording: true
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
+    vmcluster: false
+
+# ────────────────────────────────────────────────
+# K8s component scrape targets
+# ────────────────────────────────────────────────
+kubelet:
+  enabled: true
+
+kubeApiServer:
+  enabled: true
+
+kubeControllerManager:
+  enabled: true
+  service:
+    enabled: true
+    port: 10257
+  vmScrape:
+    spec:
+      endpoints:
+        - port: http-metrics
+          scheme: https
+          tlsConfig:
+            insecureSkipVerify: true
+
+kubeScheduler:
+  enabled: true
+  service:
+    enabled: true
+    port: 10259
+  vmScrape:
+    spec:
+      endpoints:
+        - port: http-metrics
+          scheme: https
+          tlsConfig:
+            insecureSkipVerify: true
+
+kubeEtcd:
+  enabled: true
+  service:
+    enabled: true
+    port: 2381
+  vmScrape:
+    spec:
+      endpoints:
+        - port: http-metrics
+          scheme: http
+
+coreDns:
+  enabled: true
+
+kubeProxy:
+  enabled: true
+  service:
+    enabled: true
+    port: 10249
+  vmScrape:
+    spec:
+      endpoints:
+        - port: http-metrics
+          scheme: http

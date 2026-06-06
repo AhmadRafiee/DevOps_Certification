@@ -1,0 +1,5 @@
+server = "https://quay.io"
+
+[host."https://quay.mecan.ir"]
+  capabilities = ["pull", "resolve"]
+  skip_verify = false

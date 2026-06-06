@@ -1,0 +1,5 @@
+server = "https://docker.io"
+
+[host."https://hub.mecan.ir"]
+  capabilities = ["pull", "resolve"]
+  skip_verify = false
