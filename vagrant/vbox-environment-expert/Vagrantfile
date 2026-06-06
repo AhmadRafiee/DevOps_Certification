@@ -1,39 +1,64 @@
-IMAGE_ubuntu_2204   = "bento/ubuntu-22.04"
-IMAGE_Debian_12     = "bento/debian-12"
+# Define base box images
+IMAGE_ubuntu_1804 = "bento/ubuntu-18.04"
+IMAGE_ubuntu_2004 = "bento/ubuntu-20.04"
+IMAGE_ubuntu_2204 = "bento/ubuntu-22.04"
 
+# Disable parallel execution for predictable provisioning
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure(2) do |config|
-  #config.vm.provision "shell", path: "bootstrap.sh"
+  # Common provider settings
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
+  # Node Type 1: Ubuntu 18.04
   NodeType1 = 1
   (1..NodeType1).each do |type1_id|
-    config.vm.define "type1#{type1_id}" do |type1_vm|
-      type1_vm.vm.box = IMAGE_Debian_12
-      type1_vm.vm.hostname = "type1#{type1_id}"
-      type1_vm.vm.network "private_network", ip: "192.168.56.10#{type1_id}"
-      type1_vm.vm.provider "virtualbox" do |v|
-        v.name = "type1#{type1_id}"
+    config.vm.define "type1-#{type1_id}" do |node|
+      node.vm.box = IMAGE_ubuntu_1804
+      node.vm.hostname = "type1-#{type1_id}"
+      node.vm.network "private_network", ip: "192.168.56.10#{type1_id}"
+      node.vm.provider "virtualbox" do |v|
+        v.name = "type1-#{type1_id}"
         v.memory = 1024
         v.cpus = 1
       end
-      # type1_vm.vm.provision "shell", path: "bootstrap_t1.sh"
+      # Optional: Uncomment to run provision script
+      # node.vm.provision "shell", path: "bootstrap_t1.sh"
     end
   end
 
-
+  # Node Type 2: Ubuntu 20.04
   NodeType2 = 0
   (1..NodeType2).each do |type2_id|
-    config.vm.define "type2#{type2_id}" do |type2_vm|
-      type2_vm.vm.box = IMAGE_Debian_12
-      type2_vm.vm.hostname = "type2#{type2_id}.example.com"
-      type2_vm.vm.network "private_network", ip: "192.168.56.11#{type2_id}"
-      type2_vm.vm.provider "virtualbox" do |v|
-        v.name = "type2#{type2_id}"
+    config.vm.define "type2-#{type2_id}" do |node|
+      node.vm.box = IMAGE_ubuntu_2004
+      node.vm.hostname = "type2-#{type2_id}.example.com"
+      node.vm.network "private_network", ip: "192.168.56.11#{type2_id}"
+      node.vm.provider "virtualbox" do |v|
+        v.name = "type2-#{type2_id}"
         v.memory = 1024
         v.cpus = 1
       end
-      # type2_vm.vm.provision "shell", path: "bootstrap_t2.sh"
+      # Optional: Uncomment to run provision script
+      # node.vm.provision "shell", path: "bootstrap_t2.sh"
+    end
+  end
+
+  # Node Type 3: Ubuntu 22.04 (newly added)
+  NodeType3 = 1
+  (1..NodeType3).each do |type3_id|
+    config.vm.define "type3-#{type3_id}" do |node|
+      node.vm.box = IMAGE_ubuntu_2204
+      node.vm.hostname = "type3-#{type3_id}"
+      # Avoid IP conflict: use 192.168.56.12x
+      node.vm.network "private_network", ip: "192.168.56.12#{type3_id}"
+      node.vm.provider "virtualbox" do |v|
+        v.name = "type3-#{type3_id}"
+        v.memory = 2048  # Recommended for modern Ubuntu
+        v.cpus = 2
+      end
+      # Optional: Provisioning script
+      # node.vm.provision "shell", path: "bootstrap_t3.sh"
     end
   end
 end
